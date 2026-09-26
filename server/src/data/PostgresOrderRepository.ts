@@ -1,8 +1,7 @@
-import pg from 'pg'
+import type pg from 'pg'
+import { getPool } from '../lib/pgPool.js'
 import type { Order } from '../models/Order.js'
 import type { OrderRepository } from './db.js'
-
-const { Pool } = pg
 
 const CREATE_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS orders (
@@ -63,13 +62,8 @@ export class PostgresOrderRepository implements OrderRepository {
   private pool: pg.Pool
   private ready: Promise<void>
 
-  constructor(connectionString: string) {
-    this.pool = new Pool({
-      connectionString,
-      // Most managed Postgres providers (Neon, Supabase, Render) require TLS
-      // and use certs that aren't in Node's default trust store.
-      ssl: { rejectUnauthorized: false },
-    })
+  constructor(_connectionString: string) {
+    this.pool = getPool()
     this.ready = this.pool
       .query(CREATE_TABLE_SQL)
       .then(() => this.pool.query(MIGRATE_SQL))

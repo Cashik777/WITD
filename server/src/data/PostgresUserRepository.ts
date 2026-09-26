@@ -1,9 +1,8 @@
-import pg from 'pg'
+import type pg from 'pg'
 import { randomUUID } from 'crypto'
+import { getPool } from '../lib/pgPool.js'
 import type { User } from '../models/User.js'
 import type { UserRepository } from './usersDb.js'
-
-const { Pool } = pg
 
 const CREATE_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS admin_users (
@@ -29,8 +28,8 @@ export class PostgresUserRepository implements UserRepository {
   private pool: pg.Pool
   private ready: Promise<void>
 
-  constructor(connectionString: string) {
-    this.pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } })
+  constructor(_connectionString: string) {
+    this.pool = getPool()
     this.ready = this.pool.query(CREATE_TABLE_SQL).then(() => undefined)
   }
 

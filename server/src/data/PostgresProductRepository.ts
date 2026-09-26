@@ -1,9 +1,8 @@
-import pg from 'pg'
+import type pg from 'pg'
+import { getPool } from '../lib/pgPool.js'
 import type { Product } from '../models/Product.js'
 import type { ProductRepository } from './productsDb.js'
 import { seedProducts } from './productsDb.js'
-
-const { Pool } = pg
 
 const CREATE_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS products (
@@ -95,8 +94,8 @@ export class PostgresProductRepository implements ProductRepository {
   private pool: pg.Pool
   private ready: Promise<void>
 
-  constructor(connectionString: string) {
-    this.pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } })
+  constructor(_connectionString: string) {
+    this.pool = getPool()
     this.ready = this.pool
       .query(CREATE_TABLE_SQL)
       .then(async () => {
