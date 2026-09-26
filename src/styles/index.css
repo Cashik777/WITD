@@ -30,6 +30,19 @@
     outline-offset: 2px;
   }
 
+  /* Native <select> popups default to a light OS/browser theme regardless of
+     page CSS. color-scheme tells the browser to render its own chrome (the
+     open dropdown list, scrollbars) in dark mode; the explicit option colors
+     are a fallback for Chromium/Firefox, which also honor them directly. */
+  select {
+    color-scheme: dark;
+  }
+
+  select option {
+    background-color: #0B0B0A;
+    color: #F4F2EC;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
