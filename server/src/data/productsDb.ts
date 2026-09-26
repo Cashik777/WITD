@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import type { Product } from '../models/Product.js'
+import { PostgresProductRepository } from './PostgresProductRepository.js'
 
 // ---------------------------------------------------------------------------
 // PRODUCT REPOSITORY ABSTRACTION
@@ -315,13 +316,13 @@ class InMemoryProductRepository implements ProductRepository {
   }
 }
 
-async function createProductRepository(): Promise<ProductRepository> {
+// See the comment in data/db.ts — this selection must stay synchronous.
+function createProductRepository(): ProductRepository {
   if (process.env.DATABASE_URL) {
-    const { PostgresProductRepository } = await import('./PostgresProductRepository.js')
     return new PostgresProductRepository(process.env.DATABASE_URL)
   }
   console.warn('DATABASE_URL is not set — product catalog is in-memory and edits will not persist.')
   return new InMemoryProductRepository()
 }
 
-export const productRepository: ProductRepository = await createProductRepository()
+export const productRepository: ProductRepository = createProductRepository()

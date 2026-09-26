@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import type { User } from '../models/User.js'
+import { PostgresUserRepository } from './PostgresUserRepository.js'
 
 export interface UserRepository {
   findByEmail(email: string): Promise<User | null>
@@ -30,13 +31,13 @@ class InMemoryUserRepository implements UserRepository {
   }
 }
 
-async function createUserRepository(): Promise<UserRepository> {
+// See the comment in data/db.ts — this selection must stay synchronous.
+function createUserRepository(): UserRepository {
   if (process.env.DATABASE_URL) {
-    const { PostgresUserRepository } = await import('./PostgresUserRepository.js')
     return new PostgresUserRepository(process.env.DATABASE_URL)
   }
   console.warn('DATABASE_URL is not set — admin users are in-memory and will be lost on restart.')
   return new InMemoryUserRepository()
 }
 
-export const userRepository: UserRepository = await createUserRepository()
+export const userRepository: UserRepository = createUserRepository()

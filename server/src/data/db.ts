@@ -1,4 +1,5 @@
 import type { Order } from '../models/Order.js'
+import { PostgresOrderRepository } from './PostgresOrderRepository.js'
 
 // ---------------------------------------------------------------------------
 // ORDER REPOSITORY ABSTRACTION
@@ -76,9 +77,15 @@ class InMemoryOrderRepository implements OrderRepository {
 
 // In-memory store — resets on every server restart. Fine for local test-mode
 // development; a real DATABASE_URL swaps this for Postgres (see below).
-async function createOrderRepository(): Promise<OrderRepository> {
+// IMPORTANT: this selection must stay fully synchronous — no top-level
+// await. An async factory here once caused the whole server to fail to
+// boot (Node exit code 13, "unfinished top-level await") when a Postgres
+// connection attempt stalled, since nothing was left to keep the process
+// alive before app.listen() was ever reached. Constructing
+// PostgresOrderRepository is cheap and never blocks; the real connection
+// only happens lazily on first query (see `ready` in that class).
+function createOrderRepository(): OrderRepository {
   if (process.env.DATABASE_URL) {
-    const { PostgresOrderRepository } = await import('./PostgresOrderRepository.js')
     return new PostgresOrderRepository(process.env.DATABASE_URL)
   }
   console.warn('DATABASE_URL is not set — orders are stored in memory and will be lost on restart.')
@@ -86,4 +93,4 @@ async function createOrderRepository(): Promise<OrderRepository> {
 }
 
 export const isUsingDatabase = Boolean(process.env.DATABASE_URL)
-export const orderRepository: OrderRepository = await createOrderRepository()
+export const orderRepository: OrderRepository = createOrderRepository()
