@@ -12,7 +12,7 @@ export interface Product {
   idea?: string
   price: number
   currency: 'CAD' | 'USD'
-  category: 'T-Shirts' | 'Hoodies' | 'Outerwear' | 'Accessories'
+  category: string // category slug, see models/Category.ts — admin-managed, not a fixed enum
   collection: string
   images: string[]
   hoverImage?: string

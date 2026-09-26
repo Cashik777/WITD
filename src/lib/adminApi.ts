@@ -20,6 +20,12 @@ export const adminApi = {
     request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteProduct: (id: string) => request(`/admin/products/${id}`, { method: 'DELETE' }),
   listOrders: () => request('/admin/orders'),
+  listCategories: () => request('/admin/categories'),
+  createCategory: (body: { name: string; parentId?: string | null }) =>
+    request('/admin/categories', { method: 'POST', body: JSON.stringify(body) }),
+  updateCategory: (id: string, body: { name?: string; parentId?: string | null }) =>
+    request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteCategory: (id: string) => request(`/admin/categories/${id}`, { method: 'DELETE' }),
   uploadImage: (file: File) => {
     const form = new FormData()
     form.append('file', file)

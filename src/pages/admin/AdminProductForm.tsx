@@ -2,9 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { adminApi } from '@/lib/adminApi'
 import type { Product } from '@/types/product'
+import type { Category } from '@/types/category'
 
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-const CATEGORIES: Product['category'][] = ['T-Shirts', 'Hoodies', 'Outerwear', 'Accessories']
 const AVAILABILITY: Product['availability'][] = ['in_stock', 'low_stock', 'sold_out', 'coming_soon']
 const PROVIDERS: Product['fulfillmentProvider'][] = ['printful', 'printify', 'mock']
 
@@ -15,7 +15,7 @@ interface FormState {
   idea: string
   price: number
   currency: Product['currency']
-  category: Product['category']
+  category: string
   collection: string
   colors: string[]
   sizes: string[]
@@ -41,7 +41,7 @@ const emptyProduct: FormState = {
   idea: '',
   price: 0,
   currency: 'CAD',
-  category: 'T-Shirts',
+  category: '',
   collection: 'First Drop',
   colors: [],
   sizes: ALL_SIZES,
@@ -68,9 +68,23 @@ export default function AdminProductForm() {
   const [form, setForm] = useState(emptyProduct)
   const [colorsInput, setColorsInput] = useState('')
   const [tagsInput, setTagsInput] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    adminApi.listCategories().then((data) => {
+      const list = data.categories as Category[]
+      setCategories(list)
+      // Default a new product to the first available category rather than
+      // leaving it blank — nothing downstream expects an empty category.
+      if (!isEdit && list.length > 0) {
+        setForm((f) => (f.category ? f : { ...f, category: list[0].name }))
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!isEdit) return
@@ -213,11 +227,21 @@ export default function AdminProductForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={label}>Category</label>
-            <select className={input} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Product['category'] })}>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+            <select className={input} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              {categories
+                .filter((c) => !c.parentId)
+                .flatMap((group) => [
+                  <option key={group.id} value={group.name}>{group.name}</option>,
+                  ...categories
+                    .filter((sub) => sub.parentId === group.id)
+                    .map((sub) => (
+                      <option key={sub.id} value={sub.name}>&nbsp;&nbsp;— {sub.name}</option>
+                    )),
+                ])}
             </select>
+            <p className="mt-1.5 text-xs text-mist">
+              Need a new one? Add it on the <a href="/admin/categories" className="underline underline-offset-4">Categories</a> page first.
+            </p>
           </div>
           <div>
             <label className={label}>Collection</label>

@@ -15,7 +15,7 @@ export interface Product {
   idea?: string // short "the idea behind this piece" editorial blurb
   price: number
   currency: 'CAD' | 'USD'
-  category: 'T-Shirts' | 'Hoodies' | 'Outerwear' | 'Accessories'
+  category: string // category slug — see Category type, admin-managed
   collection: string
   images: string[]
   hoverImage?: string

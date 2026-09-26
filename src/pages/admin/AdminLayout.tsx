@@ -24,6 +24,9 @@ export default function AdminLayout() {
             <NavLink to="/admin/orders" className={linkClass}>
               Orders
             </NavLink>
+            <NavLink to="/admin/categories" className={linkClass}>
+              Categories
+            </NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-4">

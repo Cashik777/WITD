@@ -1,12 +1,18 @@
 import type { Product, ProductFilters, SortOption } from '@/types/product'
 
+// Category is admin-managed (see AdminCategories) so it isn't a fixed list
+// here — options are derived from whatever's actually in the catalog, see
+// categoryOptions() below.
 export const filterOptions = {
-  category: ['T-Shirts', 'Hoodies', 'Outerwear', 'Accessories'],
   size: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
   color: ['Black', 'White', 'Off-White', 'Dark Stone'],
   collection: ['New Drop', 'Bestsellers', 'Limited'],
   availability: ['in_stock', 'low_stock'],
 } as const
+
+export function categoryOptions(products: Product[]): string[] {
+  return [...new Set(products.map((p) => p.category))].sort()
+}
 
 export const availabilityLabels: Record<string, string> = {
   in_stock: 'In Stock',
@@ -48,7 +54,9 @@ export function applyFilters(products: Product[], filters: ProductFilters): Prod
   })
 }
 
-function matchesGroupOption(p: Product, group: keyof typeof filterOptions, value: string): boolean {
+export type FilterGroup = 'category' | 'size' | 'color' | 'collection' | 'availability'
+
+function matchesGroupOption(p: Product, group: FilterGroup, value: string): boolean {
   switch (group) {
     case 'category':
       return p.category === value
@@ -72,12 +80,13 @@ function matchesGroupOption(p: Product, group: keyof typeof filterOptions, value
 export function countByOption(
   products: Product[],
   filters: ProductFilters,
-  group: keyof typeof filterOptions
+  group: FilterGroup
 ): Record<string, number> {
   const otherFilters: ProductFilters = { ...filters, [group]: [] }
   const base = applyFilters(products, otherFilters)
+  const options = group === 'category' ? categoryOptions(products) : filterOptions[group]
   const counts: Record<string, number> = {}
-  for (const opt of filterOptions[group]) {
+  for (const opt of options) {
     counts[opt] = base.filter((p) => matchesGroupOption(p, group, opt)).length
   }
   return counts

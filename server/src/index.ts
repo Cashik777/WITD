@@ -10,6 +10,7 @@ import { webhookRouter } from './routes/webhooks.js'
 import { ordersRouter } from './routes/orders.js'
 import { discordAuthRouter } from './routes/discordAuth.js'
 import { productsRouter } from './routes/products.js'
+import { categoriesRouter } from './routes/categories.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
 import { adminRouter } from './routes/admin.js'
 import { isStripeConfigured } from './lib/stripe.js'
@@ -38,6 +39,7 @@ app.use('/api', checkoutRouter)
 app.use('/api', ordersRouter)
 app.use('/api', discordAuthRouter)
 app.use('/api', productsRouter)
+app.use('/api', categoriesRouter)
 app.use('/api/admin', adminAuthRouter)
 app.use('/api/admin', adminRouter)
 

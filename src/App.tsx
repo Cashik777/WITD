@@ -21,6 +21,7 @@ import AdminLayout from '@/pages/admin/AdminLayout'
 import AdminProducts from '@/pages/admin/AdminProducts'
 import AdminProductForm from '@/pages/admin/AdminProductForm'
 import AdminOrders from '@/pages/admin/AdminOrders'
+import AdminCategories from '@/pages/admin/AdminCategories'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -70,6 +71,7 @@ function AdminSection() {
           <Route path="/admin/products/new" element={<AdminProductForm />} />
           <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
         </Route>
       </Routes>
     </div>

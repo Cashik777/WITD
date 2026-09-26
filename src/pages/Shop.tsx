@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { categories } from '@/context/ProductsContext'
 import { useProducts } from '@/hooks/useProducts'
 import { useFilteredProducts } from '@/hooks/useFilteredProducts'
 import { ProductGrid } from '@/components/ProductGrid'
@@ -10,13 +9,6 @@ import { activeFilterChips } from '@/lib/filters'
 import { ChevronDown, CloseIcon } from '@/components/icons'
 import type { SortOption } from '@/types/product'
 
-// "/shop/t-shirts" -> "T-Shirts", matched against the canonical category list.
-function slugToCategory(slug?: string) {
-  if (!slug) return undefined
-  const normalized = slug.replace(/-/g, ' ').toLowerCase()
-  return categories.find((c) => c.toLowerCase() === normalized)
-}
-
 const sortLabels: Record<SortOption, string> = {
   featured: 'Featured',
   newest: 'Newest',
@@ -25,9 +17,15 @@ const sortLabels: Record<SortOption, string> = {
 }
 
 export default function Shop() {
-  const { products } = useProducts()
+  const { products, categoryNames } = useProducts()
   const [searchParams] = useSearchParams()
   const { category: categoryParam } = useParams<{ category?: string }>()
+  // "/shop/t-shirts" -> "T-Shirts", matched against the loaded category list.
+  const slugToCategory = (slug?: string) => {
+    if (!slug) return undefined
+    const normalized = slug.replace(/-/g, ' ').toLowerCase()
+    return categoryNames.find((c) => c.toLowerCase() === normalized)
+  }
   const initialCategory = slugToCategory(categoryParam) ?? searchParams.get('category') ?? undefined
   const initialCollection = searchParams.get('collection') ?? undefined
 
@@ -47,7 +45,7 @@ export default function Shop() {
   const chips = activeFilterChips(filters)
   // Only list categories that actually have stock in the top nav — an empty
   // "Hoodies" tab that always shows zero results is a dead end, not a filter.
-  const availableCategories = categories.filter(
+  const availableCategories = categoryNames.filter(
     (cat) => cat === 'All' || products.some((p) => p.category === cat)
   )
 

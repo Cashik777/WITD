@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { requireAdmin } from '../lib/requireAdmin.js'
 import { productRepository } from '../data/productsDb.js'
 import { orderRepository } from '../data/db.js'
+import { categoryRepository } from '../data/categoriesDb.js'
 import { isCloudinaryConfigured, uploadImage } from '../lib/cloudinary.js'
 import type { Product } from '../models/Product.js'
 
@@ -34,7 +35,7 @@ function productFromBody(body: Record<string, unknown>, existing?: Product): Omi
     idea: (body.idea as string) ?? existing?.idea,
     price: Number(body.price ?? existing?.price ?? 0),
     currency: (body.currency as Product['currency']) ?? existing?.currency ?? 'CAD',
-    category: (body.category as Product['category']) ?? existing?.category ?? 'T-Shirts',
+    category: (body.category as string) ?? existing?.category ?? '',
     collection: (body.collection as string) ?? existing?.collection ?? 'First Drop',
     images: (body.images as string[]) ?? existing?.images ?? [],
     hoverImage: (body.hoverImage as string) ?? existing?.hoverImage,
@@ -115,4 +116,61 @@ adminRouter.post('/upload', upload.single('file'), async (req, res) => {
 adminRouter.get('/orders', async (_req, res) => {
   const orders = await orderRepository.findAll()
   res.json({ orders })
+})
+
+adminRouter.get('/categories', async (_req, res) => {
+  const categories = await categoryRepository.findAll()
+  res.json({ categories })
+})
+
+adminRouter.post('/categories', async (req, res) => {
+  const name = String(req.body?.name ?? '').trim()
+  if (!name) return res.status(400).json({ error: 'Name is required.' })
+  const parentId = req.body?.parentId ? String(req.body.parentId) : null
+  try {
+    const category = await categoryRepository.create({ name, slug: slugify(name), parentId })
+    res.status(201).json({ category })
+  } catch (err) {
+    console.error('Create category failed', err)
+    res.status(500).json({ error: 'Could not create category — check the name is unique.' })
+  }
+})
+
+adminRouter.put('/categories/:id', async (req, res) => {
+  const name = req.body?.name !== undefined ? String(req.body.name).trim() : undefined
+  const parentId = req.body?.parentId !== undefined ? (req.body.parentId ? String(req.body.parentId) : null) : undefined
+  if (parentId === req.params.id) {
+    return res.status(400).json({ error: 'A category cannot be its own parent.' })
+  }
+  try {
+    const updated = await categoryRepository.update(req.params.id, {
+      ...(name !== undefined ? { name, slug: slugify(name) } : {}),
+      ...(parentId !== undefined ? { parentId } : {}),
+    })
+    if (!updated) return res.status(404).json({ error: 'Category not found.' })
+    res.json({ category: updated })
+  } catch (err) {
+    console.error('Update category failed', err)
+    res.status(500).json({ error: 'Could not update category.' })
+  }
+})
+
+adminRouter.delete('/categories/:id', async (req, res) => {
+  const target = await categoryRepository.findById(req.params.id)
+  if (!target) return res.status(404).json({ error: 'Category not found.' })
+
+  // Product.category stores the category *name* (matching the original
+  // seed data), not its id — simple and human-readable, at the cost of a
+  // product becoming orphaned if a category is later renamed rather than
+  // recreated. Fine at this catalog's scale.
+  const products = await productRepository.findAll()
+  if (products.some((p) => p.category === target.name)) {
+    return res.status(409).json({ error: 'Move or reassign products out of this category before deleting it.' })
+  }
+  const categories = await categoryRepository.findAll()
+  if (categories.some((c) => c.parentId === req.params.id)) {
+    return res.status(409).json({ error: 'Delete or reassign subcategories before deleting this category.' })
+  }
+  await categoryRepository.remove(req.params.id)
+  res.json({ ok: true })
 })
