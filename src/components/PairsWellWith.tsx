@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { MouseEvent } from 'react'
-import { products } from '@/data/products'
+import { useProducts } from '@/hooks/useProducts'
 import type { CartLine } from '@/types/cart'
 import { formatPrice } from '@/lib/format'
 import { useCart } from '@/hooks/useCart'
@@ -9,6 +9,7 @@ import { useCart } from '@/hooks/useCart'
 // in the cart. No real "frequently bought together" data exists yet, so
 // this stays a simple catalog pick rather than pretending otherwise.
 export function PairsWellWith({ lines }: { lines: CartLine[] }) {
+  const { products } = useProducts()
   const { addItem } = useCart()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const inCartIds = new Set(lines.map((l) => l.productId))

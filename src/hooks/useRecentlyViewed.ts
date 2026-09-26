@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { getProductById } from '@/data/products'
+import { useProducts } from '@/hooks/useProducts'
 import type { Product } from '@/types/product'
 
 const STORAGE_KEY = 'witd:recently-viewed'
 const MAX_ITEMS = 8
 
 export function useRecentlyViewed(currentProductId?: string) {
+  const { getProductById } = useProducts()
   const [ids, setIds] = useState<string[]>([])
 
   useEffect(() => {

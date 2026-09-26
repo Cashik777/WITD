@@ -104,6 +104,12 @@ export class PostgresOrderRepository implements OrderRepository {
     return rows[0] ? rowToOrder(rows[0]) : null
   }
 
+  async findAll(): Promise<Order[]> {
+    await this.ready
+    const { rows } = await this.pool.query('SELECT * FROM orders ORDER BY created_at DESC')
+    return rows.map(rowToOrder)
+  }
+
   async create(order: Order): Promise<Order> {
     await this.ready
     await this.pool.query(

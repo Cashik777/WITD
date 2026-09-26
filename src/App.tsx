@@ -15,6 +15,12 @@ import VerifyPurchase from '@/pages/VerifyPurchase'
 import SearchPage from '@/pages/SearchPage'
 import NotFound from '@/pages/NotFound'
 import { Privacy, Terms, Account } from '@/pages/Legal'
+import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import AdminLogin from '@/pages/admin/AdminLogin'
+import AdminLayout from '@/pages/admin/AdminLayout'
+import AdminProducts from '@/pages/admin/AdminProducts'
+import AdminProductForm from '@/pages/admin/AdminProductForm'
+import AdminOrders from '@/pages/admin/AdminOrders'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -24,10 +30,9 @@ function ScrollToTop() {
   return null
 }
 
-export default function App() {
+function StorefrontLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-black">
-      <ScrollToTop />
       <Header />
       <main className="flex-1">
         <Routes>
@@ -52,5 +57,39 @@ export default function App() {
       <Footer />
       <CartDrawer />
     </div>
+  )
+}
+
+function AdminSection() {
+  return (
+    <div className="min-h-screen bg-black">
+      <Routes>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminProducts />} />
+          <Route path="/admin/products/new" element={<AdminProductForm />} />
+          <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+        </Route>
+      </Routes>
+    </div>
+  )
+}
+
+export default function App() {
+  const { pathname } = useLocation()
+  const isAdmin = pathname.startsWith('/admin')
+
+  return (
+    <>
+      <ScrollToTop />
+      {isAdmin ? (
+        <AdminAuthProvider>
+          <AdminSection />
+        </AdminAuthProvider>
+      ) : (
+        <StorefrontLayout />
+      )}
+    </>
   )
 }

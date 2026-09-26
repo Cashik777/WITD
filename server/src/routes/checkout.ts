@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import { randomUUID } from 'crypto'
 import { stripe, isStripeConfigured } from '../lib/stripe.js'
-import { getServerProduct } from '../data/products.js'
+import { productRepository } from '../data/productsDb.js'
 import { orderRepository } from '../data/db.js'
 import { generateOrderNumber } from '../lib/orderNumber.js'
 import type { Order, OrderItem } from '../models/Order.js'
+import type { Product } from '../models/Product.js'
 
 export const checkoutRouter = Router()
 
@@ -38,8 +39,9 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
     // --- Server-side validation. Nothing about price, product identity, or
     // stock comes from the browser past this point. ---
     const items: OrderItem[] = []
+    let currency: Product['currency'] | undefined
     for (const raw of rawItems) {
-      const product = getServerProduct(raw.productId)
+      const product = await productRepository.findById(raw.productId)
       if (!product) {
         return res.status(400).json({ error: `Unknown product: ${raw.productId}` })
       }
@@ -61,11 +63,16 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
         quantity,
         unitPrice: product.price, // server-side price — the only price Stripe ever sees
       })
+      if (!currency) currency = product.currency
     }
+
+    // items.length is guaranteed >0 here (rawItems was checked above and
+    // every raw item either resolves to a product or returns early), so the
+    // loop always ran and set this.
+    if (!currency) throw new Error('unreachable: currency was never set')
 
     const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
     const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING
-    const currency = getServerProduct(items[0].productId)!.currency
     const total = subtotal + shipping
 
     // Create our own order record *before* redirecting to Stripe, in

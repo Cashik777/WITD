@@ -25,6 +25,7 @@ export interface OrderRepository {
   findByStripeSessionId(sessionId: string): Promise<Order | null>
   findById(id: string): Promise<Order | null>
   findByOrderNumber(orderNumber: string): Promise<Order | null>
+  findAll(): Promise<Order[]>
   create(order: Order): Promise<Order>
   update(id: string, patch: Partial<Order>): Promise<Order | null>
   ping(): Promise<boolean>
@@ -51,6 +52,10 @@ class InMemoryOrderRepository implements OrderRepository {
   async findByOrderNumber(orderNumber: string): Promise<Order | null> {
     const id = this.byOrderNumber.get(orderNumber.toUpperCase())
     return id ? this.orders.get(id) ?? null : null
+  }
+
+  async findAll(): Promise<Order[]> {
+    return [...this.orders.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }
 
   async create(order: Order): Promise<Order> {

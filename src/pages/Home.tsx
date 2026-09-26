@@ -4,9 +4,10 @@ import { ProductGrid } from '@/components/ProductGrid'
 import { ManifestoSection } from '@/components/ManifestoSection'
 import { CommunitySection } from '@/components/CommunitySection'
 import { Newsletter } from '@/components/Newsletter'
-import { products } from '@/data/products'
+import { useProducts } from '@/hooks/useProducts'
 
 export default function Home() {
+  const { products } = useProducts()
   const newDrop = products.filter((p) => p.new).slice(0, 4)
   const featured = products.filter((p) => p.featured).slice(0, 3)
 

@@ -3,7 +3,7 @@ import type { Request } from 'express'
 import type Stripe from 'stripe'
 import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { orderRepository } from '../data/db.js'
-import { getServerProduct } from '../data/products.js'
+import { productRepository } from '../data/productsDb.js'
 import { getFulfillmentProvider } from '../lib/fulfillment/index.js'
 
 export const webhookRouter = Router()
@@ -97,7 +97,7 @@ webhookRouter.post('/stripe', async (req: Request, res) => {
       }
 
       // --- Trigger fulfillment ONLY after confirmed payment. Never earlier. ---
-      const firstProduct = getServerProduct(paidOrder.items[0].productId)
+      const firstProduct = await productRepository.findById(paidOrder.items[0].productId)
       const providerName = firstProduct?.fulfillmentProvider ?? 'mock'
       const provider = getFulfillmentProvider(providerName)
 

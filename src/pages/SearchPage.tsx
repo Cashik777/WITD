@@ -1,10 +1,11 @@
 import { useSearchParams } from 'react-router-dom'
-import { products } from '@/data/products'
+import { useProducts } from '@/hooks/useProducts'
 import { searchProducts } from '@/lib/search'
 import { SearchBar } from '@/components/SearchBar'
 import { ProductGrid } from '@/components/ProductGrid'
 
 export default function SearchPage() {
+  const { products } = useProducts()
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const results = searchProducts(products, query)

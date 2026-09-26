@@ -1,5 +1,5 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { getProductBySlug, getRelatedProducts } from '@/data/products'
+import { useProducts } from '@/hooks/useProducts'
 import { ProductGallery } from '@/components/ProductGallery'
 import { ProductInfo } from '@/components/ProductInfo'
 import { ProductGrid } from '@/components/ProductGrid'
@@ -9,12 +9,13 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { useProductPurchase } from '@/hooks/useProductPurchase'
 
 export default function ProductDetail() {
+  const { getProductBySlug, getRelatedProducts, loading } = useProducts()
   const { slug } = useParams<{ slug: string }>()
   const product = slug ? getProductBySlug(slug) : undefined
   const recentlyViewed = useRecentlyViewed(product?.id)
   const purchase = useProductPurchase(product)
 
-  if (!product) return <Navigate to="/404" replace />
+  if (!product) return loading ? null : <Navigate to="/404" replace />
 
   const related = getRelatedProducts(product)
   const galleryImages = (purchase.color && product.imagesByColor[purchase.color]) || product.images

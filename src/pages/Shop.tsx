@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { products, categories } from '@/data/products'
+import { categories } from '@/context/ProductsContext'
+import { useProducts } from '@/hooks/useProducts'
 import { useFilteredProducts } from '@/hooks/useFilteredProducts'
 import { ProductGrid } from '@/components/ProductGrid'
 import { FilterPanel } from '@/components/FilterPanel'
@@ -24,6 +25,7 @@ const sortLabels: Record<SortOption, string> = {
 }
 
 export default function Shop() {
+  const { products } = useProducts()
   const [searchParams] = useSearchParams()
   const { category: categoryParam } = useParams<{ category?: string }>()
   const initialCategory = slugToCategory(categoryParam) ?? searchParams.get('category') ?? undefined
