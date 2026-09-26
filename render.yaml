@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: witd-storefront
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build && cd server && npm install && npm run build
+    startCommand: node server/dist/index.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: FRONTEND_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: PRINTFUL_API_KEY
+        sync: false
+      - key: PRINTFUL_STORE_ID
+        sync: false
+      - key: PRINTIFY_API_KEY
+        sync: false
+      - key: PRINTIFY_SHOP_ID
+        sync: false

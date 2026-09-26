@@ -1,10 +1,14 @@
 import 'dotenv/config'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { existsSync } from 'fs'
 import express from 'express'
 import cors from 'cors'
 import { checkoutRouter } from './routes/checkout.js'
 import { webhookRouter } from './routes/webhooks.js'
 import { isStripeConfigured } from './lib/stripe.js'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4242
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
@@ -28,6 +32,18 @@ app.get('/api/health', (_req, res) => {
     printifyConfigured: Boolean(process.env.PRINTIFY_API_KEY && process.env.PRINTIFY_SHOP_ID),
   })
 })
+
+// Serve the built frontend (repo root `npm run build`) so one process on one
+// port can host the whole site behind a reverse proxy — only used when the
+// built assets exist; in local dev the Vite dev server (port 5173) handles
+// the frontend instead and this block is a no-op.
+const distPath = path.resolve(__dirname, '../../dist')
+if (existsSync(distPath)) {
+  app.use(express.static(distPath))
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
+}
 
 app.listen(PORT, () => {
   console.log(`WITD server listening on http://localhost:${PORT}`)
