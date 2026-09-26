@@ -62,6 +62,16 @@ export class PostgresOrderRepository implements OrderRepository {
     this.ready = this.pool.query(CREATE_TABLE_SQL).then(() => undefined)
   }
 
+  async ping(): Promise<boolean> {
+    try {
+      await this.ready
+      await this.pool.query('SELECT 1')
+      return true
+    } catch {
+      return false
+    }
+  }
+
   async findByStripeSessionId(sessionId: string): Promise<Order | null> {
     await this.ready
     const { rows } = await this.pool.query('SELECT * FROM orders WHERE stripe_session_id = $1', [sessionId])

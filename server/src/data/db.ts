@@ -26,11 +26,16 @@ export interface OrderRepository {
   findById(id: string): Promise<Order | null>
   create(order: Order): Promise<Order>
   update(id: string, patch: Partial<Order>): Promise<Order | null>
+  ping(): Promise<boolean>
 }
 
 class InMemoryOrderRepository implements OrderRepository {
   private orders = new Map<string, Order>()
   private byStripeSession = new Map<string, string>()
+
+  async ping(): Promise<boolean> {
+    return true
+  }
 
   async findByStripeSessionId(sessionId: string): Promise<Order | null> {
     const id = this.byStripeSession.get(sessionId)
@@ -67,4 +72,5 @@ async function createOrderRepository(): Promise<OrderRepository> {
   return new InMemoryOrderRepository()
 }
 
+export const isUsingDatabase = Boolean(process.env.DATABASE_URL)
 export const orderRepository: OrderRepository = await createOrderRepository()

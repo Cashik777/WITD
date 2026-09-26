@@ -7,6 +7,7 @@ import cors from 'cors'
 import { checkoutRouter } from './routes/checkout.js'
 import { webhookRouter } from './routes/webhooks.js'
 import { isStripeConfigured } from './lib/stripe.js'
+import { orderRepository, isUsingDatabase } from './data/db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -24,12 +25,14 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 app.use(express.json())
 app.use('/api', checkoutRouter)
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', async (_req, res) => {
   res.json({
     ok: true,
     stripeConfigured: isStripeConfigured,
     printfulConfigured: Boolean(process.env.PRINTFUL_API_KEY && process.env.PRINTFUL_STORE_ID),
     printifyConfigured: Boolean(process.env.PRINTIFY_API_KEY && process.env.PRINTIFY_SHOP_ID),
+    databaseConfigured: isUsingDatabase,
+    databaseConnected: await orderRepository.ping(),
   })
 })
 
