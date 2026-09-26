@@ -69,20 +69,46 @@ step 0 of the original task brief if you need the full spec again). Since then, 
   quick add (size picker, no auto-select) → cart drawer (added banner, shipping progress, pairs-well-with,
   checkout button) → checkout (steps, mobile collapsible summary, "payments not open" message) → mobile
   widths (filter drawer, swipe gallery, sticky buy bar). All confirmed working.
-- Not yet pushed to GitHub as of writing this file — see "Next steps."
+- Pushed to `https://github.com/Cashik777/WITD` (`main`), commit `5a58a93`.
+
+## Update (2026-09-26, same day)
+
+- **Final logo swapped in.** User provided the real WITD mark (as a PDF, then as a clean `Finish.svg`).
+  Extracted the exact path data and replaced the placeholder arcs in `WitdSymbol.tsx`,
+  `public/assets/brand/witd-symbol.svg` (also the favicon), and `witd-logo.svg` (symbol + wordmark
+  lockup). Colors are the real fixed brand colors now (`#ec1c24` red, `#3f48cb` blue, `#6bff00` green,
+  `#000` black) — no longer `currentColor`, since this is a fixed-identity mark. Pushed as commit
+  `16b87e7`.
+- **Real payment/fulfillment keys were provided in chat and written to `server/.env`** (gitignored, not
+  committed — verified). Backend restarted and confirms `stripeConfigured: true`.
+  - **STRIPE_SECRET_KEY is a LIVE key (`sk_live_...`), not test-mode.** The user pasted this directly in
+    chat without specifying test vs. live. This means `/api/create-checkout-session` will create *real*
+    Stripe Checkout Sessions capable of processing real charges — Stripe's test card (4242 4242 4242 4242)
+    from the README's local-testing instructions will NOT work against it (that only works with
+    `sk_test_...`). **Do not run an end-to-end checkout test against this key** without the user explicitly
+    confirming they want a real transaction, or until/unless they swap in a `sk_test_...` key instead.
+    `STRIPE_PUBLISHABLE_KEY` and `STRIPE_WEBHOOK_SECRET` were not provided — webhook signature
+    verification (and therefore fulfillment-on-payment) will not work until `STRIPE_WEBHOOK_SECRET` is set
+    (see README's "Testing the payment flow locally" section for how to get one via `stripe listen`).
+  - `PRINTFUL_API_KEY` and `PRINTIFY_API_KEY` were provided and written in, but `PRINTFUL_STORE_ID` and
+    `PRINTIFY_SHOP_ID` were not — per `server/src/lib/fulfillment/index.ts`, both providers require *both*
+    the key and the id to activate, so fulfillment still falls back to `MockProvider` until those ids are
+    supplied. `providerVariantMappings` are also still all placeholders regardless.
+  - These keys were pasted as plaintext chat messages — worth a heads-up to the user that, if this
+    conversation is ever shared or exported, the live Stripe key in particular should be rotated from the
+    Stripe Dashboard rather than assumed safe.
 
 ## Next steps
 
-1. `git init` (if not already), commit, push to `https://github.com/Cashik777/WITD` (`main`, currently
-   empty, public).
-2. Real product photography, hero image, and final logo/symbol artwork — all current visuals are
-   intentional placeholders (see "Brand system" above for exactly what to swap).
+1. Confirm the Stripe key situation above (live vs. test) before treating checkout as ready to exercise
+   end-to-end. Supply `STRIPE_WEBHOOK_SECRET`, `PRINTFUL_STORE_ID`, `PRINTIFY_SHOP_ID` when available.
+2. Real product photography and hero image — still placeholders (logo/symbol is now final, see above).
 3. Real Printful/Printify variant mappings (`providerVariantMappings` is `{}`/`PLACEHOLDER` everywhere) —
    fill in once real POD products exist.
 4. One shared product data source instead of the two hand-maintained catalog copies (frontend + server).
 5. A real database for orders — `InMemoryOrderRepository` in `server/src/data/db.ts` loses everything on
    restart; swap in a Postgres/Supabase-backed implementation of the same `OrderRepository` interface.
-6. Stripe/Printful/Printify keys: **do not connect these or ask the user for them unless explicitly
-   instructed to in a given session** — this has been an explicit standing instruction on this project.
-   The mock/unconfigured paths (`MockProvider`, the 503 + "Payments are not open yet" message) are
-   intentional and should keep working until that instruction changes.
+6. Stripe/Printful/Printify keys are now connected (see the 2026-09-26 update above for exactly what's set
+   and what's missing) — this reverses the original "don't connect yet" instruction, but only because the
+   user explicitly handed over keys unprompted. Keep the general rule for anything *not* explicitly
+   provided: don't go proactively asking for more keys/credentials in a given session unless told to.
