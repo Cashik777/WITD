@@ -98,6 +98,15 @@ export class PostgresOrderRepository implements OrderRepository {
     return rows[0] ? rowToOrder(rows[0]) : null
   }
 
+  async findByEmail(email: string): Promise<Order[]> {
+    await this.ready
+    const { rows } = await this.pool.query(
+      'SELECT * FROM orders WHERE lower(customer_email) = lower($1) ORDER BY created_at DESC',
+      [email]
+    )
+    return rows.map(rowToOrder)
+  }
+
   async findAll(): Promise<Order[]> {
     await this.ready
     const { rows } = await this.pool.query('SELECT * FROM orders ORDER BY created_at DESC')

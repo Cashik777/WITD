@@ -22,12 +22,3 @@ export function Terms() {
     </div>
   )
 }
-
-export function Account() {
-  return (
-    <div className="max-w-content mx-auto px-5 md:px-8 py-16 md:py-24 text-center">
-      <h1 className="font-display text-3xl md:text-4xl text-paper mb-4">Account</h1>
-      <p className="text-sm text-paper/70">Account sign-in isn&rsquo;t connected yet — coming with the community launch.</p>
-    </div>
-  )
-}

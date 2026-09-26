@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCart } from '@/hooks/useCart'
+import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 
 // Stripe redirects here after a successful payment
 // (success_url includes ?session_id={CHECKOUT_SESSION_ID}, set server-side).
@@ -8,6 +9,7 @@ export default function OrderConfirmation() {
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const { clearCart } = useCart()
+  const { email: accountEmail } = useCustomerAuth()
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
 
   useEffect(() => {
@@ -34,6 +36,15 @@ export default function OrderConfirmation() {
             <p className="mt-2 text-xs text-mist max-w-sm mx-auto">
               Save this — you&rsquo;ll need it with your order email to verify your purchase for community access.
             </p>
+            {!accountEmail && (
+              <p className="mt-6 text-xs text-paper/60">
+                Want to track this order later?{' '}
+                <Link to="/account" className="text-paper underline underline-offset-4 hover:text-paper/70">
+                  Create an account
+                </Link>{' '}
+                with the same email.
+              </p>
+            )}
           </>
         ) : (
           <p className="mt-8 text-xs text-mist">

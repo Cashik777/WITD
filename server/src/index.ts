@@ -13,6 +13,7 @@ import { productsRouter } from './routes/products.js'
 import { categoriesRouter } from './routes/categories.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
 import { adminRouter } from './routes/admin.js'
+import { accountRouter } from './routes/account.js'
 import { isStripeConfigured } from './lib/stripe.js'
 import { orderRepository, isUsingDatabase } from './data/db.js'
 import { productRepository } from './data/productsDb.js'
@@ -42,6 +43,7 @@ app.use('/api', productsRouter)
 app.use('/api', categoriesRouter)
 app.use('/api/admin', adminAuthRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api', accountRouter)
 
 app.get('/api/health', async (_req, res) => {
   res.json({

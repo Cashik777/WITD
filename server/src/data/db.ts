@@ -26,6 +26,7 @@ export interface OrderRepository {
   findByStripeSessionId(sessionId: string): Promise<Order | null>
   findById(id: string): Promise<Order | null>
   findByOrderNumber(orderNumber: string): Promise<Order | null>
+  findByEmail(email: string): Promise<Order[]>
   findAll(): Promise<Order[]>
   create(order: Order): Promise<Order>
   update(id: string, patch: Partial<Order>): Promise<Order | null>
@@ -57,6 +58,12 @@ class InMemoryOrderRepository implements OrderRepository {
 
   async findAll(): Promise<Order[]> {
     return [...this.orders.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  }
+
+  async findByEmail(email: string): Promise<Order[]> {
+    return [...this.orders.values()]
+      .filter((o) => o.customer.email?.toLowerCase() === email.toLowerCase())
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }
 
   async create(order: Order): Promise<Order> {
