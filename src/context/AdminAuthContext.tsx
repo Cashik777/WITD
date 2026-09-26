@@ -1,7 +1,5 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
-
 interface AdminAuthValue {
   email: string | null
   loading: boolean
@@ -16,7 +14,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/admin/me`, { credentials: 'include' })
+    fetch('/api/admin/me', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setEmail(data?.email ?? null))
       .catch(() => setEmail(null))
@@ -24,20 +22,27 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (loginEmail: string, password: string): Promise<string | null> => {
-    const res = await fetch(`${API_BASE}/api/admin/login`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: loginEmail, password }),
-    })
-    const data = await res.json()
-    if (!res.ok) return data.error || 'Login failed.'
-    setEmail(data.email)
-    return null
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) return data.error || 'Login failed.'
+      setEmail(data.email)
+      return null
+    } catch {
+      // A network-level failure here (not a 4xx/5xx response) would
+      // otherwise leave the caller's loading state stuck forever, since
+      // nothing downstream ever gets a resolved/rejected result to act on.
+      return 'Could not reach the server. Please try again.'
+    }
   }
 
   const logout = async () => {
-    await fetch(`${API_BASE}/api/admin/logout`, { method: 'POST', credentials: 'include' })
+    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
     setEmail(null)
   }
 

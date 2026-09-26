@@ -5,7 +5,6 @@ import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
 import { ChevronDown } from '@/components/icons'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
 const PAYMENTS_NOT_OPEN_MESSAGE = 'Payments are not open yet — your cart is saved.'
 
 const steps = ['Cart', 'Details', 'Payment', 'Done'] as const
@@ -40,7 +39,7 @@ export default function Checkout() {
       // The server re-validates every product id, size, color and price
       // against its own data — never trust the browser's numbers. See
       // server/src/routes/checkout.ts.
-      const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
+      const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

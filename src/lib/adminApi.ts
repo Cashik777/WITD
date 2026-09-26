@@ -1,7 +1,9 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
-
+// Relative path — the frontend and API are always same-origin (Vite's dev
+// proxy forwards /api to the backend locally; in production they're served
+// by the same combined Express process). No env var needed, and it can't
+// silently point at the wrong host the way an absolute URL fallback did.
 async function request(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE}/api${path}`, {
+  const res = await fetch(`/api${path}`, {
     credentials: 'include',
     headers: options.body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
     ...options,

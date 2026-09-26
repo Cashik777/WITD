@@ -1,8 +1,6 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react'
 import type { Product } from '@/types/product'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
-
 export const categories = ['All', 'T-Shirts', 'Hoodies', 'Outerwear', 'Accessories'] as const
 export const collections = ['New Drop', 'Bestsellers', 'Limited'] as const
 
@@ -27,7 +25,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetch(`${API_BASE}/api/products`)
+    fetch('/api/products')
       .then((res) => {
         if (!res.ok) throw new Error('Could not load products.')
         return res.json()

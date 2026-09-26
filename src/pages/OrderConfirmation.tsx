@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCart } from '@/hooks/useCart'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
-
 // Stripe redirects here after a successful payment
 // (success_url includes ?session_id={CHECKOUT_SESSION_ID}, set server-side).
 export default function OrderConfirmation() {
@@ -15,7 +13,7 @@ export default function OrderConfirmation() {
   useEffect(() => {
     if (!sessionId) return
     clearCart()
-    fetch(`${API_BASE}/api/orders/${sessionId}`)
+    fetch(`/api/orders/${sessionId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setOrderNumber(data?.orderNumber ?? null))
       .catch(() => setOrderNumber(null))

@@ -1,8 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
-
 const ERROR_MESSAGES: Record<string, string> = {
   expired: 'That verification link expired. Please verify your purchase again.',
   not_found: "We couldn't confirm that order. Please verify your purchase again.",
@@ -26,7 +24,7 @@ export default function VerifyPurchase() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/api/verify-purchase`, {
+      const res = await fetch('/api/verify-purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderNumber, email }),
