@@ -10,6 +10,7 @@ import { ordersRouter } from './routes/orders.js'
 import { discordAuthRouter } from './routes/discordAuth.js'
 import { isStripeConfigured } from './lib/stripe.js'
 import { orderRepository, isUsingDatabase } from './data/db.js'
+import { isDiscordConfigured } from './lib/discord.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -37,6 +38,7 @@ app.get('/api/health', async (_req, res) => {
     printifyConfigured: Boolean(process.env.PRINTIFY_API_KEY && process.env.PRINTIFY_SHOP_ID),
     databaseConfigured: isUsingDatabase,
     databaseConnected: await orderRepository.ping(),
+    discordConfigured: isDiscordConfigured,
   })
 })
 
