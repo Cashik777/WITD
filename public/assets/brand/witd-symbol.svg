@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="WITD symbol">
+  <!-- PLACEHOLDER MARK — replace with final production artwork.
+       Three arcs = the RGB components of perception. Center bar = the observer. -->
+  <path d="M50 12 A38 38 0 0 1 82.9 69" fill="none" stroke="#3E6B52" stroke-width="9" stroke-linecap="round" />
+  <path d="M82.9 69 A38 38 0 0 1 17.1 69" fill="none" stroke="#3A5578" stroke-width="9" stroke-linecap="round" />
+  <path d="M17.1 69 A38 38 0 0 1 50 12" fill="none" stroke="#8C4A3E" stroke-width="9" stroke-linecap="round" />
+  <rect x="46" y="32" width="8" height="36" rx="4" fill="#0B0B0A" />
+</svg>

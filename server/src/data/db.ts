@@ -1,0 +1,61 @@
+import type { Order } from '../models/Order.js'
+
+// ---------------------------------------------------------------------------
+// ORDER REPOSITORY ABSTRACTION
+//
+// The rest of the app (routes, webhook handler) only ever talks to the
+// OrderRepository interface below — never to a specific database. That's
+// what lets this swap from the in-memory store used here to Postgres,
+// Supabase, or anything else without touching route/webhook code.
+//
+// localStorage is NEVER an acceptable backing store for this — it only
+// exists on a single customer's browser and isn't authoritative. The
+// frontend only uses localStorage for the pre-checkout cart, which is a
+// separate, disposable piece of state (see src/context/CartContext.tsx).
+//
+// TO CONNECT A REAL DATABASE:
+//   1. Implement OrderRepository against Postgres/Supabase (e.g. with
+//      Prisma, Drizzle, or the Supabase client).
+//   2. Swap the `export const orderRepository = new InMemoryOrderRepository()`
+//      line at the bottom of this file for your implementation.
+//   Nothing else in the server needs to change.
+// ---------------------------------------------------------------------------
+
+export interface OrderRepository {
+  findByStripeSessionId(sessionId: string): Promise<Order | null>
+  findById(id: string): Promise<Order | null>
+  create(order: Order): Promise<Order>
+  update(id: string, patch: Partial<Order>): Promise<Order | null>
+}
+
+class InMemoryOrderRepository implements OrderRepository {
+  private orders = new Map<string, Order>()
+  private byStripeSession = new Map<string, string>()
+
+  async findByStripeSessionId(sessionId: string): Promise<Order | null> {
+    const id = this.byStripeSession.get(sessionId)
+    return id ? this.orders.get(id) ?? null : null
+  }
+
+  async findById(id: string): Promise<Order | null> {
+    return this.orders.get(id) ?? null
+  }
+
+  async create(order: Order): Promise<Order> {
+    this.orders.set(order.id, order)
+    this.byStripeSession.set(order.stripeSessionId, order.id)
+    return order
+  }
+
+  async update(id: string, patch: Partial<Order>): Promise<Order | null> {
+    const existing = this.orders.get(id)
+    if (!existing) return null
+    const updated = { ...existing, ...patch, updatedAt: new Date().toISOString() }
+    this.orders.set(id, updated)
+    return updated
+  }
+}
+
+// In-memory store — resets on every server restart. Fine for local test-mode
+// development; replace before production (see note above).
+export const orderRepository: OrderRepository = new InMemoryOrderRepository()

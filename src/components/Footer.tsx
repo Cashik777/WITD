@@ -1,0 +1,79 @@
+import { Link } from 'react-router-dom'
+import { WitdSymbol } from './WitdSymbol'
+
+const columns = [
+  {
+    heading: 'Shop',
+    links: [
+      { label: 'All Products', to: '/shop' },
+      { label: 'New Drop', to: '/shop?collection=New%20Drop' },
+      { label: 'Bestsellers', to: '/shop?collection=Bestsellers' },
+    ],
+  },
+  {
+    heading: 'WITD',
+    links: [
+      { label: 'About', to: '/about' },
+      { label: 'Community', to: '/community' },
+    ],
+  },
+  {
+    heading: 'Support',
+    links: [
+      { label: 'Shipping', to: '/about#shipping' },
+      { label: 'Returns', to: '/about#returns' },
+      { label: 'Contact', to: '/about#contact' },
+    ],
+  },
+  {
+    heading: 'Legal',
+    links: [
+      { label: 'Privacy', to: '/privacy' },
+      { label: 'Terms', to: '/terms' },
+    ],
+  },
+]
+
+export function Footer() {
+  return (
+    <footer className="bg-black border-t border-line">
+      <div className="max-w-content mx-auto px-5 md:px-8 py-16 grid grid-cols-2 md:grid-cols-6 gap-10">
+        <div className="col-span-2">
+          <div className="flex items-center gap-2.5 mb-4">
+            <WitdSymbol className="w-7 h-7 text-paper" />
+            <span className="font-display text-xl text-paper">WITD</span>
+          </div>
+          <p className="text-sm text-mist max-w-[26ch]">
+            Wake in the dream. Clothing for those who choose to stay conscious inside it.
+          </p>
+        </div>
+
+        {columns.map((col) => (
+          <div key={col.heading}>
+            <h3 className="text-xs tracking-widest uppercase text-paper mb-4">{col.heading}</h3>
+            <ul className="space-y-2.5">
+              {col.links.map((link) => (
+                <li key={link.label}>
+                  <Link to={link.to} className="text-sm text-mist hover:text-paper transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div className="max-w-content mx-auto px-5 md:px-8 py-6 border-t border-line flex flex-col md:flex-row gap-3 items-center justify-between">
+        <p className="text-xs text-mist">&copy; {new Date().getFullYear()} WITD. All rights reserved.</p>
+        <div className="flex gap-5">
+          {['Instagram', 'TikTok', 'X'].map((social) => (
+            <a key={social} href="#" className="text-xs text-mist hover:text-paper transition-colors">
+              {social}
+            </a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  )
+}
