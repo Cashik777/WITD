@@ -1,17 +1,26 @@
-// The WITD mark: an aperture/eye built from three arcs (the RGB components of
-// perception) around a single pupil bar (the observer). This is a
-// placeholder built to spec — swap the arc/pupil markup for final production
-// artwork any time; every call site just renders <WitdSymbol /> so nothing
-// else needs to change. See also /public/assets/brand/witd-symbol.svg and
-// witd-logo.svg for static-file versions (favicon, OG image, etc).
+// The WITD mark: final production artwork (RGB perception zigzag + black
+// observer pupil/stem). Colors are fixed brand colors, not currentColor —
+// the mark reads the same regardless of surrounding text color. See also
+// /public/assets/brand/witd-symbol.svg and witd-logo.svg for static-file
+// versions (favicon, OG image, etc), which share this same path data.
 
 export function WitdSymbol({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" className={className} aria-label="WITD symbol" role="img">
-      <path d="M50 12 A38 38 0 0 1 82.9 69" fill="none" stroke="#3E6B52" strokeWidth="9" strokeLinecap="round" />
-      <path d="M82.9 69 A38 38 0 0 1 17.1 69" fill="none" stroke="#3A5578" strokeWidth="9" strokeLinecap="round" />
-      <path d="M17.1 69 A38 38 0 0 1 50 12" fill="none" stroke="#8C4A3E" strokeWidth="9" strokeLinecap="round" />
-      <rect x="46" y="32" width="8" height="36" rx="4" fill="currentColor" />
+    <svg viewBox="0 0 328.5 253.5" className={className} aria-label="WITD symbol" role="img">
+      <path
+        fill="#ec1c24"
+        d="M13.37,27.49c2.92.58,4.13,1.88,3.61,3.89l3.28,1.16,82.74,82.85.73.02,43-43.1,1.71.41c.49-3.22,3.16-3.23,3.65,0l1.43-.69,42.91,43.03c27.87-27.08,55.57-54.58,83.1-82.52l3.27-1.15c-.78-1.87.42-3.17,3.6-3.9.68,0,2.03-.25,2.2.43.18.72.16,1.8.12,2.86l-92.27,92.28c-1.88.59-2.46-.33-1.42-1.95l-3.22-1.1-41.2-41.33c-14.13,13.34-28.1,27.12-41.89,41.33l-3.22,1.1c1.3,1.62.1,2.55-1.71,2.39L10.67,30.38c-.75-.75-.47-2.63.12-2.84.64-.23,1.94-.06,2.59-.06h-.01Z"
+      />
+      <path
+        fill="#3f48cb"
+        d="M286.39,27.48c-.85,1.62-2.37,2.66-3.6,3.9l-3.15,1.5h-125.99l-.06,38.96-1.5.88c-1.06-1.11-2.58-1.11-3.65,0l-1.5-.68-.06-38.88-.53-.43-126.23.15-3.14-1.5c-1.23-1.23-2.76-2.28-3.61-3.89h273.02Z"
+      />
+      <polygon fill="none" stroke="#6bff00" strokeWidth="5" strokeMiterlimit="10" points="106.78 122.9 193.7 122.46 149.98 162.43 106.78 122.9" />
+      <path
+        fill="#000"
+        d="M152.27,125.06l-.29,37.05c-.61.61-1.2,1.29-1.85,1.19-.51-.08-1.68-.19-2.27-.78l.35-37.46s4.06,0,4.06,0Z"
+      />
+      <circle fill="#000" stroke="#000" strokeWidth="5" strokeMiterlimit="10" cx="150.24" cy="103.48" r="2.26" />
     </svg>
   )
 }
