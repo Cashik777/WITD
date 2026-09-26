@@ -57,5 +57,14 @@ class InMemoryOrderRepository implements OrderRepository {
 }
 
 // In-memory store — resets on every server restart. Fine for local test-mode
-// development; replace before production (see note above).
-export const orderRepository: OrderRepository = new InMemoryOrderRepository()
+// development; a real DATABASE_URL swaps this for Postgres (see below).
+async function createOrderRepository(): Promise<OrderRepository> {
+  if (process.env.DATABASE_URL) {
+    const { PostgresOrderRepository } = await import('./PostgresOrderRepository.js')
+    return new PostgresOrderRepository(process.env.DATABASE_URL)
+  }
+  console.warn('DATABASE_URL is not set — orders are stored in memory and will be lost on restart.')
+  return new InMemoryOrderRepository()
+}
+
+export const orderRepository: OrderRepository = await createOrderRepository()
