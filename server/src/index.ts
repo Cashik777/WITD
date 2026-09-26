@@ -7,6 +7,7 @@ import cors from 'cors'
 import { checkoutRouter } from './routes/checkout.js'
 import { webhookRouter } from './routes/webhooks.js'
 import { ordersRouter } from './routes/orders.js'
+import { discordAuthRouter } from './routes/discordAuth.js'
 import { isStripeConfigured } from './lib/stripe.js'
 import { orderRepository, isUsingDatabase } from './data/db.js'
 
@@ -26,6 +27,7 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 app.use(express.json())
 app.use('/api', checkoutRouter)
 app.use('/api', ordersRouter)
+app.use('/api', discordAuthRouter)
 
 app.get('/api/health', async (_req, res) => {
   res.json({

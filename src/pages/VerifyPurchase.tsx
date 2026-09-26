@@ -1,19 +1,30 @@
 import { useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4242'
 
-type Result = { inviteUrl: string } | { error: string } | null
+const ERROR_MESSAGES: Record<string, string> = {
+  expired: 'That verification link expired. Please verify your purchase again.',
+  not_found: "We couldn't confirm that order. Please verify your purchase again.",
+  discord_failed: 'Discord declined the connection. Please try again.',
+  missing_params: 'Something went wrong on the way back from Discord. Please try again.',
+}
 
 export default function VerifyPurchase() {
+  const [searchParams] = useSearchParams()
+  const callbackSuccess = searchParams.get('success') === '1'
+  const callbackError = searchParams.get('error')
+  const channelUrl = searchParams.get('channel') || 'https://discord.com/channels/@me'
+
   const [orderNumber, setOrderNumber] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<Result>(null)
+  const [error, setError] = useState<string | null>(callbackError ? ERROR_MESSAGES[callbackError] ?? 'Something went wrong.' : null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setResult(null)
+    setError(null)
     try {
       const res = await fetch(`${API_BASE}/api/verify-purchase`, {
         method: 'POST',
@@ -21,9 +32,13 @@ export default function VerifyPurchase() {
         body: JSON.stringify({ orderNumber, email }),
       })
       const data = await res.json()
-      setResult(res.ok ? { inviteUrl: data.inviteUrl } : { error: data.error || 'Something went wrong.' })
+      if (res.ok && data.authorizeUrl) {
+        window.location.href = data.authorizeUrl
+        return
+      }
+      setError(data.error || 'Something went wrong.')
     } catch {
-      setResult({ error: 'Something went wrong. Please try again.' })
+      setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -34,22 +49,21 @@ export default function VerifyPurchase() {
       <div className="max-w-xl mx-auto text-center">
         <h1 className="font-display text-4xl md:text-5xl text-paper">Verify Your Purchase</h1>
         <p className="mt-4 text-sm text-paper/70 leading-relaxed">
-          Every WITD piece carries a way into the community — not a link anyone can share, one that only opens once
-          your purchase is confirmed. Enter your order number and the email you checked out with.
+          Every WITD piece carries a way into the community — access that only opens once your purchase is
+          confirmed. Enter your order number and the email you checked out with.
         </p>
 
-        {result && 'inviteUrl' in result ? (
+        {callbackSuccess ? (
           <div className="mt-10 border border-line p-8">
-            <p className="text-sm text-paper mb-4">You&rsquo;re verified.</p>
+            <p className="text-sm text-paper mb-4">You&rsquo;re in. Welcome to WITD.</p>
             <a
-              href={result.inviteUrl}
+              href={channelUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-block px-8 py-3.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors"
             >
-              Join the Discord
+              Open Discord
             </a>
-            <p className="mt-4 text-xs text-mist">This link works once — don&rsquo;t share it.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-10 space-y-4 text-left">
@@ -76,7 +90,7 @@ export default function VerifyPurchase() {
               />
             </div>
 
-            {result && 'error' in result && <p className="text-xs text-[#B5674F]">{result.error}</p>}
+            {error && <p className="text-xs text-[#B5674F]">{error}</p>}
 
             <button
               type="submit"

@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { orderRepository } from '../data/db.js'
-import { isDiscordConfigured, createSingleUseInvite } from '../lib/discord.js'
+import { isDiscordConfigured, signOrderState, buildAuthorizeUrl } from '../lib/discord.js'
 
 export const ordersRouter = Router()
 
@@ -52,12 +52,9 @@ ordersRouter.post('/verify-purchase', async (req, res) => {
     })
   }
 
-  try {
-    const inviteUrl = await createSingleUseInvite()
-    await orderRepository.update(order.id, { discordVerifiedAt: new Date().toISOString() })
-    res.json({ inviteUrl })
-  } catch (err) {
-    console.error('Discord invite creation failed', err)
-    res.status(500).json({ error: 'Could not create your invite. Please try again shortly.' })
-  }
+  // The actual join + role grant happens in the OAuth callback
+  // (routes/discordAuth.ts) once the customer approves on Discord's side —
+  // this just proves the order is real and hands back where to send them.
+  const state = signOrderState(order.id)
+  res.json({ authorizeUrl: buildAuthorizeUrl(state) })
 })
