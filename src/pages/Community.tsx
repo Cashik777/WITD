@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function Community() {
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-20 md:py-28">
@@ -28,6 +30,14 @@ export default function Community() {
           Enter the Community
         </button>
       </div>
+
+      <p className="mt-8 text-sm text-paper/60">
+        Already own a piece?{' '}
+        <Link to="/verify" className="text-paper underline underline-offset-4 hover:text-paper/70">
+          Verify your purchase
+        </Link>
+        .
+      </p>
     </div>
   )
 }

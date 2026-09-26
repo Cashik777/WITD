@@ -30,6 +30,7 @@ export interface ShippingAddress {
 
 export interface Order {
   id: string
+  orderNumber: string
   stripeSessionId: string
   paymentStatus: PaymentStatus
   fulfillmentStatus: FulfillmentStatus
@@ -46,4 +47,5 @@ export interface Order {
   fulfillmentProvider: 'printful' | 'printify' | 'mock' | null
   fulfillmentOrderId: string | null
   trackingNumber: string | null
+  discordVerifiedAt: string | null
 }

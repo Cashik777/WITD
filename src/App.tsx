@@ -11,6 +11,7 @@ import Community from '@/pages/Community'
 import CartPage from '@/pages/CartPage'
 import Checkout from '@/pages/Checkout'
 import OrderConfirmation from '@/pages/OrderConfirmation'
+import VerifyPurchase from '@/pages/VerifyPurchase'
 import SearchPage from '@/pages/SearchPage'
 import NotFound from '@/pages/NotFound'
 import { Privacy, Terms, Account } from '@/pages/Legal'
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/verify" element={<VerifyPurchase />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/account" element={<Account />} />
           <Route path="/privacy" element={<Privacy />} />

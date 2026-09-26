@@ -47,6 +47,7 @@ webhookRouter.post('/stripe', async (req: Request, res) => {
       const session = event.data.object as {
         id: string
         payment_status: string
+        customer_details?: { email?: string }
         shipping_details?: {
           name?: string
           address?: { line1?: string; line2?: string; city?: string; state?: string; postal_code?: string; country?: string }
@@ -73,6 +74,11 @@ webhookRouter.post('/stripe', async (req: Request, res) => {
       const addr = session.shipping_details?.address
       const paidOrder = await orderRepository.update(order.id, {
         paymentStatus: 'paid',
+        // Stripe always collects an email on its hosted checkout page, even
+        // when we didn't pre-fill one — this is the authoritative address to
+        // store, since it's what the customer will later prove ownership
+        // with (see verify-purchase in routes/orders.ts).
+        customer: { email: session.customer_details?.email ?? order.customer.email },
         shippingAddress: addr
           ? {
               name: session.shipping_details?.name,

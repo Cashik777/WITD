@@ -26,9 +26,19 @@ const CREATE_TABLE_SQL = `
   );
 `
 
+// Additive migrations for columns introduced after the table already existed
+// in production — ADD COLUMN IF NOT EXISTS is safe to re-run and never
+// touches existing rows/data.
+const MIGRATE_SQL = `
+  ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number TEXT;
+  ALTER TABLE orders ADD COLUMN IF NOT EXISTS discord_verified_at TIMESTAMPTZ;
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+`
+
 function rowToOrder(row: Record<string, unknown>): Order {
   return {
     id: row.id as string,
+    orderNumber: row.order_number as string,
     stripeSessionId: row.stripe_session_id as string,
     paymentStatus: row.payment_status as Order['paymentStatus'],
     fulfillmentStatus: row.fulfillment_status as Order['fulfillmentStatus'],
@@ -45,6 +55,7 @@ function rowToOrder(row: Record<string, unknown>): Order {
     fulfillmentProvider: row.fulfillment_provider as Order['fulfillmentProvider'],
     fulfillmentOrderId: (row.fulfillment_order_id as string | null) ?? null,
     trackingNumber: (row.tracking_number as string | null) ?? null,
+    discordVerifiedAt: row.discord_verified_at ? (row.discord_verified_at as Date).toISOString() : null,
   }
 }
 
@@ -59,7 +70,10 @@ export class PostgresOrderRepository implements OrderRepository {
       // and use certs that aren't in Node's default trust store.
       ssl: { rejectUnauthorized: false },
     })
-    this.ready = this.pool.query(CREATE_TABLE_SQL).then(() => undefined)
+    this.ready = this.pool
+      .query(CREATE_TABLE_SQL)
+      .then(() => this.pool.query(MIGRATE_SQL))
+      .then(() => undefined)
   }
 
   async ping(): Promise<boolean> {
@@ -84,16 +98,23 @@ export class PostgresOrderRepository implements OrderRepository {
     return rows[0] ? rowToOrder(rows[0]) : null
   }
 
+  async findByOrderNumber(orderNumber: string): Promise<Order | null> {
+    await this.ready
+    const { rows } = await this.pool.query('SELECT * FROM orders WHERE order_number = $1', [orderNumber.toUpperCase()])
+    return rows[0] ? rowToOrder(rows[0]) : null
+  }
+
   async create(order: Order): Promise<Order> {
     await this.ready
     await this.pool.query(
       `INSERT INTO orders (
-        id, stripe_session_id, payment_status, fulfillment_status, customer_email,
+        id, order_number, stripe_session_id, payment_status, fulfillment_status, customer_email,
         items, subtotal, shipping, tax, total, currency, shipping_address,
-        created_at, updated_at, fulfillment_provider, fulfillment_order_id, tracking_number
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+        created_at, updated_at, fulfillment_provider, fulfillment_order_id, tracking_number, discord_verified_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
       [
         order.id,
+        order.orderNumber,
         order.stripeSessionId,
         order.paymentStatus,
         order.fulfillmentStatus,
@@ -110,6 +131,7 @@ export class PostgresOrderRepository implements OrderRepository {
         order.fulfillmentProvider,
         order.fulfillmentOrderId,
         order.trackingNumber,
+        order.discordVerifiedAt,
       ]
     )
     return order
@@ -124,7 +146,7 @@ export class PostgresOrderRepository implements OrderRepository {
       `UPDATE orders SET
         payment_status = $2, fulfillment_status = $3, customer_email = $4,
         shipping_address = $5, updated_at = $6, fulfillment_provider = $7,
-        fulfillment_order_id = $8, tracking_number = $9
+        fulfillment_order_id = $8, tracking_number = $9, discord_verified_at = $10
       WHERE id = $1`,
       [
         id,
@@ -136,6 +158,7 @@ export class PostgresOrderRepository implements OrderRepository {
         updated.fulfillmentProvider,
         updated.fulfillmentOrderId,
         updated.trackingNumber,
+        updated.discordVerifiedAt,
       ]
     )
     return updated

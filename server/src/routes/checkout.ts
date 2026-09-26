@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { getServerProduct } from '../data/products.js'
 import { orderRepository } from '../data/db.js'
+import { generateOrderNumber } from '../lib/orderNumber.js'
 import type { Order, OrderItem } from '../models/Order.js'
 
 export const checkoutRouter = Router()
@@ -74,6 +75,7 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
     const now = new Date().toISOString()
     const order: Order = {
       id: orderId,
+      orderNumber: generateOrderNumber(),
       stripeSessionId: '', // filled in right after the Stripe session is created
       paymentStatus: 'pending',
       fulfillmentStatus: 'pending',
@@ -90,6 +92,7 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       fulfillmentProvider: null,
       fulfillmentOrderId: null,
       trackingNumber: null,
+      discordVerifiedAt: null,
     }
 
     const session = await stripe.checkout.sessions.create({

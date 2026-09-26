@@ -24,6 +24,7 @@ import type { Order } from '../models/Order.js'
 export interface OrderRepository {
   findByStripeSessionId(sessionId: string): Promise<Order | null>
   findById(id: string): Promise<Order | null>
+  findByOrderNumber(orderNumber: string): Promise<Order | null>
   create(order: Order): Promise<Order>
   update(id: string, patch: Partial<Order>): Promise<Order | null>
   ping(): Promise<boolean>
@@ -32,6 +33,7 @@ export interface OrderRepository {
 class InMemoryOrderRepository implements OrderRepository {
   private orders = new Map<string, Order>()
   private byStripeSession = new Map<string, string>()
+  private byOrderNumber = new Map<string, string>()
 
   async ping(): Promise<boolean> {
     return true
@@ -46,9 +48,15 @@ class InMemoryOrderRepository implements OrderRepository {
     return this.orders.get(id) ?? null
   }
 
+  async findByOrderNumber(orderNumber: string): Promise<Order | null> {
+    const id = this.byOrderNumber.get(orderNumber.toUpperCase())
+    return id ? this.orders.get(id) ?? null : null
+  }
+
   async create(order: Order): Promise<Order> {
     this.orders.set(order.id, order)
     this.byStripeSession.set(order.stripeSessionId, order.id)
+    this.byOrderNumber.set(order.orderNumber.toUpperCase(), order.id)
     return order
   }
 
