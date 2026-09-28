@@ -1,5 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-const EMAIL_FROM = process.env.EMAIL_FROM || 'WITD <onboarding@resend.dev>'
+const EMAIL_FROM = process.env.EMAIL_FROM || 'WITD <noreply@wakeinthedream.com>'
 
 export const isEmailConfigured = Boolean(RESEND_API_KEY)
 
