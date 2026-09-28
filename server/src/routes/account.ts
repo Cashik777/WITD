@@ -3,6 +3,16 @@ import { customerRepository } from '../data/customersDb.js'
 import { orderRepository } from '../data/db.js'
 import { hashPassword, verifyPassword, signSession, isAuthConfigured } from '../lib/auth.js'
 import { requireCustomer, CUSTOMER_SESSION_COOKIE, type CustomerRequest } from '../lib/requireCustomer.js'
+import { sendVerificationEmail } from '../lib/email.js'
+import {
+  generateCode,
+  hashCode,
+  codeExpiresAt,
+  isExpired,
+  isWithinResendCooldown,
+  hasAttemptsRemaining,
+  codeMatches,
+} from '../lib/verificationCode.js'
 
 export const accountRouter = Router()
 
@@ -18,9 +28,17 @@ function setSessionCookie(res: import('express').Response, customerId: string) {
   })
 }
 
+async function issueAndSendCode(customerId: string, email: string) {
+  const code = generateCode()
+  await customerRepository.setVerification(customerId, { codeHash: hashCode(code), expiresAt: codeExpiresAt(), attempts: 0 })
+  await sendVerificationEmail(email, code)
+}
+
 // Accounts are entirely optional — checkout never requires one (guest
 // checkout stays the default; see Checkout.tsx). This just lets a customer
-// who *wants* one see their order history across visits.
+// who *wants* one see their order history across visits. Email must be
+// verified with a code before the account can log in, so an order history
+// page can't be spoofed just by knowing someone else's order email.
 accountRouter.post('/account/register', async (req, res) => {
   if (!isAuthConfigured) {
     return res.status(503).json({ error: 'Accounts are not available yet.' })
@@ -34,8 +52,61 @@ accountRouter.post('/account/register', async (req, res) => {
     return res.status(409).json({ error: 'An account with that email already exists — try logging in instead.' })
   }
   const customer = await customerRepository.create({ email, passwordHash: await hashPassword(password) })
+  try {
+    await issueAndSendCode(customer.id, customer.email)
+  } catch (err) {
+    console.error('Failed to send verification email:', err)
+    return res.status(502).json({ error: 'Could not send a verification email. Please try again.' })
+  }
+  res.status(201).json({ email: customer.email, verificationRequired: true })
+})
+
+accountRouter.post('/account/verify-email', async (req, res) => {
+  const email = String(req.body?.email ?? '').trim().toLowerCase()
+  const code = String(req.body?.code ?? '').trim()
+  const customer = await customerRepository.findByEmail(email)
+  if (!customer) return res.status(404).json({ error: 'No account found for that email.' })
+
+  if (customer.emailVerified) {
+    setSessionCookie(res, customer.id)
+    return res.json({ email: customer.email })
+  }
+
+  const verification = await customerRepository.getVerification(customer.id)
+  if (!verification || isExpired(verification.expiresAt)) {
+    return res.status(400).json({ error: 'This code has expired. Request a new one.' })
+  }
+  if (!hasAttemptsRemaining(verification.attempts)) {
+    return res.status(429).json({ error: 'Too many incorrect attempts. Request a new code.' })
+  }
+  if (!codeMatches(code, verification.codeHash)) {
+    await customerRepository.incrementVerificationAttempts(customer.id)
+    return res.status(400).json({ error: 'That code is incorrect.' })
+  }
+
+  await customerRepository.markVerified(customer.id)
   setSessionCookie(res, customer.id)
-  res.status(201).json({ email: customer.email })
+  res.json({ email: customer.email })
+})
+
+accountRouter.post('/account/resend-code', async (req, res) => {
+  const email = String(req.body?.email ?? '').trim().toLowerCase()
+  const customer = await customerRepository.findByEmail(email)
+  if (!customer) return res.status(404).json({ error: 'No account found for that email.' })
+  if (customer.emailVerified) return res.status(400).json({ error: 'This account is already verified.' })
+
+  const verification = await customerRepository.getVerification(customer.id)
+  if (verification && !isExpired(verification.expiresAt) && isWithinResendCooldown(verification.expiresAt)) {
+    return res.status(429).json({ error: 'Please wait a moment before requesting another code.' })
+  }
+
+  try {
+    await issueAndSendCode(customer.id, customer.email)
+  } catch (err) {
+    console.error('Failed to send verification email:', err)
+    return res.status(502).json({ error: 'Could not send a verification email. Please try again.' })
+  }
+  res.json({ ok: true })
 })
 
 accountRouter.post('/account/login', async (req, res) => {
@@ -48,6 +119,16 @@ accountRouter.post('/account/login', async (req, res) => {
   if (!customer || !(await verifyPassword(password, customer.passwordHash))) {
     return res.status(401).json({ error: 'Invalid email or password.' })
   }
+
+  if (!customer.emailVerified) {
+    try {
+      await issueAndSendCode(customer.id, customer.email)
+    } catch (err) {
+      console.error('Failed to send verification email:', err)
+    }
+    return res.status(403).json({ error: 'Please verify your email first — we just sent you a new code.', verificationRequired: true })
+  }
+
   setSessionCookie(res, customer.id)
   res.json({ email: customer.email })
 })

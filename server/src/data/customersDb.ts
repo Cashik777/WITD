@@ -1,16 +1,21 @@
 import { randomUUID } from 'crypto'
-import type { Customer } from '../models/Customer.js'
+import type { Customer, EmailVerification } from '../models/Customer.js'
 import { PostgresCustomerRepository } from './PostgresCustomerRepository.js'
 
 export interface CustomerRepository {
   findByEmail(email: string): Promise<Customer | null>
   findById(id: string): Promise<Customer | null>
-  create(customer: Omit<Customer, 'id' | 'createdAt'>): Promise<Customer>
+  create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified'>): Promise<Customer>
   ping(): Promise<boolean>
+  setVerification(customerId: string, verification: EmailVerification): Promise<void>
+  getVerification(customerId: string): Promise<EmailVerification | null>
+  incrementVerificationAttempts(customerId: string): Promise<void>
+  markVerified(customerId: string): Promise<void>
 }
 
 class InMemoryCustomerRepository implements CustomerRepository {
   private customers = new Map<string, Customer>()
+  private verifications = new Map<string, EmailVerification>()
 
   async ping(): Promise<boolean> {
     return true
@@ -24,10 +29,29 @@ class InMemoryCustomerRepository implements CustomerRepository {
     return this.customers.get(id) ?? null
   }
 
-  async create(customer: Omit<Customer, 'id' | 'createdAt'>): Promise<Customer> {
-    const full: Customer = { ...customer, id: randomUUID(), createdAt: new Date().toISOString() }
+  async create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified'>): Promise<Customer> {
+    const full: Customer = { ...customer, id: randomUUID(), emailVerified: false, createdAt: new Date().toISOString() }
     this.customers.set(full.id, full)
     return full
+  }
+
+  async setVerification(customerId: string, verification: EmailVerification): Promise<void> {
+    this.verifications.set(customerId, verification)
+  }
+
+  async getVerification(customerId: string): Promise<EmailVerification | null> {
+    return this.verifications.get(customerId) ?? null
+  }
+
+  async incrementVerificationAttempts(customerId: string): Promise<void> {
+    const v = this.verifications.get(customerId)
+    if (v) v.attempts += 1
+  }
+
+  async markVerified(customerId: string): Promise<void> {
+    const c = this.customers.get(customerId)
+    if (c) c.emailVerified = true
+    this.verifications.delete(customerId)
   }
 }
 

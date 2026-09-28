@@ -55,13 +55,86 @@ function OrderHistory() {
   )
 }
 
+const input =
+  'w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors'
+
+function VerifyEmailForm() {
+  const { pendingVerificationEmail, verifyEmail, resendCode, cancelVerification } = useCustomerAuth()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setNotice(null)
+    const err = await verifyEmail(code)
+    setLoading(false)
+    if (err) setError(err)
+  }
+
+  const handleResend = async () => {
+    setResending(true)
+    setError(null)
+    setNotice(null)
+    const err = await resendCode()
+    setResending(false)
+    if (err) setError(err)
+    else setNotice('A new code is on its way.')
+  }
+
+  return (
+    <div className="max-w-sm mx-auto">
+      <h2 className="text-sm text-paper mb-2">Check your email</h2>
+      <p className="text-xs text-mist mb-6">
+        We sent a 6-digit code to <span className="text-paper/80">{pendingVerificationEmail}</span>. Enter it below to
+        confirm your account.
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          required
+          placeholder="6-digit code"
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          className={`${input} tracking-[0.3em] text-center`}
+        />
+        {error && <p className="text-xs text-[#B5674F]">{error}</p>}
+        {notice && <p className="text-xs text-paper/60">{notice}</p>}
+        <button
+          type="submit"
+          disabled={loading || code.length !== 6}
+          className="w-full py-3.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Verifying…' : 'Verify'}
+        </button>
+      </form>
+      <div className="mt-4 flex items-center justify-between text-xs">
+        <button onClick={handleResend} disabled={resending} className="text-paper/60 underline underline-offset-4 hover:text-paper disabled:opacity-50">
+          {resending ? 'Sending…' : 'Resend code'}
+        </button>
+        <button onClick={cancelVerification} className="text-paper/60 underline underline-offset-4 hover:text-paper">
+          Use a different email
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function AuthForms() {
-  const { register, login } = useCustomerAuth()
+  const { register, login, pendingVerificationEmail } = useCustomerAuth()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  if (pendingVerificationEmail) return <VerifyEmailForm />
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -71,9 +144,6 @@ function AuthForms() {
     setLoading(false)
     if (err) setError(err)
   }
-
-  const input =
-    'w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors'
 
   return (
     <div className="max-w-sm mx-auto">

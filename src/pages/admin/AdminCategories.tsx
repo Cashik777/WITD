@@ -68,14 +68,14 @@ export default function AdminCategories() {
       {error && <p className="text-xs text-[#B5674F] mb-4">{error}</p>}
 
       <div className="max-w-xl space-y-8">
-        <form onSubmit={handleAddGroup} className="flex gap-3">
+        <form onSubmit={handleAddGroup} className="flex flex-col sm:flex-row gap-3">
           <input className={input} placeholder="New group name (e.g. Hoodies)" value={groupName} onChange={(e) => setGroupName(e.target.value)} />
-          <button type="submit" className="px-5 py-2.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors">
+          <button type="submit" className="px-5 py-2.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors shrink-0">
             Add Group
           </button>
         </form>
 
-        <form onSubmit={handleAddSub} className="flex gap-3">
+        <form onSubmit={handleAddSub} className="flex flex-col sm:flex-row gap-3">
           <select className={input} value={subParentId} onChange={(e) => setSubParentId(e.target.value)}>
             <option value="">Parent group…</option>
             {topLevel.map((c) => (
@@ -83,7 +83,7 @@ export default function AdminCategories() {
             ))}
           </select>
           <input className={input} placeholder="New subgroup name" value={subName} onChange={(e) => setSubName(e.target.value)} />
-          <button type="submit" className="px-5 py-2.5 border border-paper text-paper text-xs tracking-widest uppercase hover:bg-paper hover:text-black transition-colors">
+          <button type="submit" className="px-5 py-2.5 border border-paper text-paper text-xs tracking-widest uppercase hover:bg-paper hover:text-black transition-colors shrink-0">
             Add Subgroup
           </button>
         </form>

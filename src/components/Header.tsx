@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { WitdSymbol } from './WitdSymbol'
 import { SearchIcon, BagIcon, UserIcon, MenuIcon } from './icons'
 import { useCart } from '@/hooks/useCart'
@@ -12,9 +12,22 @@ const navLinks = [
   { label: 'COMMUNITY', to: '/community' },
 ]
 
+// SHOP and NEW DROP both point at /shop (one plain, one with a ?collection=
+// filter), so react-router's NavLink — which only matches on pathname —
+// used to mark both active at once whenever either was selected. Match on
+// the full pathname+search instead so exactly one link is active.
+function isNavLinkActive(to: string, pathname: string, search: string): boolean {
+  const [linkPath, linkQuery] = to.split('?')
+  if (linkPath !== pathname) return false
+  const linkCollection = new URLSearchParams(linkQuery ?? '').get('collection')
+  const currentCollection = new URLSearchParams(search).get('collection')
+  return linkCollection === currentCollection
+}
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { itemCount, openCart } = useCart()
+  const location = useLocation()
 
   return (
     <>
@@ -39,19 +52,20 @@ export function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.label}
-                to={link.to}
-                className={({ isActive }) =>
-                  `text-xs tracking-widest uppercase text-paper/80 hover:text-paper transition-colors duration-200 pb-1 border-b ${
+            {navLinks.map((link) => {
+              const isActive = isNavLinkActive(link.to, location.pathname, location.search)
+              return (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className={`text-xs tracking-widest uppercase text-paper/80 hover:text-paper transition-colors duration-200 pb-1 border-b ${
                     isActive ? 'border-paper text-paper' : 'border-transparent'
-                  }`
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
           </nav>
 
           <div className="flex items-center gap-4 md:gap-5 text-paper">

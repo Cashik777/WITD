@@ -186,7 +186,7 @@ export default function AdminProductForm() {
     <div>
       <h1 className="font-display text-2xl text-paper mb-6">{isEdit ? 'Edit Product' : 'New Product'}</h1>
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={label}>Name</label>
             <input required className={input} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -206,7 +206,7 @@ export default function AdminProductForm() {
           <textarea className={input} rows={2} value={form.idea} onChange={(e) => setForm({ ...form, idea: e.target.value })} />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className={label}>Price</label>
             <input required type="number" min={0} step="0.01" className={input} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
@@ -224,7 +224,7 @@ export default function AdminProductForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={label}>Category</label>
             <select className={input} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
@@ -256,7 +256,7 @@ export default function AdminProductForm() {
 
         <div>
           <label className={label}>Available Sizes</label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {ALL_SIZES.map((s) => (
               <button
                 key={s}
@@ -270,7 +270,7 @@ export default function AdminProductForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={label}>Materials</label>
             <input className={input} value={form.materials} onChange={(e) => setForm({ ...form, materials: e.target.value })} />
@@ -289,7 +289,7 @@ export default function AdminProductForm() {
           <input className={input} value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={label}>Availability</label>
             <select className={input} value={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.value as Product['availability'] })}>
@@ -308,7 +308,7 @@ export default function AdminProductForm() {
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap">
           {(['featured', 'new', 'bestseller'] as const).map((flag) => (
             <label key={flag} className="flex items-center gap-2 text-sm text-paper/80 cursor-pointer">
               <input

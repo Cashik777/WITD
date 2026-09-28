@@ -20,6 +20,7 @@ import { productRepository } from './data/productsDb.js'
 import { isDiscordConfigured } from './lib/discord.js'
 import { isAuthConfigured } from './lib/auth.js'
 import { isCloudinaryConfigured } from './lib/cloudinary.js'
+import { isEmailConfigured } from './lib/email.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -57,6 +58,7 @@ app.get('/api/health', async (_req, res) => {
     discordConfigured: isDiscordConfigured,
     authConfigured: isAuthConfigured,
     uploadsConfigured: isCloudinaryConfigured,
+    emailConfigured: isEmailConfigured,
   })
 })
 
