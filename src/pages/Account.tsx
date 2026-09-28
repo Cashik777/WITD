@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 import { formatPrice } from '@/lib/format'
+import { Accordion } from '@/components/Accordion'
 
 interface AccountOrder {
   orderNumber: string
@@ -83,37 +85,39 @@ function ProfileForm() {
   }
 
   return (
-    <div className="mt-12 border-t border-line pt-8">
-      <h2 className="text-sm text-paper mb-1">Profile</h2>
-      <p className="text-xs text-mist mb-5">Optional — helps us understand who's wearing WITD.</p>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
-        <input placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={input} />
-        <input placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} className={input} />
-        <input
-          placeholder="Age"
-          type="number"
-          min={1}
-          max={120}
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          className={`${input} sm:col-span-1`}
-        />
-        {error && <p className="text-xs text-[#B5674F] sm:col-span-2">{error}</p>}
-        {saved && !error && <p className="text-xs text-paper/60 sm:col-span-2">Saved.</p>}
-        <button
-          type="submit"
-          disabled={saving}
-          className="sm:col-span-2 w-fit px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : 'Save'}
-        </button>
-      </form>
+    <div className="mt-12 border-t border-line">
+      <Accordion title="My Profile">
+        <p className="text-xs text-mist mb-5">Optional — helps us understand who's wearing WITD.</p>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+          <input placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={input} />
+          <input placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} className={input} />
+          <input
+            placeholder="Age"
+            type="number"
+            min={1}
+            max={120}
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            className={`${input} sm:col-span-1`}
+          />
+          {error && <p className="text-xs text-[#B5674F] sm:col-span-2">{error}</p>}
+          {saved && !error && <p className="text-xs text-paper/60 sm:col-span-2">Saved.</p>}
+          <button
+            type="submit"
+            disabled={saving}
+            className="sm:col-span-2 w-fit px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </form>
+      </Accordion>
     </div>
   )
 }
 
 function VerifyEmailForm() {
   const { pendingVerificationEmail, verifyEmail, resendCode, cancelVerification } = useCustomerAuth()
+  const navigate = useNavigate()
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -128,6 +132,9 @@ function VerifyEmailForm() {
     const err = await verifyEmail(code)
     setLoading(false)
     if (err) setError(err)
+    // Freshly activated — send them to the shop rather than parking them on
+    // an empty order-history page.
+    else navigate('/shop')
   }
 
   const handleResend = async () => {
