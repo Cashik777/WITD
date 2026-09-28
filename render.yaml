@@ -26,3 +26,5 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      - key: RESEND_NEWSLETTER_AUDIENCE_ID
+        sync: false
