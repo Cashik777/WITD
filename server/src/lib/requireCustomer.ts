@@ -8,7 +8,13 @@ import { verifySession } from './auth.js'
 export const CUSTOMER_SESSION_COOKIE = 'witd_customer_session'
 
 export interface CustomerRequest extends Request {
-  customer?: { id: string; email: string }
+  customer?: {
+    id: string
+    email: string
+    firstName: string | null
+    lastName: string | null
+    age: number | null
+  }
 }
 
 export async function requireCustomer(req: CustomerRequest, res: Response, next: NextFunction) {
@@ -19,6 +25,12 @@ export async function requireCustomer(req: CustomerRequest, res: Response, next:
   const customer = await customerRepository.findById(customerId)
   if (!customer) return res.status(401).json({ error: 'Not authenticated.' })
 
-  req.customer = { id: customer.id, email: customer.email }
+  req.customer = {
+    id: customer.id,
+    email: customer.email,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    age: customer.age,
+  }
   next()
 }

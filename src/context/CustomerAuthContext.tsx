@@ -1,7 +1,16 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react'
 
+export interface CustomerProfile {
+  firstName: string | null
+  lastName: string | null
+  age: number | null
+}
+
+const emptyProfile: CustomerProfile = { firstName: null, lastName: null, age: null }
+
 interface CustomerAuthValue {
   email: string | null
+  profile: CustomerProfile
   loading: boolean
   // Set once a register (or an unverified login) triggers a code email —
   // the UI switches to the "enter your code" step while this is set.
@@ -11,6 +20,7 @@ interface CustomerAuthValue {
   verifyEmail: (code: string) => Promise<string | null>
   resendCode: () => Promise<string | null>
   cancelVerification: () => void
+  updateProfile: (profile: CustomerProfile) => Promise<string | null>
   logout: () => Promise<void>
 }
 
@@ -18,20 +28,28 @@ export const CustomerAuthContext = createContext<CustomerAuthValue | null>(null)
 
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const [email, setEmail] = useState<string | null>(null)
+  const [profile, setProfile] = useState<CustomerProfile>(emptyProfile)
   const [loading, setLoading] = useState(true)
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null)
+
+  const applyAccountData = (data: any) => {
+    setEmail(data.email)
+    setProfile({ firstName: data.firstName ?? null, lastName: data.lastName ?? null, age: data.age ?? null })
+  }
 
   useEffect(() => {
     fetch('/api/account/me', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setEmail(data?.email ?? null))
+      .then((data) => {
+        if (data) applyAccountData(data)
+      })
       .catch(() => setEmail(null))
       .finally(() => setLoading(false))
   }, [])
 
-  const submit = async (path: string, body: Record<string, string>): Promise<{ data: any; ok: boolean }> => {
+  const submit = async (path: string, body: Record<string, string>, method = 'POST'): Promise<{ data: any; ok: boolean }> => {
     const res = await fetch(path, {
-      method: 'POST',
+      method,
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -61,7 +79,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         }
         return data.error || 'Something went wrong.'
       }
-      setEmail(data.email)
+      applyAccountData(data)
       return null
     } catch {
       return 'Could not reach the server. Please try again.'
@@ -73,7 +91,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, ok } = await submit('/api/account/verify-email', { email: pendingVerificationEmail, code })
       if (!ok) return data.error || 'Something went wrong.'
-      setEmail(data.email)
+      applyAccountData(data)
       setPendingVerificationEmail(null)
       return null
     } catch {
@@ -94,14 +112,30 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
 
   const cancelVerification = () => setPendingVerificationEmail(null)
 
+  const updateProfile = async (next: CustomerProfile): Promise<string | null> => {
+    try {
+      const { data, ok } = await submit(
+        '/api/account/profile',
+        { firstName: next.firstName ?? '', lastName: next.lastName ?? '', age: next.age?.toString() ?? '' },
+        'PATCH'
+      )
+      if (!ok) return data.error || 'Something went wrong.'
+      applyAccountData(data)
+      return null
+    } catch {
+      return 'Could not reach the server. Please try again.'
+    }
+  }
+
   const logout = async () => {
     await fetch('/api/account/logout', { method: 'POST', credentials: 'include' })
     setEmail(null)
+    setProfile(emptyProfile)
   }
 
   return (
     <CustomerAuthContext.Provider
-      value={{ email, loading, pendingVerificationEmail, register, login, verifyEmail, resendCode, cancelVerification, logout }}
+      value={{ email, profile, loading, pendingVerificationEmail, register, login, verifyEmail, resendCode, cancelVerification, updateProfile, logout }}
     >
       {children}
     </CustomerAuthContext.Provider>

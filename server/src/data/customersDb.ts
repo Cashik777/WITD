@@ -1,16 +1,17 @@
 import { randomUUID } from 'crypto'
-import type { Customer, EmailVerification } from '../models/Customer.js'
+import type { Customer, CustomerProfile, EmailVerification } from '../models/Customer.js'
 import { PostgresCustomerRepository } from './PostgresCustomerRepository.js'
 
 export interface CustomerRepository {
   findByEmail(email: string): Promise<Customer | null>
   findById(id: string): Promise<Customer | null>
-  create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified'>): Promise<Customer>
+  create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified' | 'firstName' | 'lastName' | 'age'>): Promise<Customer>
   ping(): Promise<boolean>
   setVerification(customerId: string, verification: EmailVerification): Promise<void>
   getVerification(customerId: string): Promise<EmailVerification | null>
   incrementVerificationAttempts(customerId: string): Promise<void>
   markVerified(customerId: string): Promise<void>
+  updateProfile(customerId: string, profile: CustomerProfile): Promise<Customer>
 }
 
 class InMemoryCustomerRepository implements CustomerRepository {
@@ -29,8 +30,16 @@ class InMemoryCustomerRepository implements CustomerRepository {
     return this.customers.get(id) ?? null
   }
 
-  async create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified'>): Promise<Customer> {
-    const full: Customer = { ...customer, id: randomUUID(), emailVerified: false, createdAt: new Date().toISOString() }
+  async create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified' | 'firstName' | 'lastName' | 'age'>): Promise<Customer> {
+    const full: Customer = {
+      ...customer,
+      id: randomUUID(),
+      emailVerified: false,
+      firstName: null,
+      lastName: null,
+      age: null,
+      createdAt: new Date().toISOString(),
+    }
     this.customers.set(full.id, full)
     return full
   }
@@ -52,6 +61,14 @@ class InMemoryCustomerRepository implements CustomerRepository {
     const c = this.customers.get(customerId)
     if (c) c.emailVerified = true
     this.verifications.delete(customerId)
+  }
+
+  async updateProfile(customerId: string, profile: CustomerProfile): Promise<Customer> {
+    const c = this.customers.get(customerId)
+    if (!c) throw new Error('Customer not found')
+    const updated = { ...c, ...profile }
+    this.customers.set(customerId, updated)
+    return updated
   }
 }
 

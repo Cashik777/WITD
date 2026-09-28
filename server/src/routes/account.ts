@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { customerRepository } from '../data/customersDb.js'
 import { orderRepository } from '../data/db.js'
+import type { Customer } from '../models/Customer.js'
 import { hashPassword, verifyPassword, signSession, isAuthConfigured } from '../lib/auth.js'
 import { requireCustomer, CUSTOMER_SESSION_COOKIE, type CustomerRequest } from '../lib/requireCustomer.js'
 import { sendVerificationEmail } from '../lib/email.js'
@@ -26,6 +27,15 @@ function setSessionCookie(res: import('express').Response, customerId: string) {
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
   })
+}
+
+function profileResponse(customer: Customer) {
+  return {
+    email: customer.email,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    age: customer.age,
+  }
 }
 
 async function issueAndSendCode(customerId: string, email: string) {
@@ -69,7 +79,7 @@ accountRouter.post('/account/verify-email', async (req, res) => {
 
   if (customer.emailVerified) {
     setSessionCookie(res, customer.id)
-    return res.json({ email: customer.email })
+    return res.json(profileResponse(customer))
   }
 
   const verification = await customerRepository.getVerification(customer.id)
@@ -86,7 +96,7 @@ accountRouter.post('/account/verify-email', async (req, res) => {
 
   await customerRepository.markVerified(customer.id)
   setSessionCookie(res, customer.id)
-  res.json({ email: customer.email })
+  res.json(profileResponse(customer))
 })
 
 accountRouter.post('/account/resend-code', async (req, res) => {
@@ -130,7 +140,7 @@ accountRouter.post('/account/login', async (req, res) => {
   }
 
   setSessionCookie(res, customer.id)
-  res.json({ email: customer.email })
+  res.json(profileResponse(customer))
 })
 
 accountRouter.post('/account/logout', (_req, res) => {
@@ -139,7 +149,34 @@ accountRouter.post('/account/logout', (_req, res) => {
 })
 
 accountRouter.get('/account/me', requireCustomer, (req: CustomerRequest, res) => {
-  res.json({ email: req.customer!.email })
+  res.json(req.customer)
+})
+
+// Entirely optional, filled in from the account page after signup — see the
+// comment on Customer in models/Customer.ts for why this isn't asked at
+// registration.
+accountRouter.patch('/account/profile', requireCustomer, async (req: CustomerRequest, res) => {
+  const clean = (v: unknown): string | null => {
+    if (v == null) return null
+    const s = String(v).trim().slice(0, 100)
+    return s || null
+  }
+
+  let age: number | null = null
+  if (req.body?.age != null && req.body.age !== '') {
+    const n = Number(req.body.age)
+    if (!Number.isInteger(n) || n < 1 || n > 120) {
+      return res.status(400).json({ error: 'Age must be a whole number between 1 and 120.' })
+    }
+    age = n
+  }
+
+  const customer = await customerRepository.updateProfile(req.customer!.id, {
+    firstName: clean(req.body?.firstName),
+    lastName: clean(req.body?.lastName),
+    age,
+  })
+  res.json(profileResponse(customer))
 })
 
 // Matches by email rather than a strict customer-id foreign key on Order —

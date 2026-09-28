@@ -1,7 +1,7 @@
 import type pg from 'pg'
 import { randomUUID } from 'crypto'
 import { getPool } from '../lib/pgPool.js'
-import type { Customer, EmailVerification } from '../models/Customer.js'
+import type { Customer, CustomerProfile, EmailVerification } from '../models/Customer.js'
 import type { CustomerRepository } from './customersDb.js'
 
 const CREATE_TABLE_SQL = `
@@ -22,12 +22,23 @@ const ADD_VERIFICATION_COLUMNS_SQL = `
   ALTER TABLE customers ADD COLUMN IF NOT EXISTS verification_attempts INT NOT NULL DEFAULT 0;
 `
 
+// Optional profile fields, filled in from the account page after signup —
+// see the comment on Customer in models/Customer.ts.
+const ADD_PROFILE_COLUMNS_SQL = `
+  ALTER TABLE customers ADD COLUMN IF NOT EXISTS first_name TEXT;
+  ALTER TABLE customers ADD COLUMN IF NOT EXISTS last_name TEXT;
+  ALTER TABLE customers ADD COLUMN IF NOT EXISTS age INT;
+`
+
 function rowToCustomer(row: Record<string, unknown>): Customer {
   return {
     id: row.id as string,
     email: row.email as string,
     passwordHash: row.password_hash as string,
     emailVerified: row.email_verified as boolean,
+    firstName: (row.first_name as string | null) ?? null,
+    lastName: (row.last_name as string | null) ?? null,
+    age: (row.age as number | null) ?? null,
     createdAt: (row.created_at as Date).toISOString(),
   }
 }
@@ -41,6 +52,7 @@ export class PostgresCustomerRepository implements CustomerRepository {
     this.ready = this.pool
       .query(CREATE_TABLE_SQL)
       .then(() => this.pool.query(ADD_VERIFICATION_COLUMNS_SQL))
+      .then(() => this.pool.query(ADD_PROFILE_COLUMNS_SQL))
       .then(() => undefined)
   }
 
@@ -66,14 +78,31 @@ export class PostgresCustomerRepository implements CustomerRepository {
     return rows[0] ? rowToCustomer(rows[0]) : null
   }
 
-  async create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified'>): Promise<Customer> {
+  async create(customer: Omit<Customer, 'id' | 'createdAt' | 'emailVerified' | 'firstName' | 'lastName' | 'age'>): Promise<Customer> {
     await this.ready
-    const full: Customer = { ...customer, id: randomUUID(), emailVerified: false, createdAt: new Date().toISOString() }
+    const full: Customer = {
+      ...customer,
+      id: randomUUID(),
+      emailVerified: false,
+      firstName: null,
+      lastName: null,
+      age: null,
+      createdAt: new Date().toISOString(),
+    }
     await this.pool.query(
       'INSERT INTO customers (id, email, password_hash, email_verified, created_at) VALUES ($1,$2,$3,$4,$5)',
       [full.id, full.email.toLowerCase(), full.passwordHash, full.emailVerified, full.createdAt]
     )
     return full
+  }
+
+  async updateProfile(customerId: string, profile: CustomerProfile): Promise<Customer> {
+    await this.ready
+    const { rows } = await this.pool.query(
+      'UPDATE customers SET first_name = $1, last_name = $2, age = $3 WHERE id = $4 RETURNING *',
+      [profile.firstName, profile.lastName, profile.age, customerId]
+    )
+    return rowToCustomer(rows[0])
   }
 
   async setVerification(customerId: string, verification: EmailVerification): Promise<void> {

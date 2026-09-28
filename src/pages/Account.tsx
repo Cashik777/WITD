@@ -58,6 +58,60 @@ function OrderHistory() {
 const input =
   'w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors'
 
+function ProfileForm() {
+  const { profile, updateProfile } = useCustomerAuth()
+  const [firstName, setFirstName] = useState(profile.firstName ?? '')
+  const [lastName, setLastName] = useState(profile.lastName ?? '')
+  const [age, setAge] = useState(profile.age != null ? String(profile.age) : '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    setSaved(false)
+    const err = await updateProfile({
+      firstName: firstName.trim() || null,
+      lastName: lastName.trim() || null,
+      age: age.trim() ? Number(age) : null,
+    })
+    setSaving(false)
+    if (err) setError(err)
+    else setSaved(true)
+  }
+
+  return (
+    <div className="mt-12 border-t border-line pt-8">
+      <h2 className="text-sm text-paper mb-1">Profile</h2>
+      <p className="text-xs text-mist mb-5">Optional — helps us understand who's wearing WITD.</p>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+        <input placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={input} />
+        <input placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} className={input} />
+        <input
+          placeholder="Age"
+          type="number"
+          min={1}
+          max={120}
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
+          className={`${input} sm:col-span-1`}
+        />
+        {error && <p className="text-xs text-[#B5674F] sm:col-span-2">{error}</p>}
+        {saved && !error && <p className="text-xs text-paper/60 sm:col-span-2">Saved.</p>}
+        <button
+          type="submit"
+          disabled={saving}
+          className="sm:col-span-2 w-fit px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
 function VerifyEmailForm() {
   const { pendingVerificationEmail, verifyEmail, resendCode, cancelVerification } = useCustomerAuth()
   const [code, setCode] = useState('')
@@ -210,6 +264,7 @@ export default function Account() {
             </button>
           </div>
           <OrderHistory />
+          <ProfileForm />
         </div>
       ) : (
         <>
