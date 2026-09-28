@@ -24,3 +24,5 @@ services:
         sync: false
       - key: PRINTIFY_SHOP_ID
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
