@@ -112,3 +112,25 @@ step 0 of the original task brief if you need the full spec again). Since then, 
    and what's missing) — this reverses the original "don't connect yet" instruction, but only because the
    user explicitly handed over keys unprompted. Keep the general rule for anything *not* explicitly
    provided: don't go proactively asking for more keys/credentials in a given session unless told to.
+
+## Update (2026-09-28) — the site is now live on Render at wakeinthedream.com
+
+Deployed to Render with a Postgres (Neon) backend, real payment/fulfillment/Discord/Cloudinary keys, a full
+admin panel (product CRUD with Cloudinary image upload, category/subcategory management, order viewing,
+login+password auth), and optional customer accounts with order history. Since then, three more fixes went
+in from user-reported issues, all pushed and confirmed live:
+
+- **Header nav bug**: SHOP and NEW DROP both underlined simultaneously — react-router's `NavLink` only
+  matches on `pathname`, and both links point at `/shop` (one plain, one with `?collection=New%20Drop`).
+  Replaced with a custom active-match in `Header.tsx` that also compares the `collection` query param.
+- **Admin panel mobile responsiveness**: `AdminLayout`'s header nav, `AdminCategories`'s add-group/add-
+  subgroup forms, and `AdminProductForm`'s field grids were fixed-width/fixed-column and didn't adapt below
+  ~600px. Made them stack vertically / wrap on small screens.
+- **Customer email verification**: registration now requires entering a 6-digit code sent to the customer's
+  email before the account can log in (`server/src/lib/verificationCode.ts` for generation/hashing/expiry,
+  `server/src/lib/email.ts` for sending via Resend's REST API). **`RESEND_API_KEY` has not been provided** —
+  until it is, `sendVerificationEmail` falls back to logging the code server-side instead of emailing it
+  (mirrors the `MockProvider` fallback pattern for fulfillment), so registration works in dev but real
+  customers in production won't receive an actual email yet. Set `RESEND_API_KEY` (and optionally
+  `EMAIL_FROM`, defaults to `WITD <onboarding@resend.dev>`) as a Render env var to turn on real sending —
+  Resend's free tier needs no domain verification if sending from `onboarding@resend.dev`.
