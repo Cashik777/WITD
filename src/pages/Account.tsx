@@ -189,6 +189,7 @@ function VerifyEmailForm() {
 
 function AuthForms() {
   const { register, login, pendingVerificationEmail } = useCustomerAuth()
+  const navigate = useNavigate()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -201,9 +202,16 @@ function AuthForms() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const err = mode === 'login' ? await login(email, password) : await register(email, password)
-    setLoading(false)
-    if (err) setError(err)
+    if (mode === 'login') {
+      const result = await login(email, password)
+      setLoading(false)
+      if (result === 'ok') navigate('/shop')
+      else if (result !== 'pending') setError(result)
+    } else {
+      const err = await register(email, password)
+      setLoading(false)
+      if (err) setError(err)
+    }
   }
 
   return (

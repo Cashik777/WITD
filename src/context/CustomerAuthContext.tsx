@@ -16,7 +16,10 @@ interface CustomerAuthValue {
   // the UI switches to the "enter your code" step while this is set.
   pendingVerificationEmail: string | null
   register: (email: string, password: string) => Promise<string | null>
-  login: (email: string, password: string) => Promise<string | null>
+  // Resolves to 'ok' once actually logged in, 'pending' if it instead
+  // triggered a verification code (check pendingVerificationEmail), or an
+  // error string.
+  login: (email: string, password: string) => Promise<'ok' | 'pending' | string>
   verifyEmail: (code: string) => Promise<string | null>
   resendCode: () => Promise<string | null>
   cancelVerification: () => void
@@ -69,18 +72,18 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string): Promise<string | null> => {
+  const login = async (email: string, password: string): Promise<'ok' | 'pending' | string> => {
     try {
       const { data, ok } = await submit('/api/account/login', { email, password })
       if (!ok) {
         if (data.verificationRequired) {
           setPendingVerificationEmail(email)
-          return null
+          return 'pending'
         }
         return data.error || 'Something went wrong.'
       }
       applyAccountData(data)
-      return null
+      return 'ok'
     } catch {
       return 'Could not reach the server. Please try again.'
     }
