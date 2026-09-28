@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '@/hooks/useCart'
+import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
 import { ChevronDown } from '@/components/icons'
@@ -24,10 +25,20 @@ function CheckoutSteps({ current }: { current: number }) {
 
 export default function Checkout() {
   const { lines, subtotal } = useCart()
+  const { email: accountEmail } = useCustomerAuth()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [summaryOpen, setSummaryOpen] = useState(false)
+
+  // Logged-in customers shouldn't have to retype an email we already know —
+  // prefill (and lock) it from their account instead. useState's initializer
+  // only runs on mount, and CustomerAuthContext's /account/me check is still
+  // in flight at that point, so this has to happen in an effect once it
+  // resolves rather than in the useState call above.
+  useEffect(() => {
+    if (accountEmail) setEmail(accountEmail)
+  }, [accountEmail])
 
   const shipping = calculateShipping(subtotal)
   const total = subtotal + shipping
@@ -130,9 +141,11 @@ export default function Checkout() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            readOnly={Boolean(accountEmail)}
             placeholder="you@example.com"
-            className="w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors"
+            className={`w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors ${accountEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
           />
+          {accountEmail && <p className="mt-2 text-xs text-mist">Using your account email.</p>}
           <p className="mt-3 text-xs text-mist leading-relaxed">
             Shipping address and payment are collected securely on the next step through Stripe Checkout — WITD
             never sees or stores your card details.
