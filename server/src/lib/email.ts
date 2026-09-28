@@ -1,7 +1,9 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const EMAIL_FROM = process.env.EMAIL_FROM || 'WITD <noreply@wakeinthedream.com>'
+const NEWSLETTER_AUDIENCE_ID = process.env.RESEND_NEWSLETTER_AUDIENCE_ID
 
 export const isEmailConfigured = Boolean(RESEND_API_KEY)
+export const isNewsletterConfigured = Boolean(RESEND_API_KEY && NEWSLETTER_AUDIENCE_ID)
 
 // Without a RESEND_API_KEY (not yet provided — see CLAUDE.md), verification
 // still works end-to-end in dev: the code just lands in the server log
@@ -36,5 +38,28 @@ export async function sendVerificationEmail(to: string, code: string): Promise<v
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`Failed to send verification email (${res.status}): ${text}`)
+  }
+}
+
+// Adds an address to the Resend Audience backing the "Enter the dream"
+// newsletter signup (see Newsletter.tsx). Resend's contacts endpoint upserts
+// by email, so re-subscribing an existing address is a harmless no-op.
+export async function subscribeToNewsletter(email: string): Promise<void> {
+  if (!isNewsletterConfigured) {
+    throw new Error('Newsletter signup is not configured (RESEND_NEWSLETTER_AUDIENCE_ID missing).')
+  }
+
+  const res = await fetch(`https://api.resend.com/audiences/${NEWSLETTER_AUDIENCE_ID}/contacts`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, unsubscribed: false }),
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Failed to subscribe to newsletter (${res.status}): ${text}`)
   }
 }

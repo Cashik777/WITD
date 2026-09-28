@@ -14,13 +14,14 @@ import { categoriesRouter } from './routes/categories.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
 import { adminRouter } from './routes/admin.js'
 import { accountRouter } from './routes/account.js'
+import { newsletterRouter } from './routes/newsletter.js'
 import { isStripeConfigured } from './lib/stripe.js'
 import { orderRepository, isUsingDatabase } from './data/db.js'
 import { productRepository } from './data/productsDb.js'
 import { isDiscordConfigured } from './lib/discord.js'
 import { isAuthConfigured } from './lib/auth.js'
 import { isCloudinaryConfigured } from './lib/cloudinary.js'
-import { isEmailConfigured } from './lib/email.js'
+import { isEmailConfigured, isNewsletterConfigured } from './lib/email.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -45,6 +46,7 @@ app.use('/api', categoriesRouter)
 app.use('/api/admin', adminAuthRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api', accountRouter)
+app.use('/api', newsletterRouter)
 
 app.get('/api/health', async (_req, res) => {
   res.json({
@@ -59,6 +61,7 @@ app.get('/api/health', async (_req, res) => {
     authConfigured: isAuthConfigured,
     uploadsConfigured: isCloudinaryConfigured,
     emailConfigured: isEmailConfigured,
+    newsletterConfigured: isNewsletterConfigured,
   })
 })
 

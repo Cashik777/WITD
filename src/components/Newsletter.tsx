@@ -3,13 +3,28 @@ import { useState, type FormEvent } from 'react'
 export function Newsletter() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!email) return
-    // No backend wired up yet — swap this for a real signup endpoint
-    // (Klaviyo, Mailchimp, or your own /api/newsletter route) when ready.
-    setSubmitted(true)
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Something went wrong.')
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -34,12 +49,14 @@ export function Newsletter() {
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors"
+              disabled={loading}
+              className="px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
             >
-              Join
+              {loading ? '…' : 'Join'}
             </button>
           </form>
         )}
+        {error && <p className="mt-4 text-xs text-[#B5674F]">{error}</p>}
       </div>
     </section>
   )
