@@ -4,7 +4,7 @@ import { adminApi } from '@/lib/adminApi'
 import type { Product } from '@/types/product'
 import type { Category } from '@/types/category'
 
-const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
 const AVAILABILITY: Product['availability'][] = ['in_stock', 'low_stock', 'sold_out', 'coming_soon']
 const PROVIDERS: Product['fulfillmentProvider'][] = ['printful', 'printify', 'mock']
 

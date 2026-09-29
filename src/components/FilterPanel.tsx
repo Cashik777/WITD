@@ -1,5 +1,5 @@
 import type { Product, ProductFilters } from '@/types/product'
-import { filterOptions, availabilityLabels, countByOption, categoryOptions } from '@/lib/filters'
+import { filterOptions, availabilityLabels, countByOption, categoryOptions, colorOptions } from '@/lib/filters'
 
 interface FilterPanelProps {
   products: Product[]
@@ -85,7 +85,7 @@ export function FilterPanel({ products, filters, toggleFilter, clearFilters }: F
       />
       <CheckboxGroup
         title="Color"
-        options={filterOptions.color}
+        options={colorOptions(products)}
         selected={filters.color}
         counts={countByOption(products, filters, 'color')}
         onToggle={(v) => toggleFilter('color', v)}

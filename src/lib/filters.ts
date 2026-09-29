@@ -1,17 +1,21 @@
 import type { Product, ProductFilters, SortOption } from '@/types/product'
 
-// Category is admin-managed (see AdminCategories) so it isn't a fixed list
-// here — options are derived from whatever's actually in the catalog, see
-// categoryOptions() below.
+// Category and color are admin-managed (see AdminCategories, and the
+// growing set of real garment colorways from Printful) so neither is a
+// fixed list here — options are derived from whatever's actually in the
+// catalog, see categoryOptions()/colorOptions() below.
 export const filterOptions = {
-  size: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  color: ['Black', 'White', 'Off-White', 'Dark Stone'],
+  size: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
   collection: ['New Drop', 'Bestsellers', 'Limited'],
   availability: ['in_stock', 'low_stock'],
 } as const
 
 export function categoryOptions(products: Product[]): string[] {
   return [...new Set(products.map((p) => p.category))].sort()
+}
+
+export function colorOptions(products: Product[]): string[] {
+  return [...new Set(products.flatMap((p) => p.colors))].sort()
 }
 
 export const availabilityLabels: Record<string, string> = {
@@ -84,7 +88,8 @@ export function countByOption(
 ): Record<string, number> {
   const otherFilters: ProductFilters = { ...filters, [group]: [] }
   const base = applyFilters(products, otherFilters)
-  const options = group === 'category' ? categoryOptions(products) : filterOptions[group]
+  const options =
+    group === 'category' ? categoryOptions(products) : group === 'color' ? colorOptions(products) : filterOptions[group]
   const counts: Record<string, number> = {}
   for (const opt of options) {
     counts[opt] = base.filter((p) => matchesGroupOption(p, group, opt)).length

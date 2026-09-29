@@ -1,5 +1,7 @@
 import type { FulfillmentProvider, FulfillmentOrderResult, FulfillmentTracking } from './FulfillmentProvider.js'
 import type { Order } from '../../models/Order.js'
+import { productRepository } from '../../data/productsDb.js'
+import { variantKey } from '../../models/Product.js'
 
 const API_BASE = 'https://api.printful.com'
 
@@ -25,14 +27,28 @@ export class PrintfulProvider implements FulfillmentProvider {
   }
 
   async createOrder(order: Order): Promise<FulfillmentOrderResult> {
-    // Real product/variant mapping (product.providerVariantMappings) must be
-    // filled in before this call will work — see src/data/products.ts. Until
-    // then this intentionally throws rather than silently submitting a
-    // malformed order to a live Printful account.
-    const missingMappings = order.items.some((item) => !item.productId)
-    if (missingMappings || !this.apiKey) {
-      throw new Error('Printful is not fully configured — missing API credentials or variant mappings.')
+    if (!this.apiKey) {
+      throw new Error('Printful is not fully configured — missing API credentials.')
     }
+
+    // sync_variant_id (not the generic catalog variant_id) — these come from
+    // OUR store's synced products in Printful, which is where the actual
+    // WITD print designs live. Looked up per line item via
+    // product.providerVariantMappings, keyed by "<color>-<size>" (see
+    // variantKey in models/Product.ts). Missing a mapping throws rather than
+    // silently submitting a malformed/wrong-design order to a live account.
+    const items = await Promise.all(
+      order.items.map(async (item) => {
+        const product = await productRepository.findById(item.productId)
+        const syncVariantId = product?.providerVariantMappings[variantKey(item.color, item.size)]
+        if (!syncVariantId) {
+          throw new Error(
+            `No Printful variant mapping for "${item.name}" (${item.color}/${item.size}) — set it in the admin panel before this order can be fulfilled.`
+          )
+        }
+        return { sync_variant_id: Number(syncVariantId), quantity: item.quantity }
+      })
+    )
 
     const res = await fetch(`${API_BASE}/orders`, {
       method: 'POST',
@@ -40,13 +56,7 @@ export class PrintfulProvider implements FulfillmentProvider {
       body: JSON.stringify({
         external_id: order.id,
         recipient: order.shippingAddress,
-        items: order.items.map((item) => ({
-          // `variant_id` below is a PLACEHOLDER — replace with the real
-          // Printful variant id from providerVariantMappings once the
-          // catalog is connected.
-          variant_id: 'PLACEHOLDER',
-          quantity: item.quantity,
-        })),
+        items,
       }),
     })
 

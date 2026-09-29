@@ -3,6 +3,16 @@ const colorSwatch: Record<string, string> = {
   White: '#F4F2EC',
   'Off-White': '#E8E3D6',
   'Dark Stone': '#4A473F',
+  Asphalt: '#4A4A4A',
+  Ash: '#B1B0AC',
+  'Heather Dust': '#E4CDB7',
+  'Athletic Heather': '#B2B4B2',
+  Silver: '#C9CACA',
+  'Vintage White': '#F0EAD9',
+  'Vintage Black': '#2B2B2B',
+  'Dark Grey': '#3B3B3B',
+  'Soft Cream': '#F3E9D7',
+  Natural: '#E8DCC8',
 }
 
 interface ColorSelectorProps {

@@ -4,6 +4,13 @@ export interface ProductVariantMapping {
   [colorSizeKey: string]: string
 }
 
+// The single source of truth for how a color+size pair is looked up in
+// providerVariantMappings — the admin form and every FulfillmentProvider
+// must build/read this key the same way.
+export function variantKey(color: string, size: string): string {
+  return `${color}-${size}`
+}
+
 export interface Product {
   id: string
   slug: string
