@@ -430,7 +430,7 @@ export function IdeaVisual() {
         </button>
       ) : (
         <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] tracking-widest uppercase text-paper/40 pointer-events-none">
-          {remaining < QUEST_TOTAL ? `${remaining} more for 20% off` : 'Trace the shape'}
+          {remaining < QUEST_TOTAL ? `+${QUEST_TOTAL - remaining}% off your first order` : 'Trace the shape'}
         </p>
       )}
     </div>
