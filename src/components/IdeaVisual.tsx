@@ -471,18 +471,18 @@ export function IdeaVisual() {
               window.setTimeout(() => setCopied(false), 1500)
             })
           }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto bg-paper px-5 py-2.5 shadow-[0_0_24px_rgba(244,242,236,0.25)]"
+          className="absolute top-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto bg-paper px-5 py-2.5 shadow-[0_0_24px_rgba(244,242,236,0.25)]"
         >
           <p className="text-[10px] tracking-widest uppercase text-black/60">
             20% off unlocked — tap to copy
             {couponExpiresAt != null && ` · ${formatCountdown(couponExpiresAt - now)}`}
           </p>
-          <p className="mt-0.5 text-base font-display tracking-[0.2em] text-black">
+          <p className="mt-0.5 text-lg font-display italic tracking-[0.15em] text-black">
             {copied ? 'Copied!' : couponCode}
           </p>
         </button>
       ) : (
-        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs tracking-widest uppercase text-paper bg-black/70 border border-paper/30 px-4 py-2 pointer-events-none">
+        <p className="absolute top-4 left-1/2 -translate-x-1/2 text-center text-lg font-display italic text-paper bg-black/70 border border-paper/30 px-5 py-2.5 pointer-events-none">
           {remaining < QUEST_TOTAL ? `+${QUEST_TOTAL - remaining}% off your first order` : 'Trace the shape'}
         </p>
       )}
