@@ -1,15 +1,81 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
+// The two rings, three perception arcs, and center "pupil" are inlined
+// (rather than the static /assets/hero/witd-hero.svg <img>) so scrolling can
+// drive them directly — each ring/arc spins at its own rate/direction for a
+// layered parallax feel, and the pupil "blinks" every so often as you scroll
+// past it, echoing the WitdSymbol eye motif instead of sitting static.
+const CENTER = { x: 1160, y: 420 }
+const originStyle = { transformBox: 'view-box' as const, transformOrigin: `${CENTER.x}px ${CENTER.y}px` }
+
 export function Hero() {
+  const ring1Ref = useRef<SVGCircleElement>(null)
+  const ring2Ref = useRef<SVGCircleElement>(null)
+  const arc1Ref = useRef<SVGPathElement>(null)
+  const arc2Ref = useRef<SVGPathElement>(null)
+  const arc3Ref = useRef<SVGPathElement>(null)
+  const pupilRef = useRef<SVGCircleElement>(null)
+
+  useEffect(() => {
+    let ticking = false
+    let lastBlinkY = window.scrollY
+    let blinkTimeout: number | undefined
+
+    const blink = () => {
+      const p = pupilRef.current
+      if (!p) return
+      p.style.transition = 'transform 110ms ease'
+      p.style.transform = 'scaleY(0.15)'
+      blinkTimeout = window.setTimeout(() => {
+        p.style.transform = 'scaleY(1)'
+      }, 120)
+    }
+
+    const apply = () => {
+      const y = window.scrollY
+      if (ring1Ref.current) ring1Ref.current.style.transform = `rotate(${y * 0.04}deg)`
+      if (ring2Ref.current) ring2Ref.current.style.transform = `rotate(${-y * 0.07}deg)`
+      if (arc1Ref.current) arc1Ref.current.style.transform = `rotate(${y * 0.1}deg)`
+      if (arc2Ref.current) arc2Ref.current.style.transform = `rotate(${-y * 0.13}deg)`
+      if (arc3Ref.current) arc3Ref.current.style.transform = `rotate(${y * 0.16}deg)`
+
+      if (Math.abs(y - lastBlinkY) > 140) {
+        lastBlinkY = y
+        blink()
+      }
+      ticking = false
+    }
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(apply)
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (blinkTimeout) window.clearTimeout(blinkTimeout)
+    }
+  }, [])
+
   return (
     <section className="relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-black">
-      <img
-        src="/assets/hero/witd-hero.svg"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover opacity-70"
-        // Placeholder graphic — drop production photography in at
-        // /public/assets/hero/witd-hero.jpg (or update the src) to replace.
-      />
+      <svg
+        viewBox="0 0 1600 1000"
+        preserveAspectRatio="xMidYMid slice"
+        className="absolute inset-0 w-full h-full opacity-70"
+        aria-hidden="true"
+      >
+        <rect width="1600" height="1000" fill="#0B0B0A" />
+        <circle ref={ring1Ref} cx={CENTER.x} cy={CENTER.y} r="340" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
+        <circle ref={ring2Ref} cx={CENTER.x} cy={CENTER.y} r="230" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
+        <path ref={arc1Ref} d="M 900 420 A 260 260 0 0 1 1420 420" fill="none" stroke="#8FA98F" strokeWidth="2.5" opacity="0.35" style={originStyle} />
+        <path ref={arc2Ref} d="M 940 340 A 260 300 0 0 1 1400 500" fill="none" stroke="#7E93B0" strokeWidth="2.5" opacity="0.3" style={originStyle} />
+        <path ref={arc3Ref} d="M 960 520 A 260 260 0 0 1 1360 320" fill="none" stroke="#AD7B6E" strokeWidth="2.5" opacity="0.3" style={originStyle} />
+        <circle ref={pupilRef} cx={CENTER.x} cy={CENTER.y} r="26" fill="#0B0B0A" stroke="#F4F2EC" strokeWidth="2" opacity="0.55" style={originStyle} />
+      </svg>
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/30" />
 
       <div className="relative h-full max-w-content mx-auto px-5 md:px-8 flex flex-col justify-end pb-16 md:pb-20">
