@@ -238,6 +238,7 @@ export function IdeaVisual() {
   const ghostRef = useRef<SVGPolylineElement>(null)
   const pointRefs = useRef<(SVGCircleElement | null)[]>([])
   const segRefs = useRef<(SVGLineElement | null)[]>([])
+  const headerRef = useRef<HTMLDivElement>(null)
   const shapeIndex = useRef(0)
   const lit = useRef<boolean[]>(new Array(N).fill(false))
   const litCount = useRef(0)
@@ -292,6 +293,30 @@ export function IdeaVisual() {
       cancelled = true
     }
   }, [remaining, couponCode, claimAttempt])
+
+  // The code can land while the customer is scrolled away from this panel
+  // (still dragging, or already looking further down the page) — bring the
+  // header into view so the reward is actually seen, not just sitting there
+  // technically rendered off-screen.
+  useEffect(() => {
+    if (couponCode) headerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [couponCode])
+
+  // Safety net: if a claim already wrote a still-valid code to localStorage
+  // earlier in *this* mount (remaining only ever reaches 0 without a reload,
+  // since a fresh mount always starts at QUEST_TOTAL) but couponCode
+  // somehow isn't reflecting it, resync from storage instead of leaving the
+  // customer stuck on "Unlocking…" with a code that already exists.
+  useEffect(() => {
+    if (remaining !== 0 || couponCode || claimFailed) return
+    const savedCode = window.localStorage.getItem(QUEST_COUPON_KEY)
+    const savedExpiresRaw = window.localStorage.getItem(QUEST_COUPON_EXPIRES_KEY)
+    const savedExpires = savedExpiresRaw ? Number(savedExpiresRaw) : null
+    if (savedCode && savedExpires && savedExpires > Date.now()) {
+      setCouponCode(savedCode)
+      setCouponExpiresAt(savedExpires)
+    }
+  }, [remaining, couponCode, claimFailed])
 
   // Ticks the countdown while a code is live, and resets the whole quest
   // once it lapses — the code is single-use anyway, so there's no reason to
@@ -470,7 +495,7 @@ export function IdeaVisual() {
           100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
-      <div className="shrink-0 text-center py-3 px-4 border-b border-line">
+      <div ref={headerRef} className="shrink-0 text-center py-3 px-4 border-b border-line">
         {couponCode ? (
           <button
             onClick={() => {

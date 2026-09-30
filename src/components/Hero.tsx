@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 // The two rings, three perception arcs, and center "pupil" are inlined
@@ -8,6 +8,18 @@ import { Link } from 'react-router-dom'
 // past it, echoing the WitdSymbol eye motif instead of sitting static.
 const CENTER = { x: 1160, y: 420 }
 const originStyle = { transformBox: 'view-box' as const, transformOrigin: `${CENTER.x}px ${CENTER.y}px` }
+
+// The full 1600x1000 artwork puts the eye off-center (toward the right,
+// balancing the headline on the left on desktop) — preserveAspectRatio=
+// "xMidYMid slice" crops that box around its own geometric center (x=800),
+// not around the eye (x=1160). On a narrow/tall phone viewport, width is
+// the dimension that gets cropped to cover the screen, and the crop window
+// was landing mostly to the LEFT of the eye — it barely showed, off-
+// balance compared to the desktop composition. A separate viewBox, cropped
+// tight and centered directly on the eye, fixes that: any further
+// slice-cropping to fit a narrow screen stays symmetric around it instead.
+const DESKTOP_VIEWBOX = '0 0 1600 1000'
+const MOBILE_VIEWBOX = `${CENTER.x - 400} ${CENTER.y - 400} 800 800`
 
 // Lags behind the page scroll instead of moving 1:1 with it — scrolling
 // down still sends it up and off, just more slowly, so it doesn't vanish as
@@ -22,6 +34,15 @@ export function Hero() {
   const arc3Ref = useRef<SVGPathElement>(null)
   const pupilRef = useRef<SVGCircleElement>(null)
   const parallaxRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    setIsMobile(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
     let ticking = false
@@ -71,7 +92,7 @@ export function Hero() {
     <section className="relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-black">
       <div ref={parallaxRef} className="absolute inset-0">
         <svg
-          viewBox="0 0 1600 1000"
+          viewBox={isMobile ? MOBILE_VIEWBOX : DESKTOP_VIEWBOX}
           preserveAspectRatio="xMidYMid slice"
           className="absolute inset-0 w-full h-full opacity-70"
           aria-hidden="true"
