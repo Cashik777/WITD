@@ -153,12 +153,13 @@ export class PostgresOrderRepository implements OrderRepository {
     const updated: Order = { ...existing, ...patch, updatedAt: new Date().toISOString() }
     await this.pool.query(
       `UPDATE orders SET
-        payment_status = $2, fulfillment_status = $3, customer_email = $4,
-        shipping_address = $5, updated_at = $6, fulfillment_provider = $7,
-        fulfillment_order_id = $8, tracking_number = $9, discord_verified_at = $10
+        stripe_session_id = $2, payment_status = $3, fulfillment_status = $4, customer_email = $5,
+        shipping_address = $6, updated_at = $7, fulfillment_provider = $8,
+        fulfillment_order_id = $9, tracking_number = $10, discord_verified_at = $11
       WHERE id = $1`,
       [
         id,
+        updated.stripeSessionId,
         updated.paymentStatus,
         updated.fulfillmentStatus,
         updated.customer.email ?? null,

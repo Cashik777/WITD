@@ -4,6 +4,7 @@ import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { productRepository } from '../data/productsDb.js'
 import { orderRepository } from '../data/db.js'
 import { generateOrderNumber } from '../lib/orderNumber.js'
+import { requireCustomer, type CustomerRequest } from '../lib/requireCustomer.js'
 import type { Order, OrderItem } from '../models/Order.js'
 import type { Product } from '../models/Product.js'
 
@@ -102,26 +103,9 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       discordVerifiedAt: null,
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      customer_email: email,
-      line_items: items.map((item) => ({
-        quantity: item.quantity,
-        price_data: {
-          currency,
-          unit_amount: Math.round(item.unitPrice * 100),
-          product_data: { name: `${item.name} — ${item.color} / ${item.size}` },
-        },
-      })),
-      shipping_options:
-        shipping > 0
-          ? [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: shipping * 100, currency }, display_name: 'Standard Shipping' } }]
-          : [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: 0, currency }, display_name: 'Free Shipping' } }],
-      shipping_address_collection: { allowed_countries: ['CA', 'US'] },
-      success_url: `${FRONTEND_URL}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}/cart`,
-      metadata: { orderId },
-    })
+    const session = await stripe.checkout.sessions.create(
+      buildSessionParams({ items, currency, shipping, email, orderId }),
+    )
 
     order.stripeSessionId = session.id
     await orderRepository.create(order)
@@ -130,5 +114,74 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
   } catch (err) {
     console.error('create-checkout-session failed', err)
     res.status(500).json({ error: 'Could not start checkout. Please try again.' })
+  }
+})
+
+function buildSessionParams(args: {
+  items: OrderItem[]
+  currency: string
+  shipping: number
+  email: string | undefined
+  orderId: string
+}): import('stripe').default.Checkout.SessionCreateParams {
+  const { items, currency, shipping, email, orderId } = args
+  return {
+    mode: 'payment',
+    customer_email: email,
+    line_items: items.map((item) => ({
+      quantity: item.quantity,
+      price_data: {
+        currency,
+        unit_amount: Math.round(item.unitPrice * 100),
+        product_data: { name: `${item.name} — ${item.color} / ${item.size}` },
+      },
+    })),
+    shipping_options:
+      shipping > 0
+        ? [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: shipping * 100, currency }, display_name: 'Standard Shipping' } }]
+        : [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: 0, currency }, display_name: 'Free Shipping' } }],
+    shipping_address_collection: { allowed_countries: ['CA', 'US'] },
+    success_url: `${FRONTEND_URL}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${FRONTEND_URL}/cart`,
+    metadata: { orderId },
+  }
+}
+
+// A customer who opened Stripe Checkout and then backed out/closed the tab
+// leaves behind a `pending` order (see the comment above — it's written
+// before Stripe redirect) with no way back to payment. This re-opens a fresh
+// Checkout Session for that same order so "pending" in order history isn't a
+// dead end — it's ownership-checked by email so one customer can't resume
+// another's order by guessing an order number.
+checkoutRouter.post('/checkout/resume/:orderNumber', requireCustomer, async (req: CustomerRequest, res) => {
+  try {
+    if (!isStripeConfigured || !stripe) {
+      return res.status(503).json({ error: 'Stripe is not connected yet.' })
+    }
+
+    const order = await orderRepository.findByOrderNumber(req.params.orderNumber)
+    if (!order || order.customer.email?.toLowerCase() !== req.customer!.email.toLowerCase()) {
+      return res.status(404).json({ error: 'Order not found.' })
+    }
+    if (order.paymentStatus !== 'pending') {
+      return res.status(400).json({ error: 'This order has already been paid or is no longer payable.' })
+    }
+
+    const session = await stripe.checkout.sessions.create(
+      buildSessionParams({
+        items: order.items,
+        currency: order.currency,
+        shipping: order.shipping,
+        email: order.customer.email,
+        orderId: order.id,
+      }),
+    )
+
+    await orderRepository.update(order.id, { stripeSessionId: session.id })
+
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('resume-checkout failed', err)
+    res.status(500).json({ error: 'Could not resume checkout. Please try again.' })
   }
 })

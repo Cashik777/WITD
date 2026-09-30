@@ -18,6 +18,8 @@ interface AccountOrder {
 function OrderHistory() {
   const [orders, setOrders] = useState<AccountOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [resuming, setResuming] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/account/orders', { credentials: 'include' })
@@ -26,33 +28,62 @@ function OrderHistory() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handleResume = async (orderNumber: string) => {
+    setResuming(orderNumber)
+    setError(null)
+    try {
+      const res = await fetch(`/api/checkout/resume/${orderNumber}`, { method: 'POST', credentials: 'include' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not resume checkout.')
+      window.location.href = data.url
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not resume checkout.')
+      setResuming(null)
+    }
+  }
+
   if (loading) return <p className="text-sm text-mist">Loading…</p>
   if (orders.length === 0) {
     return <p className="text-sm text-mist">No orders yet — anything you buy with this email will show up here.</p>
   }
 
   return (
-    <div className="border border-line divide-y divide-line">
-      {orders.map((o) => (
-        <div key={o.orderNumber} className="px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-paper">{o.orderNumber}</p>
-              <p className="text-xs text-mist">{new Date(o.createdAt).toLocaleDateString()}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-paper">{formatPrice(o.total, o.currency)}</p>
-              <p className="text-xs text-mist">
-                {o.paymentStatus} · {o.fulfillmentStatus}
-                {o.trackingNumber ? ` · ${o.trackingNumber}` : ''}
+    <div>
+      <div className="border border-line divide-y divide-line">
+        {orders.map((o) => {
+          const pending = o.paymentStatus === 'pending'
+          return (
+            <div key={o.orderNumber} className="px-4 py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-paper">{o.orderNumber}</p>
+                  <p className="text-xs text-mist">{new Date(o.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-paper">{formatPrice(o.total, o.currency)}</p>
+                  <p className="text-xs text-mist">
+                    {o.paymentStatus} · {o.fulfillmentStatus}
+                    {o.trackingNumber ? ` · ${o.trackingNumber}` : ''}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-paper/60">
+                {o.items.map((i) => `${i.name} (${i.color}/${i.size}) ×${i.quantity}`).join(', ')}
               </p>
+              {pending && (
+                <button
+                  onClick={() => handleResume(o.orderNumber)}
+                  disabled={resuming === o.orderNumber}
+                  className="mt-3 px-5 py-2 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
+                >
+                  {resuming === o.orderNumber ? 'Redirecting…' : 'Pay Now'}
+                </button>
+              )}
             </div>
-          </div>
-          <p className="mt-2 text-xs text-paper/60">
-            {o.items.map((i) => `${i.name} (${i.color}/${i.size}) ×${i.quantity}`).join(', ')}
-          </p>
-        </div>
-      ))}
+          )
+        })}
+      </div>
+      {error && <p className="mt-3 text-xs text-[#B5674F]">{error}</p>}
     </div>
   )
 }
