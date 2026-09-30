@@ -23,27 +23,22 @@ const HIT_RADIUS = 20
 const HIT_RADIUS_TOUCH = 34
 const COMPLETE_RATIO = 0.85
 
-// Trace 20 shapes and earn 20% off — progress and the earned code persist
-// in localStorage so it survives a page reload (no account required to
-// play). The claim call itself happens server-side (see the effect below);
-// this is a marketing gimmick, not a guarded reward — see the comment on
-// POST /coupons/claim in the backend for the honest threat model.
+// Trace 20 shapes and earn 20% off. Progress itself is intentionally NOT
+// persisted — a fresh page load always starts the quest over at 20, so
+// there's always a reward available to go earn. That's safe to be generous
+// with because the thing that actually matters (checkout.ts) gates the
+// discount on email, not on the code itself: a code only redeems on an
+// email with no prior paid order, so refreshing for more codes doesn't get
+// anyone more than one working discount per email they control. The earned
+// code+expiry DO get written to localStorage, purely so Checkout.tsx can
+// prefill it without the customer having to copy-paste.
 const QUEST_TOTAL = 20
-const QUEST_REMAINING_KEY = 'witd_quest_remaining'
 const QUEST_COUPON_KEY = 'witd_quest_coupon'
 const QUEST_COUPON_EXPIRES_KEY = 'witd_quest_coupon_expires'
 
 function formatCountdown(ms: number): string {
   const s = Math.max(0, Math.ceil(ms / 1000))
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-}
-
-function readStoredRemaining(): number {
-  if (typeof window === 'undefined') return QUEST_TOTAL
-  const raw = window.localStorage.getItem(QUEST_REMAINING_KEY)
-  if (raw == null) return QUEST_TOTAL // Number(null) is 0, not NaN — has to be checked separately
-  const saved = Number(raw)
-  return Number.isFinite(saved) && saved >= 0 && saved <= QUEST_TOTAL ? saved : QUEST_TOTAL
 }
 
 // Every shape is reduced to a dense vertex path, then resampled down to
@@ -155,40 +150,44 @@ function arrow(s: number): Point[] {
   ])
 }
 
+// Sized a bit smaller than the panel could fit (R ~120 instead of ~150) so
+// the traceable area sits with real margin from the panel edges — easier to
+// reach every point comfortably with a fingertip instead of hugging the
+// border.
 const RAW_SHAPES: { verts: Point[]; closed: boolean }[] = [
-  { verts: circle(140), closed: true },
-  { verts: regularPolygon(3, -90, 150), closed: true },
-  { verts: regularPolygon(3, 90, 150), closed: true },
-  { verts: regularPolygon(4, 0, 150), closed: true },
-  { verts: regularPolygon(4, 45, 150), closed: true },
-  { verts: regularPolygon(5, -90, 150), closed: true },
-  { verts: regularPolygon(6, 0, 150), closed: true },
-  { verts: regularPolygon(7, -90, 150), closed: true },
-  { verts: regularPolygon(8, 0, 150), closed: true },
-  { verts: regularPolygon(9, -90, 150), closed: true },
-  { verts: regularPolygon(10, 0, 150), closed: true },
-  { verts: regularPolygon(11, -90, 150), closed: true },
-  { verts: regularPolygon(12, 0, 150), closed: true },
-  { verts: star(4, 0.45, 0, 150), closed: true },
-  { verts: star(5, 0.5, -90, 150), closed: true },
-  { verts: star(5, 0.65, -90, 150), closed: true },
-  { verts: star(6, 0.55, 0, 150), closed: true },
-  { verts: star(6, 0.7, 0, 150), closed: true },
-  { verts: star(7, 0.55, -90, 150), closed: true },
-  { verts: star(8, 0.6, 0, 150), closed: true },
-  { verts: star(8, 0.45, 0, 150), closed: true },
-  { verts: star(9, 0.55, -90, 150), closed: true },
-  { verts: star(10, 0.6, 0, 150), closed: true },
-  { verts: star(12, 0.65, 0, 150), closed: true },
-  { verts: spiral(2.5, 150, true), closed: false },
-  { verts: spiral(2.5, 150, false), closed: false },
-  { verts: spiral(4, 140, true), closed: false },
-  { verts: heart(8.5), closed: true },
-  { verts: infinity(150), closed: true },
-  { verts: cross(120, 40), closed: true },
-  { verts: arrow(150), closed: true },
-  { verts: flower(5, 150), closed: true },
-  { verts: flower(3, 150), closed: true },
+  { verts: circle(112), closed: true },
+  { verts: regularPolygon(3, -90, 120), closed: true },
+  { verts: regularPolygon(3, 90, 120), closed: true },
+  { verts: regularPolygon(4, 0, 120), closed: true },
+  { verts: regularPolygon(4, 45, 120), closed: true },
+  { verts: regularPolygon(5, -90, 120), closed: true },
+  { verts: regularPolygon(6, 0, 120), closed: true },
+  { verts: regularPolygon(7, -90, 120), closed: true },
+  { verts: regularPolygon(8, 0, 120), closed: true },
+  { verts: regularPolygon(9, -90, 120), closed: true },
+  { verts: regularPolygon(10, 0, 120), closed: true },
+  { verts: regularPolygon(11, -90, 120), closed: true },
+  { verts: regularPolygon(12, 0, 120), closed: true },
+  { verts: star(4, 0.45, 0, 120), closed: true },
+  { verts: star(5, 0.5, -90, 120), closed: true },
+  { verts: star(5, 0.65, -90, 120), closed: true },
+  { verts: star(6, 0.55, 0, 120), closed: true },
+  { verts: star(6, 0.7, 0, 120), closed: true },
+  { verts: star(7, 0.55, -90, 120), closed: true },
+  { verts: star(8, 0.6, 0, 120), closed: true },
+  { verts: star(8, 0.45, 0, 120), closed: true },
+  { verts: star(9, 0.55, -90, 120), closed: true },
+  { verts: star(10, 0.6, 0, 120), closed: true },
+  { verts: star(12, 0.65, 0, 120), closed: true },
+  { verts: spiral(2.5, 120, true), closed: false },
+  { verts: spiral(2.5, 120, false), closed: false },
+  { verts: spiral(4, 112, true), closed: false },
+  { verts: heart(6.8), closed: true },
+  { verts: infinity(120), closed: true },
+  { verts: cross(96, 32), closed: true },
+  { verts: arrow(120), closed: true },
+  { verts: flower(5, 120), closed: true },
+  { verts: flower(3, 120), closed: true },
 ]
 
 // Reduce every raw shape to exactly N checkpoints up front, and shuffle the
@@ -214,15 +213,9 @@ export function IdeaVisual() {
   const transitioning = useRef(false)
   const timeouts = useRef<number[]>([])
 
-  const [remaining, setRemaining] = useState(readStoredRemaining)
-  const [couponCode, setCouponCode] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : window.localStorage.getItem(QUEST_COUPON_KEY)
-  )
-  const [couponExpiresAt, setCouponExpiresAt] = useState<number | null>(() => {
-    if (typeof window === 'undefined') return null
-    const raw = window.localStorage.getItem(QUEST_COUPON_EXPIRES_KEY)
-    return raw ? Number(raw) : null
-  })
+  const [remaining, setRemaining] = useState(QUEST_TOTAL)
+  const [couponCode, setCouponCode] = useState<string | null>(null)
+  const [couponExpiresAt, setCouponExpiresAt] = useState<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [copied, setCopied] = useState(false)
 
@@ -258,7 +251,6 @@ export function IdeaVisual() {
     if (now >= couponExpiresAt) {
       window.localStorage.removeItem(QUEST_COUPON_KEY)
       window.localStorage.removeItem(QUEST_COUPON_EXPIRES_KEY)
-      window.localStorage.setItem(QUEST_REMAINING_KEY, String(QUEST_TOTAL))
       setCouponCode(null)
       setCouponExpiresAt(null)
       setRemaining(QUEST_TOTAL)
@@ -346,12 +338,7 @@ export function IdeaVisual() {
       }, 500)
       timeouts.current.push(t1)
 
-      setRemaining((prev) => {
-        if (prev <= 0) return prev
-        const next = prev - 1
-        window.localStorage.setItem(QUEST_REMAINING_KEY, String(next))
-        return next
-      })
+      setRemaining((prev) => (prev > 0 ? prev - 1 : prev))
     }
 
     // The panel isn't always the viewBox's own 4:5 ratio (it's a square on
@@ -426,6 +413,13 @@ export function IdeaVisual() {
 
   return (
     <div className="relative w-full h-full overflow-hidden rounded-t-2xl bg-[#161513] border border-line flex flex-col">
+      <style>{`
+        @keyframes wq-pop {
+          0% { transform: scale(0.82); opacity: 0; }
+          65% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
       <div className="shrink-0 text-center py-3 px-4 border-b border-line">
         {couponCode ? (
           <button
@@ -441,19 +435,21 @@ export function IdeaVisual() {
               20% off unlocked — tap to copy
               {couponExpiresAt != null && ` · ${formatCountdown(couponExpiresAt - now)}`}
             </p>
-            <p className="mt-0.5 text-base font-display italic tracking-wide text-paper">
+            <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper animate-[wq-pop_420ms_ease]">
               {copied ? 'Copied!' : couponCode}
             </p>
           </button>
+        ) : remaining < QUEST_TOTAL ? (
+          <div key={remaining} className="animate-[wq-pop_420ms_ease]">
+            <p className="text-[10px] tracking-widest uppercase text-mist">You got</p>
+            <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper">
+              +{QUEST_TOTAL - remaining}% off your first order
+            </p>
+          </div>
         ) : (
-          <>
-            <p className="text-[10px] tracking-widest uppercase text-mist">
-              {remaining < QUEST_TOTAL ? 'In progress' : 'A small reward'}
-            </p>
-            <p className="mt-0.5 text-base font-display italic tracking-wide text-paper">
-              {remaining < QUEST_TOTAL ? `+${QUEST_TOTAL - remaining}% off your first order` : 'Trace the shape'}
-            </p>
-          </>
+          <p className="text-lg font-display italic tracking-wide text-paper animate-pulse">
+            Connect all the dots
+          </p>
         )}
       </div>
 
