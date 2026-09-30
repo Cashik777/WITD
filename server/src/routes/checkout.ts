@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { productRepository } from '../data/productsDb.js'
 import { orderRepository } from '../data/db.js'
+import { couponRepository } from '../data/couponsDb.js'
 import { generateOrderNumber } from '../lib/orderNumber.js'
 import { requireCustomer, type CustomerRequest } from '../lib/requireCustomer.js'
 import type { Order, OrderItem } from '../models/Order.js'
@@ -76,8 +77,29 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
     if (!currency) throw new Error('unreachable: currency was never set')
 
     const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+
+    // Coupon is optional — the homepage trace-the-shape toy hands one out
+    // after 20 completed shapes. Only honored on a customer's first PAID
+    // order, and single-use (markUsed is an atomic compare-and-set in the
+    // repository, so two concurrent redemptions can't both succeed).
+    let discount = 0
+    let appliedCouponCode: string | null = null
+    const rawCouponCode = req.body?.couponCode ? String(req.body.couponCode).trim().toUpperCase() : ''
+    if (rawCouponCode) {
+      const coupon = await couponRepository.findByCode(rawCouponCode)
+      if (!coupon) return res.status(400).json({ error: 'That code is not valid.' })
+      if (coupon.used) return res.status(400).json({ error: 'That code has already been used.' })
+      const priorOrders = await orderRepository.findByEmail(email)
+      if (priorOrders.some((o) => o.paymentStatus === 'paid')) {
+        return res.status(400).json({ error: 'This code is only valid on your first order.' })
+      }
+      discount = Math.round(subtotal * (coupon.percentOff / 100) * 100) / 100
+      appliedCouponCode = coupon.code
+    }
+
     const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING
-    const total = subtotal + shipping
+    const total = subtotal - discount + shipping
+    const discountRate = subtotal > 0 ? discount / subtotal : 0
 
     // Create our own order record *before* redirecting to Stripe, in
     // `pending` state. The webhook flips it to `paid` — fulfillment is only
@@ -93,6 +115,8 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       customer: { email },
       items,
       subtotal,
+      discount,
+      couponCode: appliedCouponCode,
       shipping,
       tax: 0,
       total,
@@ -107,11 +131,12 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
     }
 
     const session = await stripe.checkout.sessions.create(
-      buildSessionParams({ items, currency, shipping, email, orderId }),
+      buildSessionParams({ items, currency, shipping, email, orderId, discountRate }),
     )
 
     order.stripeSessionId = session.id
     await orderRepository.create(order)
+    if (appliedCouponCode) await couponRepository.markUsed(appliedCouponCode, email)
 
     res.json({ url: session.url })
   } catch (err) {
@@ -126,8 +151,9 @@ function buildSessionParams(args: {
   shipping: number
   email: string | undefined
   orderId: string
+  discountRate?: number
 }): import('stripe').default.Checkout.SessionCreateParams {
-  const { items, currency, shipping, email, orderId } = args
+  const { items, currency, shipping, email, orderId, discountRate = 0 } = args
   return {
     mode: 'payment',
     customer_email: email,
@@ -135,8 +161,11 @@ function buildSessionParams(args: {
       quantity: item.quantity,
       price_data: {
         currency,
-        unit_amount: Math.round(item.unitPrice * 100),
-        product_data: { name: `${item.name} — ${item.color} / ${item.size}` },
+        unit_amount: Math.round(item.unitPrice * (1 - discountRate) * 100),
+        product_data: {
+          name: `${item.name} — ${item.color} / ${item.size}`,
+          ...(discountRate > 0 ? { description: `${Math.round(discountRate * 100)}% off applied` } : {}),
+        },
       },
     })),
     shipping_options:
@@ -177,6 +206,7 @@ checkoutRouter.post('/checkout/resume/:orderNumber', requireCustomer, async (req
         shipping: order.shipping,
         email: order.customer.email,
         orderId: order.id,
+        discountRate: order.subtotal > 0 ? order.discount / order.subtotal : 0,
       }),
     )
 

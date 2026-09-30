@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CursorTrail } from './CursorTrail'
 
 // A small "trace the shape" toy standing in for real photography on the
@@ -21,6 +21,21 @@ const CENTER: Point = { x: 200, y: 250 }
 const N = 48
 const HIT_RADIUS = 20
 const COMPLETE_RATIO = 0.92
+
+// Trace 20 shapes and earn 20% off — progress and the earned code persist
+// in localStorage so it survives a page reload (no account required to
+// play). The claim call itself happens server-side (see the effect below);
+// this is a marketing gimmick, not a guarded reward — see the comment on
+// POST /coupons/claim in the backend for the honest threat model.
+const QUEST_TOTAL = 20
+const QUEST_REMAINING_KEY = 'witd_quest_remaining'
+const QUEST_COUPON_KEY = 'witd_quest_coupon'
+
+function readStoredRemaining(): number {
+  if (typeof window === 'undefined') return QUEST_TOTAL
+  const saved = Number(window.localStorage.getItem(QUEST_REMAINING_KEY))
+  return Number.isFinite(saved) && saved >= 0 && saved <= QUEST_TOTAL ? saved : QUEST_TOTAL
+}
 
 // Every shape is reduced to a dense vertex path, then resampled down to
 // exactly N evenly-spaced-by-arc-length checkpoints — so wildly different
@@ -182,15 +197,37 @@ export function IdeaVisual() {
   const svgRef = useRef<SVGSVGElement>(null)
   const groupRef = useRef<SVGGElement>(null)
   const ghostRef = useRef<SVGPolylineElement>(null)
-  const hintRef = useRef<HTMLParagraphElement>(null)
   const pointRefs = useRef<(SVGCircleElement | null)[]>([])
   const segRefs = useRef<(SVGLineElement | null)[]>([])
   const shapeIndex = useRef(0)
   const lit = useRef<boolean[]>(new Array(N).fill(false))
   const litCount = useRef(0)
   const transitioning = useRef(false)
-  const hintHidden = useRef(false)
   const timeouts = useRef<number[]>([])
+
+  const [remaining, setRemaining] = useState(readStoredRemaining)
+  const [couponCode, setCouponCode] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : window.localStorage.getItem(QUEST_COUPON_KEY)
+  )
+  const [copied, setCopied] = useState(false)
+
+  // Fires exactly once, the moment the 20th shape is completed — claims the
+  // code server-side and persists it so the reward survives a reload.
+  useEffect(() => {
+    if (remaining > 0 || couponCode) return
+    let cancelled = false
+    fetch('/api/coupons/claim', { method: 'POST' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled || !data.code) return
+        window.localStorage.setItem(QUEST_COUPON_KEY, data.code)
+        setCouponCode(data.code)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [remaining, couponCode])
 
   useEffect(() => {
     const svg = svgRef.current
@@ -269,6 +306,13 @@ export function IdeaVisual() {
         timeouts.current.push(t2)
       }, 500)
       timeouts.current.push(t1)
+
+      setRemaining((prev) => {
+        if (prev <= 0) return prev
+        const next = prev - 1
+        window.localStorage.setItem(QUEST_REMAINING_KEY, String(next))
+        return next
+      })
     }
 
     const toSvgPoint = (clientX: number, clientY: number) => {
@@ -301,10 +345,6 @@ export function IdeaVisual() {
       }
       if (newlyLit) {
         updateSegments()
-        if (!hintHidden.current && hintRef.current) {
-          hintHidden.current = true
-          hintRef.current.style.opacity = '0'
-        }
         if (litCount.current >= Math.ceil(N * COMPLETE_RATIO)) {
           startTransition()
         }
@@ -373,12 +413,26 @@ export function IdeaVisual() {
         </g>
       </svg>
       <CursorTrail color="#F4F2EC" />
-      <p
-        ref={hintRef}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] tracking-widest uppercase text-paper/40 pointer-events-none transition-opacity duration-500"
-      >
-        Trace the shape
-      </p>
+      {couponCode ? (
+        <button
+          onClick={() => {
+            navigator.clipboard?.writeText(couponCode).then(() => {
+              setCopied(true)
+              window.setTimeout(() => setCopied(false), 1500)
+            })
+          }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto"
+        >
+          <p className="text-[10px] tracking-widest uppercase text-paper/70">20% off unlocked — tap to copy</p>
+          <p className="mt-1 text-sm font-display tracking-[0.2em] text-paper">
+            {copied ? 'Copied!' : couponCode}
+          </p>
+        </button>
+      ) : (
+        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] tracking-widest uppercase text-paper/40 pointer-events-none">
+          {remaining < QUEST_TOTAL ? `${remaining} more for 20% off` : 'Trace the shape'}
+        </p>
+      )}
     </div>
   )
 }

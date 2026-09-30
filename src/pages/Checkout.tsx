@@ -27,9 +27,18 @@ export default function Checkout() {
   const { lines, subtotal } = useCart()
   const { email: accountEmail } = useCustomerAuth()
   const [email, setEmail] = useState('')
+  const [couponCode, setCouponCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [summaryOpen, setSummaryOpen] = useState(false)
+
+  // The trace-the-shape toy on the homepage writes its earned code here once
+  // 20 shapes are completed — prefill it so the reward doesn't require
+  // copy-pasting, but leave it editable.
+  useEffect(() => {
+    const earned = window.localStorage.getItem('witd_quest_coupon')
+    if (earned) setCouponCode(earned)
+  }, [])
 
   // Logged-in customers shouldn't have to retype an email we already know —
   // prefill (and lock) it from their account instead. useState's initializer
@@ -61,6 +70,7 @@ export default function Checkout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
+          couponCode: couponCode.trim() || undefined,
           items: lines.map((l) => ({
             productId: l.productId,
             size: l.size,
@@ -152,6 +162,16 @@ export default function Checkout() {
             className={`w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors ${accountEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
           />
           {accountEmail && <p className="mt-2 text-xs text-mist">Using your account email.</p>}
+
+          <label className="block text-xs tracking-widest uppercase text-paper mb-3 mt-6">Coupon Code</label>
+          <input
+            type="text"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            placeholder="Optional"
+            className="w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors tracking-widest"
+          />
+
           <p className="mt-3 text-xs text-mist leading-relaxed">
             Shipping address and payment are collected securely on the next step through Stripe Checkout — WITD
             never sees or stores your card details.

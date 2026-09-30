@@ -31,6 +31,8 @@ const CREATE_TABLE_SQL = `
 const MIGRATE_SQL = `
   ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number TEXT;
   ALTER TABLE orders ADD COLUMN IF NOT EXISTS discord_verified_at TIMESTAMPTZ;
+  ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC NOT NULL DEFAULT 0;
+  ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
   CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
 `
 
@@ -44,6 +46,8 @@ function rowToOrder(row: Record<string, unknown>): Order {
     customer: { email: (row.customer_email as string | null) ?? undefined },
     items: row.items as Order['items'],
     subtotal: Number(row.subtotal),
+    discount: Number(row.discount ?? 0),
+    couponCode: (row.coupon_code as string | null) ?? null,
     shipping: Number(row.shipping),
     tax: Number(row.tax),
     total: Number(row.total),
@@ -118,9 +122,9 @@ export class PostgresOrderRepository implements OrderRepository {
     await this.pool.query(
       `INSERT INTO orders (
         id, order_number, stripe_session_id, payment_status, fulfillment_status, customer_email,
-        items, subtotal, shipping, tax, total, currency, shipping_address,
+        items, subtotal, discount, coupon_code, shipping, tax, total, currency, shipping_address,
         created_at, updated_at, fulfillment_provider, fulfillment_order_id, tracking_number, discord_verified_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
       [
         order.id,
         order.orderNumber,
@@ -130,6 +134,8 @@ export class PostgresOrderRepository implements OrderRepository {
         order.customer.email ?? null,
         JSON.stringify(order.items),
         order.subtotal,
+        order.discount,
+        order.couponCode,
         order.shipping,
         order.tax,
         order.total,

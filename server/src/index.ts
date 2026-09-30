@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser'
 import { checkoutRouter } from './routes/checkout.js'
 import { webhookRouter } from './routes/webhooks.js'
 import { ordersRouter } from './routes/orders.js'
+import { couponsRouter } from './routes/coupons.js'
 import { discordAuthRouter } from './routes/discordAuth.js'
 import { productsRouter } from './routes/products.js'
 import { categoriesRouter } from './routes/categories.js'
@@ -40,6 +41,7 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 app.use(express.json())
 app.use('/api', checkoutRouter)
 app.use('/api', ordersRouter)
+app.use('/api', couponsRouter)
 app.use('/api', discordAuthRouter)
 app.use('/api', productsRouter)
 app.use('/api', categoriesRouter)

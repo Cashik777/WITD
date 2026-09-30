@@ -37,6 +37,8 @@ export interface Order {
   customer: { email?: string }
   items: OrderItem[]
   subtotal: number
+  discount: number
+  couponCode: string | null
   shipping: number
   tax: number
   total: number
