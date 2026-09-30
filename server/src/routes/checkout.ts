@@ -102,7 +102,7 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
 
     const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING
     const total = subtotal - discount + shipping
-    const discountRate = subtotal > 0 ? discount / subtotal : 0
+    const percentOff = appliedCouponCode ? discount / subtotal * 100 : 0
 
     // Create our own order record *before* redirecting to Stripe, in
     // `pending` state. The webhook flips it to `paid` — fulfillment is only
@@ -134,7 +134,7 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
     }
 
     const session = await stripe.checkout.sessions.create(
-      buildSessionParams({ items, currency, shipping, email, orderId, discountRate }),
+      await buildSessionParams({ items, currency, shipping, email, orderId, percentOff, couponCode: appliedCouponCode }),
     )
 
     order.stripeSessionId = session.id
@@ -148,15 +148,34 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
   }
 })
 
-function buildSessionParams(args: {
+// A coupon is applied as a real Stripe Coupon/discount rather than by just
+// shaving the line item prices down — that way Stripe's own hosted page
+// renders a distinct "Discount" row in the order summary (coupon name and
+// the amount it took off), so the customer sees plainly that a discount was
+// applied instead of just noticing smaller prices and maybe not connecting
+// the dots. A fresh one-off Coupon object is created per checkout; it isn't
+// reused, so there's nothing to clean up afterward.
+async function buildSessionParams(args: {
   items: OrderItem[]
   currency: string
   shipping: number
   email: string | undefined
   orderId: string
-  discountRate?: number
-}): import('stripe').default.Checkout.SessionCreateParams {
-  const { items, currency, shipping, email, orderId, discountRate = 0 } = args
+  percentOff?: number
+  couponCode?: string | null
+}): Promise<import('stripe').default.Checkout.SessionCreateParams> {
+  const { items, currency, shipping, email, orderId, percentOff = 0, couponCode } = args
+
+  let discounts: import('stripe').default.Checkout.SessionCreateParams.Discount[] | undefined
+  if (percentOff > 0 && stripe) {
+    const stripeCoupon = await stripe.coupons.create({
+      percent_off: Math.round(percentOff * 100) / 100,
+      duration: 'once',
+      name: couponCode ? `WITD ${couponCode}` : 'WITD discount',
+    })
+    discounts = [{ coupon: stripeCoupon.id }]
+  }
+
   return {
     mode: 'payment',
     customer_email: email,
@@ -164,13 +183,11 @@ function buildSessionParams(args: {
       quantity: item.quantity,
       price_data: {
         currency,
-        unit_amount: Math.round(item.unitPrice * (1 - discountRate) * 100),
-        product_data: {
-          name: `${item.name} — ${item.color} / ${item.size}`,
-          ...(discountRate > 0 ? { description: `${Math.round(discountRate * 100)}% off applied` } : {}),
-        },
+        unit_amount: Math.round(item.unitPrice * 100),
+        product_data: { name: `${item.name} — ${item.color} / ${item.size}` },
       },
     })),
+    discounts,
     shipping_options:
       shipping > 0
         ? [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: shipping * 100, currency }, display_name: 'Standard Shipping' } }]
@@ -203,13 +220,14 @@ checkoutRouter.post('/checkout/resume/:orderNumber', requireCustomer, async (req
     }
 
     const session = await stripe.checkout.sessions.create(
-      buildSessionParams({
+      await buildSessionParams({
         items: order.items,
         currency: order.currency,
         shipping: order.shipping,
         email: order.customer.email,
         orderId: order.id,
-        discountRate: order.subtotal > 0 ? order.discount / order.subtotal : 0,
+        percentOff: order.subtotal > 0 ? (order.discount / order.subtotal) * 100 : 0,
+        couponCode: order.couponCode,
       }),
     )
 
