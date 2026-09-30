@@ -33,7 +33,9 @@ const QUEST_COUPON_KEY = 'witd_quest_coupon'
 
 function readStoredRemaining(): number {
   if (typeof window === 'undefined') return QUEST_TOTAL
-  const saved = Number(window.localStorage.getItem(QUEST_REMAINING_KEY))
+  const raw = window.localStorage.getItem(QUEST_REMAINING_KEY)
+  if (raw == null) return QUEST_TOTAL // Number(null) is 0, not NaN — has to be checked separately
+  const saved = Number(raw)
   return Number.isFinite(saved) && saved >= 0 && saved <= QUEST_TOTAL ? saved : QUEST_TOTAL
 }
 
