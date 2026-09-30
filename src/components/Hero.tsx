@@ -73,16 +73,18 @@ export function Hero() {
         <svg
           viewBox="0 0 1600 1000"
           preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 w-full h-full opacity-70 rotate-180"
+          className="absolute inset-0 w-full h-full opacity-70"
           aria-hidden="true"
         >
           <rect width="1600" height="1000" fill="#0B0B0A" />
-          <circle ref={ring1Ref} cx={CENTER.x} cy={CENTER.y} r="340" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
-          <circle ref={ring2Ref} cx={CENTER.x} cy={CENTER.y} r="230" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
-          <path ref={arc1Ref} d="M 900 420 A 260 260 0 0 1 1420 420" fill="none" stroke="#8FA98F" strokeWidth="2.5" opacity="0.35" style={originStyle} />
-          <path ref={arc2Ref} d="M 940 340 A 260 300 0 0 1 1400 500" fill="none" stroke="#7E93B0" strokeWidth="2.5" opacity="0.3" style={originStyle} />
-          <path ref={arc3Ref} d="M 960 520 A 260 260 0 0 1 1360 320" fill="none" stroke="#AD7B6E" strokeWidth="2.5" opacity="0.3" style={originStyle} />
-          <circle ref={pupilRef} cx={CENTER.x} cy={CENTER.y} r="26" fill="#0B0B0A" stroke="#F4F2EC" strokeWidth="2" opacity="0.55" style={originStyle} />
+          <g style={{ transform: 'rotate(180deg)', ...originStyle }}>
+            <circle ref={ring1Ref} cx={CENTER.x} cy={CENTER.y} r="340" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
+            <circle ref={ring2Ref} cx={CENTER.x} cy={CENTER.y} r="230" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
+            <path ref={arc1Ref} d="M 900 420 A 260 260 0 0 1 1420 420" fill="none" stroke="#8FA98F" strokeWidth="2.5" opacity="0.35" style={originStyle} />
+            <path ref={arc2Ref} d="M 940 340 A 260 300 0 0 1 1400 500" fill="none" stroke="#7E93B0" strokeWidth="2.5" opacity="0.3" style={originStyle} />
+            <path ref={arc3Ref} d="M 960 520 A 260 260 0 0 1 1360 320" fill="none" stroke="#AD7B6E" strokeWidth="2.5" opacity="0.3" style={originStyle} />
+            <circle ref={pupilRef} cx={CENTER.x} cy={CENTER.y} r="26" fill="#0B0B0A" stroke="#F4F2EC" strokeWidth="2" opacity="0.55" style={originStyle} />
+          </g>
         </svg>
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/30" />
