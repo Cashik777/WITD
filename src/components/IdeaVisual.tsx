@@ -17,15 +17,15 @@ interface Burst {
   start: number
 }
 
-const SPACING = 15
-const BUBBLE_R = 7
-const POP_RADIUS = 16
-const MAX_SEGMENTS = 50
+const SPACING = 32
+const BUBBLE_R = 16
+const POP_RADIUS = 34
+const MAX_SEGMENTS = 30
 const GROWTH_INTERVAL = 650
 const BURST_DURATION = 320
 const WANDER_STRENGTH = 0.06
 const SPEED = 0.09
-const MARGIN = 30
+const MARGIN = 40
 const FOLLOW_EASE = 0.35
 
 export function IdeaVisual() {
@@ -66,16 +66,19 @@ export function IdeaVisual() {
     let respawnAt = 0
     let hintShown = false
 
+    // Starts from a single bubble at a random spot each time — not pinned to
+    // the center or an edge — and grows outward from there via the same
+    // per-interval growth below.
     const spawnSnake = () => {
-      const cx = width / 2
-      const cy = height / 2
       const angle = Math.random() * Math.PI * 2
       head.vx = Math.cos(angle) * SPEED
       head.vy = Math.sin(angle) * SPEED
-      segments = Array.from({ length: 6 }, (_, i) => ({
-        x: cx - Math.cos(angle) * i * SPACING,
-        y: cy - Math.sin(angle) * i * SPACING,
-      }))
+      segments = [
+        {
+          x: MARGIN + Math.random() * (width - MARGIN * 2),
+          y: MARGIN + Math.random() * (height - MARGIN * 2),
+        },
+      ]
     }
     spawnSnake()
 
@@ -200,7 +203,7 @@ export function IdeaVisual() {
         ctx.beginPath()
         ctx.strokeStyle = `rgba(244,242,236,${1 - t})`
         ctx.lineWidth = 1.5
-        ctx.arc(b.x, b.y, BUBBLE_R + t * 14, 0, Math.PI * 2)
+        ctx.arc(b.x, b.y, BUBBLE_R + t * 28, 0, Math.PI * 2)
         ctx.stroke()
       }
 
