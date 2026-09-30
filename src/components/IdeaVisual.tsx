@@ -20,7 +20,8 @@ const VIEW_H = 500
 const CENTER: Point = { x: 200, y: 250 }
 const N = 48
 const HIT_RADIUS = 20
-const COMPLETE_RATIO = 0.92
+const HIT_RADIUS_TOUCH = 34
+const COMPLETE_RATIO = 0.85
 
 // Trace 20 shapes and earn 20% off — progress and the earned code persist
 // in localStorage so it survives a page reload (no account required to
@@ -353,15 +354,24 @@ export function IdeaVisual() {
       })
     }
 
+    // The panel isn't always the viewBox's own 4:5 ratio (it's a square on
+    // mobile), so the default preserveAspectRatio="xMidYMid meet" letterboxes
+    // the content — centers it and scales it to fit the narrower dimension,
+    // not a plain stretch-to-fill. A naive rect.width/rect.height ratio
+    // ignores that letterbox offset entirely, which quietly put every touch
+    // point off from where the shape is actually drawn on a non-4:5 panel.
     const toSvgPoint = (clientX: number, clientY: number) => {
       const rect = svg.getBoundingClientRect()
+      const scale = Math.min(rect.width / VIEW_W, rect.height / VIEW_H)
+      const offsetX = (rect.width - VIEW_W * scale) / 2
+      const offsetY = (rect.height - VIEW_H * scale) / 2
       return {
-        x: ((clientX - rect.left) / rect.width) * VIEW_W,
-        y: ((clientY - rect.top) / rect.height) * VIEW_H,
+        x: (clientX - rect.left - offsetX) / scale,
+        y: (clientY - rect.top - offsetY) / scale,
       }
     }
 
-    const handlePoint = (clientX: number, clientY: number) => {
+    const handlePoint = (clientX: number, clientY: number, hitRadius: number) => {
       if (transitioning.current) return
       const p = toSvgPoint(clientX, clientY)
       const pts = SHAPES[shapeIndex.current].points
@@ -370,7 +380,7 @@ export function IdeaVisual() {
         if (lit.current[i]) continue
         const dx = p.x - pts[i].x
         const dy = p.y - pts[i].y
-        if (dx * dx + dy * dy <= HIT_RADIUS * HIT_RADIUS) {
+        if (dx * dx + dy * dy <= hitRadius * hitRadius) {
           lit.current[i] = true
           litCount.current++
           newlyLit = true
@@ -389,14 +399,16 @@ export function IdeaVisual() {
       }
     }
 
-    const onMouseMove = (e: MouseEvent) => handlePoint(e.clientX, e.clientY)
+    const onMouseMove = (e: MouseEvent) => handlePoint(e.clientX, e.clientY, HIT_RADIUS)
     // A touchmove here would otherwise just scroll the page — preventDefault
-    // so dragging a finger traces the shape instead, the same as a mouse.
+    // so dragging a finger traces the shape instead, the same as a mouse. A
+    // fingertip is far less precise than a cursor, so touch gets a
+    // noticeably bigger hit radius than the mouse does.
     const onTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0]
       if (!touch) return
       e.preventDefault()
-      handlePoint(touch.clientX, touch.clientY)
+      handlePoint(touch.clientX, touch.clientY, HIT_RADIUS_TOUCH)
     }
 
     applyShape(shapeIndex.current)
@@ -459,18 +471,18 @@ export function IdeaVisual() {
               window.setTimeout(() => setCopied(false), 1500)
             })
           }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto bg-paper px-5 py-2.5 shadow-[0_0_24px_rgba(244,242,236,0.25)]"
         >
-          <p className="text-[10px] tracking-widest uppercase text-paper/70">
+          <p className="text-[10px] tracking-widest uppercase text-black/60">
             20% off unlocked — tap to copy
-            {couponExpiresAt != null && ` · expires in ${formatCountdown(couponExpiresAt - now)}`}
+            {couponExpiresAt != null && ` · ${formatCountdown(couponExpiresAt - now)}`}
           </p>
-          <p className="mt-1 text-sm font-display tracking-[0.2em] text-paper">
+          <p className="mt-0.5 text-base font-display tracking-[0.2em] text-black">
             {copied ? 'Copied!' : couponCode}
           </p>
         </button>
       ) : (
-        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] tracking-widest uppercase text-paper/40 pointer-events-none">
+        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs tracking-widest uppercase text-paper bg-black/70 border border-paper/30 px-4 py-2 pointer-events-none">
           {remaining < QUEST_TOTAL ? `+${QUEST_TOTAL - remaining}% off your first order` : 'Trace the shape'}
         </p>
       )}

@@ -38,11 +38,19 @@ export function CommunityVisual() {
     const svg = svgRef.current
     if (!svg) return
 
+    // Accounts for preserveAspectRatio="xMidYMid meet" letterboxing (centers
+    // and uniformly scales to the narrower dimension) rather than assuming
+    // the rendered box is a plain stretch-to-fill of the viewBox — keeps
+    // pointer coordinates correct even if this panel's aspect ratio ever
+    // stops matching the viewBox's 4:3.
     const toSvgPoint = (clientX: number, clientY: number) => {
       const rect = svg.getBoundingClientRect()
+      const scale = Math.min(rect.width / VIEW_W, rect.height / VIEW_H)
+      const offsetX = (rect.width - VIEW_W * scale) / 2
+      const offsetY = (rect.height - VIEW_H * scale) / 2
       return {
-        x: ((clientX - rect.left) / rect.width) * VIEW_W,
-        y: ((clientY - rect.top) / rect.height) * VIEW_H,
+        x: (clientX - rect.left - offsetX) / scale,
+        y: (clientY - rect.top - offsetY) / scale,
       }
     }
 
