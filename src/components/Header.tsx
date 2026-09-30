@@ -58,11 +58,14 @@ export function Header() {
                 <Link
                   key={link.label}
                   to={link.to}
-                  className={`text-xs tracking-widest uppercase text-paper/80 hover:text-paper transition-colors duration-200 pb-1 border-b ${
-                    isActive ? 'border-paper text-paper' : 'border-transparent'
-                  }`}
+                  className="relative group text-xs tracking-widest uppercase text-paper/80 hover:text-paper transition-colors duration-200 pb-1"
                 >
                   {link.label}
+                  <span
+                    className={`absolute left-0 -bottom-0.5 h-px w-full bg-paper origin-left transition-transform duration-300 ease-witd ${
+                      isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                    }`}
+                  />
                 </Link>
               )
             })}

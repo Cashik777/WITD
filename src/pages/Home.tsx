@@ -52,12 +52,22 @@ export default function Home() {
         <div className="grid md:grid-cols-3 gap-6">
           {featured.map((product) => (
             <Link key={product.id} to={`/product/${product.slug}`} className="group block">
-              <div className="aspect-[3/4] bg-[#151412] overflow-hidden">
+              <div className="relative aspect-[3/4] bg-[#151412] overflow-hidden">
                 <img
                   src={product.images[0]}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-witd"
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-witd group-hover:scale-105 ${
+                    product.hoverImage ? 'group-hover:opacity-0' : ''
+                  }`}
                 />
+                {product.hoverImage && (
+                  <img
+                    src={product.hoverImage}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover scale-105 opacity-0 transition-opacity duration-700 ease-witd group-hover:opacity-100"
+                  />
+                )}
               </div>
               <p className="mt-4 font-display text-lg text-paper">{product.name}</p>
             </Link>

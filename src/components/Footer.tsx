@@ -54,8 +54,9 @@ export function Footer() {
             <ul className="space-y-2.5">
               {col.links.map((link) => (
                 <li key={link.label}>
-                  <Link to={link.to} className="text-sm text-mist hover:text-paper transition-colors">
+                  <Link to={link.to} className="relative inline-block group text-sm text-mist hover:text-paper transition-colors duration-200">
                     {link.label}
+                    <span className="absolute left-0 -bottom-0.5 h-px w-full bg-paper scale-x-0 origin-left transition-transform duration-300 ease-witd group-hover:scale-x-100" />
                   </Link>
                 </li>
               ))}
@@ -68,8 +69,9 @@ export function Footer() {
         <p className="text-xs text-mist">&copy; {new Date().getFullYear()} WITD. All rights reserved.</p>
         <div className="flex gap-5">
           {['Instagram', 'TikTok', 'X'].map((social) => (
-            <a key={social} href="#" className="text-xs text-mist hover:text-paper transition-colors">
+            <a key={social} href="#" className="relative inline-block group text-xs text-mist hover:text-paper transition-colors duration-200">
               {social}
+              <span className="absolute left-0 -bottom-0.5 h-px w-full bg-paper scale-x-0 origin-left transition-transform duration-300 ease-witd group-hover:scale-x-100" />
             </a>
           ))}
         </div>

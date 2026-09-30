@@ -1,3 +1,5 @@
+import { CursorTrail } from './CursorTrail'
+
 // Abstract stand-in for real photography on the homepage "WITD Idea" panel —
 // a single point of focus with awareness rippling outward through scattered
 // noise, echoing the copy (noticing the dream instead of just living inside
@@ -42,6 +44,7 @@ export function IdeaVisual() {
         <circle cx="200" cy="235" r="26" fill="url(#idea-point)" />
         <circle cx="200" cy="235" r="3.5" fill="#F4F2EC" />
       </svg>
+      <CursorTrail color="#F4F2EC" />
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { CursorTrail } from './CursorTrail'
+
 // Abstract stand-in for real photography on the "Join the community" panel —
 // an organic node network (closer to neurons firing than a logo lockup):
 // each point connects to its nearest neighbors rather than radiating from
@@ -38,6 +40,7 @@ export function CommunityVisual() {
           <circle key={i} cx={n.x} cy={n.y} r={i % 4 === 0 ? 3.5 : 2.5} fill="#F4F2EC" fillOpacity="0.55" />
         ))}
       </svg>
+      <CursorTrail color="#F4F2EC" />
     </div>
   )
 }
