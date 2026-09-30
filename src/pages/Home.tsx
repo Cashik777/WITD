@@ -28,7 +28,7 @@ export default function Home() {
 
       <section className="bg-[#0F0F0D] border-y border-line">
         <div className="max-w-content mx-auto px-5 md:px-8 py-24 md:py-32 grid md:grid-cols-2 gap-12 items-center">
-          <div className="aspect-[4/5] order-2 md:order-1">
+          <div className="aspect-square md:aspect-[4/5] order-2 md:order-1">
             <IdeaVisual />
           </div>
           <div className="order-1 md:order-2">
