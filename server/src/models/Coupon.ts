@@ -5,5 +5,6 @@ export interface Coupon {
   used: boolean
   usedByEmail: string | null
   createdAt: string
+  expiresAt: string
   usedAt: string | null
 }

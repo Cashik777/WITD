@@ -34,10 +34,14 @@ export default function Checkout() {
 
   // The trace-the-shape toy on the homepage writes its earned code here once
   // 20 shapes are completed — prefill it so the reward doesn't require
-  // copy-pasting, but leave it editable.
+  // copy-pasting, but leave it editable. Skip a code that's already expired
+  // (the toy itself clears these keys once it notices, but that only runs
+  // while the homepage panel is mounted, so a stale pair can still be
+  // sitting in localStorage if the customer jumped straight to checkout).
   useEffect(() => {
     const earned = window.localStorage.getItem('witd_quest_coupon')
-    if (earned) setCouponCode(earned)
+    const expiresAt = Number(window.localStorage.getItem('witd_quest_coupon_expires'))
+    if (earned && Number.isFinite(expiresAt) && expiresAt > Date.now()) setCouponCode(earned)
   }, [])
 
   // Logged-in customers shouldn't have to retype an email we already know —

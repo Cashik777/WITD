@@ -11,8 +11,15 @@ const CREATE_TABLE_SQL = `
     used BOOLEAN NOT NULL DEFAULT false,
     used_by_email TEXT,
     created_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ,
     used_at TIMESTAMPTZ
   );
+`
+
+// expires_at was added after the table already existed in production —
+// ADD COLUMN IF NOT EXISTS is safe to re-run and never touches existing rows.
+const MIGRATE_SQL = `
+  ALTER TABLE coupons ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 `
 
 function rowToCoupon(row: Record<string, unknown>): Coupon {
@@ -23,6 +30,9 @@ function rowToCoupon(row: Record<string, unknown>): Coupon {
     used: row.used as boolean,
     usedByEmail: (row.used_by_email as string | null) ?? null,
     createdAt: (row.created_at as Date).toISOString(),
+    // Rows created before expires_at existed have none — treat as already
+    // expired (epoch) rather than pretending they're valid indefinitely.
+    expiresAt: row.expires_at ? (row.expires_at as Date).toISOString() : new Date(0).toISOString(),
     usedAt: row.used_at ? (row.used_at as Date).toISOString() : null,
   }
 }
@@ -33,7 +43,10 @@ export class PostgresCouponRepository implements CouponRepository {
 
   constructor(_connectionString: string) {
     this.pool = getPool()
-    this.ready = this.pool.query(CREATE_TABLE_SQL).then(() => undefined)
+    this.ready = this.pool
+      .query(CREATE_TABLE_SQL)
+      .then(() => this.pool.query(MIGRATE_SQL))
+      .then(() => undefined)
   }
 
   async ping(): Promise<boolean> {
@@ -49,9 +62,18 @@ export class PostgresCouponRepository implements CouponRepository {
   async create(coupon: Coupon): Promise<Coupon> {
     await this.ready
     await this.pool.query(
-      `INSERT INTO coupons (id, code, percent_off, used, used_by_email, created_at, used_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [coupon.id, coupon.code, coupon.percentOff, coupon.used, coupon.usedByEmail, coupon.createdAt, coupon.usedAt]
+      `INSERT INTO coupons (id, code, percent_off, used, used_by_email, created_at, expires_at, used_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [
+        coupon.id,
+        coupon.code,
+        coupon.percentOff,
+        coupon.used,
+        coupon.usedByEmail,
+        coupon.createdAt,
+        coupon.expiresAt,
+        coupon.usedAt,
+      ]
     )
     return coupon
   }

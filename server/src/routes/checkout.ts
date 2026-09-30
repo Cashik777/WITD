@@ -89,6 +89,9 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       const coupon = await couponRepository.findByCode(rawCouponCode)
       if (!coupon) return res.status(400).json({ error: 'That code is not valid.' })
       if (coupon.used) return res.status(400).json({ error: 'That code has already been used.' })
+      if (new Date(coupon.expiresAt).getTime() < Date.now()) {
+        return res.status(400).json({ error: 'This code has expired — trace the shape again for a new one.' })
+      }
       const priorOrders = await orderRepository.findByEmail(email)
       if (priorOrders.some((o) => o.paymentStatus === 'paid')) {
         return res.status(400).json({ error: 'This code is only valid on your first order.' })

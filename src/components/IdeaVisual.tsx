@@ -30,6 +30,12 @@ const COMPLETE_RATIO = 0.92
 const QUEST_TOTAL = 20
 const QUEST_REMAINING_KEY = 'witd_quest_remaining'
 const QUEST_COUPON_KEY = 'witd_quest_coupon'
+const QUEST_COUPON_EXPIRES_KEY = 'witd_quest_coupon_expires'
+
+function formatCountdown(ms: number): string {
+  const s = Math.max(0, Math.ceil(ms / 1000))
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+}
 
 function readStoredRemaining(): number {
   if (typeof window === 'undefined') return QUEST_TOTAL
@@ -211,10 +217,17 @@ export function IdeaVisual() {
   const [couponCode, setCouponCode] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : window.localStorage.getItem(QUEST_COUPON_KEY)
   )
+  const [couponExpiresAt, setCouponExpiresAt] = useState<number | null>(() => {
+    if (typeof window === 'undefined') return null
+    const raw = window.localStorage.getItem(QUEST_COUPON_EXPIRES_KEY)
+    return raw ? Number(raw) : null
+  })
+  const [now, setNow] = useState(() => Date.now())
   const [copied, setCopied] = useState(false)
 
   // Fires exactly once, the moment the 20th shape is completed — claims the
-  // code server-side and persists it so the reward survives a reload.
+  // code server-side and persists it (code + expiry) so the reward survives
+  // a reload.
   useEffect(() => {
     if (remaining > 0 || couponCode) return
     let cancelled = false
@@ -224,12 +237,35 @@ export function IdeaVisual() {
         if (cancelled || !data.code) return
         window.localStorage.setItem(QUEST_COUPON_KEY, data.code)
         setCouponCode(data.code)
+        if (data.expiresAt) {
+          const ts = new Date(data.expiresAt).getTime()
+          window.localStorage.setItem(QUEST_COUPON_EXPIRES_KEY, String(ts))
+          setCouponExpiresAt(ts)
+        }
       })
       .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [remaining, couponCode])
+
+  // Ticks the countdown while a code is live, and resets the whole quest
+  // once it lapses — the code is single-use anyway, so there's no reason to
+  // keep showing a dead one instead of letting them earn a fresh one.
+  useEffect(() => {
+    if (!couponCode || !couponExpiresAt) return
+    if (now >= couponExpiresAt) {
+      window.localStorage.removeItem(QUEST_COUPON_KEY)
+      window.localStorage.removeItem(QUEST_COUPON_EXPIRES_KEY)
+      window.localStorage.setItem(QUEST_REMAINING_KEY, String(QUEST_TOTAL))
+      setCouponCode(null)
+      setCouponExpiresAt(null)
+      setRemaining(QUEST_TOTAL)
+      return
+    }
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [couponCode, couponExpiresAt, now])
 
   useEffect(() => {
     const svg = svgRef.current
@@ -425,7 +461,10 @@ export function IdeaVisual() {
           }}
           className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto"
         >
-          <p className="text-[10px] tracking-widest uppercase text-paper/70">20% off unlocked — tap to copy</p>
+          <p className="text-[10px] tracking-widest uppercase text-paper/70">
+            20% off unlocked — tap to copy
+            {couponExpiresAt != null && ` · expires in ${formatCountdown(couponExpiresAt - now)}`}
+          </p>
           <p className="mt-1 text-sm font-display tracking-[0.2em] text-paper">
             {copied ? 'Copied!' : couponCode}
           </p>
