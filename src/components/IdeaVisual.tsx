@@ -425,67 +425,77 @@ export function IdeaVisual() {
   }, [])
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#161513] border border-line">
-      <svg ref={svgRef} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="w-full h-full" aria-hidden="true">
-        <defs>
-          <radialGradient id="idea-glow" cx="50%" cy="47%" r="65%">
-            <stop offset="0%" stopColor="#1C1B17" />
-            <stop offset="100%" stopColor="#0B0B0A" />
-          </radialGradient>
-        </defs>
-        <rect width={VIEW_W} height={VIEW_H} fill="url(#idea-glow)" />
-        <g ref={groupRef} style={{ transition: 'opacity 400ms ease', opacity: 1 }}>
-          <polyline ref={ghostRef} fill="none" stroke="#F4F2EC" strokeOpacity="0.15" strokeWidth="1" />
-          {Array.from({ length: N }).map((_, i) => (
-            <line
-              key={`seg-${i}`}
-              ref={(el) => {
-                segRefs.current[i] = el
-              }}
-              stroke="#F4F2EC"
-              strokeWidth="1.5"
-              strokeOpacity="0"
-              style={{ transition: 'stroke-opacity 200ms ease' }}
-            />
-          ))}
-          {Array.from({ length: N }).map((_, i) => (
-            <circle
-              key={`pt-${i}`}
-              ref={(el) => {
-                pointRefs.current[i] = el
-              }}
-              r="2.5"
-              fill="#F4F2EC"
-              fillOpacity="0.35"
-              style={{ transition: 'fill-opacity 200ms ease, r 200ms ease' }}
-            />
-          ))}
-        </g>
-      </svg>
-      <CursorTrail color="#F4F2EC" />
-      {couponCode ? (
-        <button
-          onClick={() => {
-            navigator.clipboard?.writeText(couponCode).then(() => {
-              setCopied(true)
-              window.setTimeout(() => setCopied(false), 1500)
-            })
-          }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 text-center pointer-events-auto bg-paper px-5 py-2.5 shadow-[0_0_24px_rgba(244,242,236,0.25)]"
-        >
-          <p className="text-[10px] tracking-widest uppercase text-black/60">
-            20% off unlocked — tap to copy
-            {couponExpiresAt != null && ` · ${formatCountdown(couponExpiresAt - now)}`}
-          </p>
-          <p className="mt-0.5 text-lg font-display italic tracking-[0.15em] text-black">
-            {copied ? 'Copied!' : couponCode}
-          </p>
-        </button>
-      ) : (
-        <p className="absolute top-4 left-1/2 -translate-x-1/2 text-center text-lg font-display italic text-paper bg-black/70 border border-paper/30 px-5 py-2.5 pointer-events-none">
-          {remaining < QUEST_TOTAL ? `+${QUEST_TOTAL - remaining}% off your first order` : 'Trace the shape'}
-        </p>
-      )}
+    <div className="relative w-full h-full overflow-hidden rounded-t-2xl bg-[#161513] border border-line flex flex-col">
+      <div className="shrink-0 text-center py-3 px-4 border-b border-line">
+        {couponCode ? (
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(couponCode).then(() => {
+                setCopied(true)
+                window.setTimeout(() => setCopied(false), 1500)
+              })
+            }}
+            className="w-full"
+          >
+            <p className="text-[10px] tracking-widest uppercase text-mist">
+              20% off unlocked — tap to copy
+              {couponExpiresAt != null && ` · ${formatCountdown(couponExpiresAt - now)}`}
+            </p>
+            <p className="mt-0.5 text-base font-display italic tracking-wide text-paper">
+              {copied ? 'Copied!' : couponCode}
+            </p>
+          </button>
+        ) : (
+          <>
+            <p className="text-[10px] tracking-widest uppercase text-mist">
+              {remaining < QUEST_TOTAL ? 'In progress' : 'A small reward'}
+            </p>
+            <p className="mt-0.5 text-base font-display italic tracking-wide text-paper">
+              {remaining < QUEST_TOTAL ? `+${QUEST_TOTAL - remaining}% off your first order` : 'Trace the shape'}
+            </p>
+          </>
+        )}
+      </div>
+
+      <div className="relative flex-1 min-h-0">
+        <svg ref={svgRef} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="w-full h-full" aria-hidden="true">
+          <defs>
+            <radialGradient id="idea-glow" cx="50%" cy="47%" r="65%">
+              <stop offset="0%" stopColor="#1C1B17" />
+              <stop offset="100%" stopColor="#0B0B0A" />
+            </radialGradient>
+          </defs>
+          <rect width={VIEW_W} height={VIEW_H} fill="url(#idea-glow)" />
+          <g ref={groupRef} style={{ transition: 'opacity 400ms ease', opacity: 1 }}>
+            <polyline ref={ghostRef} fill="none" stroke="#F4F2EC" strokeOpacity="0.15" strokeWidth="1" />
+            {Array.from({ length: N }).map((_, i) => (
+              <line
+                key={`seg-${i}`}
+                ref={(el) => {
+                  segRefs.current[i] = el
+                }}
+                stroke="#F4F2EC"
+                strokeWidth="1.5"
+                strokeOpacity="0"
+                style={{ transition: 'stroke-opacity 200ms ease' }}
+              />
+            ))}
+            {Array.from({ length: N }).map((_, i) => (
+              <circle
+                key={`pt-${i}`}
+                ref={(el) => {
+                  pointRefs.current[i] = el
+                }}
+                r="2.5"
+                fill="#F4F2EC"
+                fillOpacity="0.35"
+                style={{ transition: 'fill-opacity 200ms ease, r 200ms ease' }}
+              />
+            ))}
+          </g>
+        </svg>
+        <CursorTrail color="#F4F2EC" />
+      </div>
     </div>
   )
 }
