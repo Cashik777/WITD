@@ -4,6 +4,7 @@ import { ProductGrid } from '@/components/ProductGrid'
 import { ManifestoSection } from '@/components/ManifestoSection'
 import { CommunitySection } from '@/components/CommunitySection'
 import { Newsletter } from '@/components/Newsletter'
+import { IdeaVisual } from '@/components/IdeaVisual'
 import { useProducts } from '@/hooks/useProducts'
 
 export default function Home() {
@@ -27,7 +28,9 @@ export default function Home() {
 
       <section className="bg-[#0F0F0D] border-y border-line">
         <div className="max-w-content mx-auto px-5 md:px-8 py-24 md:py-32 grid md:grid-cols-2 gap-12 items-center">
-          <div className="aspect-[4/5] bg-[#161513] border border-line order-2 md:order-1" />
+          <div className="aspect-[4/5] order-2 md:order-1">
+            <IdeaVisual />
+          </div>
           <div className="order-1 md:order-2">
             <h2 className="font-display text-3xl md:text-5xl text-paper leading-tight">The WITD Idea</h2>
             <p className="mt-6 text-base md:text-lg text-paper/75 leading-relaxed max-w-md">

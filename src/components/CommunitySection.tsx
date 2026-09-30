@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { CommunityVisual } from './CommunityVisual'
 
 export function CommunitySection() {
   return (
@@ -17,7 +18,9 @@ export function CommunitySection() {
             Enter the Community
           </Link>
         </div>
-        <div className="aspect-[4/3] bg-[#161513] border border-line" />
+        <div className="aspect-[4/3]">
+          <CommunityVisual />
+        </div>
       </div>
     </section>
   )
