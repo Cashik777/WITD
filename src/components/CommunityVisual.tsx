@@ -52,8 +52,20 @@ export function CommunityVisual() {
     const onLeave = () => {
       mouse.current = null
     }
+    // A touchmove here would otherwise just scroll the page — preventDefault
+    // so dragging a finger pulls the mesh instead, the same as a mouse.
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0]
+      if (!touch) return
+      e.preventDefault()
+      mouse.current = toSvgPoint(touch.clientX, touch.clientY)
+    }
     svg.addEventListener('mousemove', onMove)
     svg.addEventListener('mouseleave', onLeave)
+    svg.addEventListener('touchstart', onTouchMove, { passive: false })
+    svg.addEventListener('touchmove', onTouchMove, { passive: false })
+    svg.addEventListener('touchend', onLeave)
+    svg.addEventListener('touchcancel', onLeave)
 
     let raf = 0
     const tick = () => {
@@ -98,6 +110,10 @@ export function CommunityVisual() {
       cancelAnimationFrame(raf)
       svg.removeEventListener('mousemove', onMove)
       svg.removeEventListener('mouseleave', onLeave)
+      svg.removeEventListener('touchstart', onTouchMove)
+      svg.removeEventListener('touchmove', onTouchMove)
+      svg.removeEventListener('touchend', onLeave)
+      svg.removeEventListener('touchcancel', onLeave)
     }
   }, [])
 

@@ -279,9 +279,9 @@ export function IdeaVisual() {
       }
     }
 
-    const onMove = (e: MouseEvent) => {
+    const handlePoint = (clientX: number, clientY: number) => {
       if (transitioning.current) return
-      const p = toSvgPoint(e.clientX, e.clientY)
+      const p = toSvgPoint(clientX, clientY)
       const pts = SHAPES[shapeIndex.current].points
       let newlyLit = false
       for (let i = 0; i < N; i++) {
@@ -311,11 +311,25 @@ export function IdeaVisual() {
       }
     }
 
+    const onMouseMove = (e: MouseEvent) => handlePoint(e.clientX, e.clientY)
+    // A touchmove here would otherwise just scroll the page — preventDefault
+    // so dragging a finger traces the shape instead, the same as a mouse.
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0]
+      if (!touch) return
+      e.preventDefault()
+      handlePoint(touch.clientX, touch.clientY)
+    }
+
     applyShape(shapeIndex.current)
-    svg.addEventListener('mousemove', onMove)
+    svg.addEventListener('mousemove', onMouseMove)
+    svg.addEventListener('touchstart', onTouchMove, { passive: false })
+    svg.addEventListener('touchmove', onTouchMove, { passive: false })
 
     return () => {
-      svg.removeEventListener('mousemove', onMove)
+      svg.removeEventListener('mousemove', onMouseMove)
+      svg.removeEventListener('touchstart', onTouchMove)
+      svg.removeEventListener('touchmove', onTouchMove)
       timeouts.current.forEach((id) => window.clearTimeout(id))
     }
   }, [])

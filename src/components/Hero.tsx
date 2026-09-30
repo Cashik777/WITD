@@ -9,6 +9,11 @@ import { Link } from 'react-router-dom'
 const CENTER = { x: 1160, y: 420 }
 const originStyle = { transformBox: 'view-box' as const, transformOrigin: `${CENTER.x}px ${CENTER.y}px` }
 
+// Lags behind the page scroll instead of moving 1:1 with it — scrolling
+// down still sends it up and off, just more slowly, so it doesn't vanish as
+// abruptly as plain in-flow content would.
+const PARALLAX_LAG = 0.35
+
 export function Hero() {
   const ring1Ref = useRef<SVGCircleElement>(null)
   const ring2Ref = useRef<SVGCircleElement>(null)
@@ -16,6 +21,7 @@ export function Hero() {
   const arc2Ref = useRef<SVGPathElement>(null)
   const arc3Ref = useRef<SVGPathElement>(null)
   const pupilRef = useRef<SVGCircleElement>(null)
+  const parallaxRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let ticking = false
@@ -34,6 +40,7 @@ export function Hero() {
 
     const apply = () => {
       const y = window.scrollY
+      if (parallaxRef.current) parallaxRef.current.style.transform = `translateY(${y * PARALLAX_LAG}px)`
       if (ring1Ref.current) ring1Ref.current.style.transform = `rotate(${y * 0.04}deg)`
       if (ring2Ref.current) ring2Ref.current.style.transform = `rotate(${-y * 0.07}deg)`
       if (arc1Ref.current) arc1Ref.current.style.transform = `rotate(${y * 0.1}deg)`
@@ -62,20 +69,22 @@ export function Hero() {
 
   return (
     <section className="relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-black">
-      <svg
-        viewBox="0 0 1600 1000"
-        preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 w-full h-full opacity-70"
-        aria-hidden="true"
-      >
-        <rect width="1600" height="1000" fill="#0B0B0A" />
-        <circle ref={ring1Ref} cx={CENTER.x} cy={CENTER.y} r="340" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
-        <circle ref={ring2Ref} cx={CENTER.x} cy={CENTER.y} r="230" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
-        <path ref={arc1Ref} d="M 900 420 A 260 260 0 0 1 1420 420" fill="none" stroke="#8FA98F" strokeWidth="2.5" opacity="0.35" style={originStyle} />
-        <path ref={arc2Ref} d="M 940 340 A 260 300 0 0 1 1400 500" fill="none" stroke="#7E93B0" strokeWidth="2.5" opacity="0.3" style={originStyle} />
-        <path ref={arc3Ref} d="M 960 520 A 260 260 0 0 1 1360 320" fill="none" stroke="#AD7B6E" strokeWidth="2.5" opacity="0.3" style={originStyle} />
-        <circle ref={pupilRef} cx={CENTER.x} cy={CENTER.y} r="26" fill="#0B0B0A" stroke="#F4F2EC" strokeWidth="2" opacity="0.55" style={originStyle} />
-      </svg>
+      <div ref={parallaxRef} className="absolute inset-0">
+        <svg
+          viewBox="0 0 1600 1000"
+          preserveAspectRatio="xMidYMid slice"
+          className="absolute inset-0 w-full h-full opacity-70 rotate-180"
+          aria-hidden="true"
+        >
+          <rect width="1600" height="1000" fill="#0B0B0A" />
+          <circle ref={ring1Ref} cx={CENTER.x} cy={CENTER.y} r="340" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
+          <circle ref={ring2Ref} cx={CENTER.x} cy={CENTER.y} r="230" fill="none" stroke="#26251F" strokeWidth="1.5" style={originStyle} />
+          <path ref={arc1Ref} d="M 900 420 A 260 260 0 0 1 1420 420" fill="none" stroke="#8FA98F" strokeWidth="2.5" opacity="0.35" style={originStyle} />
+          <path ref={arc2Ref} d="M 940 340 A 260 300 0 0 1 1400 500" fill="none" stroke="#7E93B0" strokeWidth="2.5" opacity="0.3" style={originStyle} />
+          <path ref={arc3Ref} d="M 960 520 A 260 260 0 0 1 1360 320" fill="none" stroke="#AD7B6E" strokeWidth="2.5" opacity="0.3" style={originStyle} />
+          <circle ref={pupilRef} cx={CENTER.x} cy={CENTER.y} r="26" fill="#0B0B0A" stroke="#F4F2EC" strokeWidth="2" opacity="0.55" style={originStyle} />
+        </svg>
+      </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/30" />
 
       <div className="relative h-full max-w-content mx-auto px-5 md:px-8 flex flex-col justify-end pb-16 md:pb-20">
