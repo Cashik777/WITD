@@ -43,7 +43,13 @@ export default function Checkout() {
   const shipping = calculateShipping(subtotal)
   const total = subtotal + shipping
 
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+
   const handleCheckout = async () => {
+    if (!emailValid) {
+      setError('Enter a valid email to continue.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -54,7 +60,7 @@ export default function Checkout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email || undefined,
+          email: email.trim(),
           items: lines.map((l) => ({
             productId: l.productId,
             size: l.size,
@@ -164,7 +170,7 @@ export default function Checkout() {
 
           <button
             onClick={handleCheckout}
-            disabled={loading}
+            disabled={loading || !emailValid}
             className="mt-8 w-full md:w-auto px-10 py-4 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
           >
             {loading ? 'Redirecting to payment…' : 'Continue to Payment'}

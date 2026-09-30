@@ -31,10 +31,13 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
     }
 
     const rawItems = req.body?.items as CheckoutRequestItem[] | undefined
-    const email: string | undefined = req.body?.email
+    const email = String(req.body?.email ?? '').trim()
 
     if (!Array.isArray(rawItems) || rawItems.length === 0) {
       return res.status(400).json({ error: 'Cart is empty.' })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'A valid email is required to check out.' })
     }
 
     // --- Server-side validation. Nothing about price, product identity, or
