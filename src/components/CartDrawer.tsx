@@ -9,17 +9,29 @@ import { CloseIcon, BagIcon } from './icons'
 export function CartDrawer() {
   const { lines, isOpen, closeCart, subtotal, lastAdded } = useCart()
 
-  if (!isOpen) return null
-
   const shipping = calculateShipping(subtotal)
   const total = subtotal + shipping
   const remaining = amountToFreeShipping(subtotal)
   const progressPct = Math.min(100, (subtotal / store.freeShippingThreshold) * 100)
 
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/70" onClick={closeCart} />
-      <div className="absolute inset-y-0 right-0 w-full sm:w-[420px] bg-black border-l border-line flex flex-col">
+    <div
+      className={`fixed inset-0 z-50 ${isOpen ? '' : 'pointer-events-none'}`}
+      role="dialog"
+      aria-modal="true"
+      aria-hidden={!isOpen}
+    >
+      <div
+        className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ease-witd ${
+          isOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={closeCart}
+      />
+      <div
+        className={`absolute inset-y-0 right-0 w-full sm:w-[420px] bg-black border-l border-line flex flex-col transition-transform duration-300 ease-witd ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
         <div className="flex items-center justify-between px-6 h-16 border-b border-line shrink-0">
           <h2 className="text-xs tracking-widest uppercase text-paper">
             Cart {lines.length > 0 && `(${lines.length})`}
