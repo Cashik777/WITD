@@ -41,6 +41,37 @@ function formatCountdown(ms: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 
+// navigator.clipboard?.writeText(...).then(...) throws when
+// navigator.clipboard is undefined — optional chaining just makes the whole
+// call resolve to undefined, and undefined has no .then. That's a real dead
+// end on browsers/contexts without the Clipboard API (some mobile in-app
+// webviews), so this falls back to the old execCommand('copy') trick via a
+// hidden textarea, and never throws either way.
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // fall through to the legacy path below
+  }
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return ok
+  } catch {
+    return false
+  }
+}
+
 // Every shape is reduced to a dense vertex path, then resampled down to
 // exactly N evenly-spaced-by-arc-length checkpoints — so wildly different
 // shapes (a star's short inner edges vs. a heart's long sweeping curves)
@@ -218,17 +249,27 @@ export function IdeaVisual() {
   const [couponExpiresAt, setCouponExpiresAt] = useState<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [copied, setCopied] = useState(false)
+  const [claimFailed, setClaimFailed] = useState(false)
+  const [claimAttempt, setClaimAttempt] = useState(0)
 
-  // Fires exactly once, the moment the 20th shape is completed — claims the
-  // code server-side and persists it (code + expiry) so the reward survives
-  // a reload.
+  // Fires the moment the 20th shape is completed — claims the code
+  // server-side and persists it (code + expiry) so the reward survives a
+  // reload. A flaky connection (more likely on mobile) used to leave this
+  // permanently stuck — one failed fetch and the effect's dependencies
+  // never changed again, so it never got a second try. Now a failure
+  // retries automatically with a short backoff, and if it keeps failing,
+  // shows a manual retry instead of silently doing nothing forever.
   useEffect(() => {
     if (remaining > 0 || couponCode) return
     let cancelled = false
+    setClaimFailed(false)
     fetch('/api/coupons/claim', { method: 'POST' })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`claim failed: ${res.status}`)
+        return res.json()
+      })
       .then((data) => {
-        if (cancelled || !data.code) return
+        if (cancelled || !data.code) throw new Error('claim response missing code')
         window.localStorage.setItem(QUEST_COUPON_KEY, data.code)
         setCouponCode(data.code)
         if (data.expiresAt) {
@@ -237,11 +278,20 @@ export function IdeaVisual() {
           setCouponExpiresAt(ts)
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (cancelled) return
+        if (claimAttempt < 3) {
+          window.setTimeout(() => {
+            if (!cancelled) setClaimAttempt((n) => n + 1)
+          }, 1500)
+        } else {
+          setClaimFailed(true)
+        }
+      })
     return () => {
       cancelled = true
     }
-  }, [remaining, couponCode])
+  }, [remaining, couponCode, claimAttempt])
 
   // Ticks the countdown while a code is live, and resets the whole quest
   // once it lapses — the code is single-use anyway, so there's no reason to
@@ -424,7 +474,8 @@ export function IdeaVisual() {
         {couponCode ? (
           <button
             onClick={() => {
-              navigator.clipboard?.writeText(couponCode).then(() => {
+              copyText(couponCode).then((ok) => {
+                if (!ok) return
                 setCopied(true)
                 window.setTimeout(() => setCopied(false), 1500)
               })
@@ -439,6 +490,19 @@ export function IdeaVisual() {
               {copied ? 'Copied!' : couponCode}
             </p>
           </button>
+        ) : remaining === 0 && claimFailed ? (
+          <button
+            onClick={() => {
+              setClaimFailed(false)
+              setClaimAttempt(0)
+            }}
+            className="w-full"
+          >
+            <p className="text-[10px] tracking-widest uppercase text-mist">Couldn't reach the server</p>
+            <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper">Tap to try again</p>
+          </button>
+        ) : remaining === 0 ? (
+          <p className="text-lg font-display italic tracking-wide text-paper animate-pulse">Unlocking your code…</p>
         ) : remaining < QUEST_TOTAL ? (
           <div key={remaining} className="animate-[wq-pop_420ms_ease]">
             <p className="text-[10px] tracking-widest uppercase text-mist">You got</p>
