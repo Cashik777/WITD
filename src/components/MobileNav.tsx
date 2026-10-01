@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import type { SyntheticEvent } from 'react'
 import { WitdSymbol } from './WitdSymbol'
 import { CloseIcon } from './icons'
 
@@ -9,6 +10,21 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ open, onClose, links }: MobileNavProps) {
+  const navigate = useNavigate()
+
+  // A plain <Link onClick> relies on the browser synthesizing a click after
+  // the tap — which, on this panel specifically, real phones (and a
+  // dispatched TouchEvent in testing) don't reliably do, leaving the link
+  // completely dead on touch despite working fine with a mouse. Navigating
+  // explicitly on touchend — and preventDefault to stop a duplicate
+  // synthesized click from firing — makes it work regardless of whether
+  // that synthesis happens.
+  const go = (to: string) => (e: SyntheticEvent) => {
+    e.preventDefault()
+    onClose()
+    navigate(to)
+  }
+
   return (
     <div
       className={`fixed inset-0 z-50 md:hidden transition-visibility ${open ? '' : 'pointer-events-none'}`}
@@ -26,7 +42,7 @@ export function MobileNav({ open, onClose, links }: MobileNavProps) {
         }`}
       >
         <div className="h-16 flex items-center justify-between px-5 border-b border-line">
-          <Link to="/" onClick={onClose} className="flex items-center gap-2.5">
+          <Link to="/" onClick={go('/')} onTouchEnd={go('/')} className="flex items-center gap-2.5">
             <WitdSymbol className="w-6 h-6 text-paper" />
             <span className="font-display text-lg text-paper">WITD</span>
           </Link>
@@ -40,7 +56,8 @@ export function MobileNav({ open, onClose, links }: MobileNavProps) {
             <Link
               key={link.label}
               to={link.to}
-              onClick={onClose}
+              onClick={go(link.to)}
+              onTouchEnd={go(link.to)}
               className="py-3.5 text-sm tracking-widest uppercase text-paper border-b border-line/60"
             >
               {link.label}
