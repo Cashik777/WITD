@@ -4,9 +4,9 @@ import { CursorTrail } from './CursorTrail'
 // A small "trace the shape" toy standing in for real photography on the
 // homepage "WITD Idea" panel — echoes the copy (noticing something instead
 // of just moving through it) by rewarding attention: trace the outline with
-// the cursor, and once it's fully connected, it dissolves into the next
-// shape from a large, shuffled set (circles, polygons, stars, a spiral,
-// a heart, an infinity loop, a cross, an arrow, flowers...). All
+// the cursor, and once it's fully connected, it dissolves into a random next
+// shape from a large set (circles, polygons, stars, a spiral, a heart, an
+// infinity loop, a cross, an arrow, flowers...). All
 // checkpoint/segment state is written directly to the DOM via refs on each
 // pointer move rather than through React state, since this fires on every
 // mousemove and a re-render per hit would be wasteful.
@@ -221,16 +221,13 @@ const RAW_SHAPES: { verts: Point[]; closed: boolean }[] = [
   { verts: flower(3, 120), closed: true },
 ]
 
-// Reduce every raw shape to exactly N checkpoints up front, and shuffle the
-// order once per page load so the cycle doesn't play identically every time.
+// Reduce every raw shape to exactly N checkpoints up front. Which shape
+// comes next is picked at random each time a trace completes (see
+// startTransition below), not by walking this array in order.
 const SHAPES: { points: Point[]; closed: boolean }[] = RAW_SHAPES.map((s) => ({
   points: distributeAlongVertices(s.verts, s.closed, N),
   closed: s.closed,
 }))
-for (let i = SHAPES.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1))
-  ;[SHAPES[i], SHAPES[j]] = [SHAPES[j], SHAPES[i]]
-}
 
 export function IdeaVisual() {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -239,7 +236,7 @@ export function IdeaVisual() {
   const pointRefs = useRef<(SVGCircleElement | null)[]>([])
   const segRefs = useRef<(SVGLineElement | null)[]>([])
   const headerRef = useRef<HTMLDivElement>(null)
-  const shapeIndex = useRef(0)
+  const shapeIndex = useRef(Math.floor(Math.random() * SHAPES.length))
   const lit = useRef<boolean[]>(new Array(N).fill(false))
   const litCount = useRef(0)
   const transitioning = useRef(false)
@@ -401,7 +398,11 @@ export function IdeaVisual() {
       const t1 = window.setTimeout(() => {
         if (group) group.style.opacity = '0'
         const t2 = window.setTimeout(() => {
-          shapeIndex.current = (shapeIndex.current + 1) % SHAPES.length
+          let next = Math.floor(Math.random() * SHAPES.length)
+          if (SHAPES.length > 1 && next === shapeIndex.current) {
+            next = (next + 1) % SHAPES.length
+          }
+          shapeIndex.current = next
           applyShape(shapeIndex.current)
           if (group) {
             void group.getBoundingClientRect() // force reflow so the opacity change below transitions in
