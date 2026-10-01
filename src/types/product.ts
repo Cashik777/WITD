@@ -13,7 +13,8 @@ export interface Product {
   name: string
   description: string
   idea?: string // short "the idea behind this piece" editorial blurb
-  price: number
+  price: number // CAD — the base/display price
+  priceUSD: number | null // shown/charged to customers detected as non-Canadian; null falls back to `price`
   currency: 'CAD' | 'USD'
   category: string // category slug — see Category type, admin-managed
   collection: string

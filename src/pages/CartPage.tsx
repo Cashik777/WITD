@@ -2,11 +2,14 @@ import { Link } from 'react-router-dom'
 import { useCart } from '@/hooks/useCart'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
+import { useCurrency } from '@/context/CurrencyContext'
 import { CartItem } from '@/components/CartItem'
 
 export default function CartPage() {
   const { lines, subtotal } = useCart()
-  const shipping = calculateShipping(subtotal)
+  const { currency: activeCurrency } = useCurrency()
+  const currency = lines[0]?.currency ?? activeCurrency
+  const shipping = calculateShipping(subtotal, currency)
   const total = subtotal + shipping
 
   return (
@@ -32,15 +35,15 @@ export default function CartPage() {
             <h2 className="text-xs tracking-widest uppercase text-paper">Order Summary</h2>
             <div className="flex justify-between text-sm">
               <span className="text-mist">Subtotal</span>
-              <span className="text-paper">{formatPrice(subtotal)}</span>
+              <span className="text-paper">{formatPrice(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-mist">Shipping</span>
-              <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+              <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping, currency)}</span>
             </div>
             <div className="flex justify-between text-sm pt-3 border-t border-line">
               <span className="text-paper">Total</span>
-              <span className="text-paper">{formatPrice(total)}</span>
+              <span className="text-paper">{formatPrice(total, currency)}</span>
             </div>
             <Link
               to="/checkout"

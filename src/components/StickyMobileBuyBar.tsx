@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Product } from '@/types/product'
 import { formatPrice } from '@/lib/format'
+import { getProductPrice } from '@/lib/price'
+import { useCurrency } from '@/context/CurrencyContext'
 import type { useProductPurchase } from '@/hooks/useProductPurchase'
 
 interface StickyMobileBuyBarProps {
@@ -16,6 +18,7 @@ interface StickyMobileBuyBarProps {
 export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProps) {
   const { size, addToCart, soldOut } = purchase
   const [visible, setVisible] = useState(false)
+  const { currency } = useCurrency()
 
   useEffect(() => {
     if (soldOut) return
@@ -42,7 +45,7 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
     <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-black border-t border-line px-5 py-3 flex items-center gap-3">
       <div className="min-w-0 flex-1">
         <p className="text-xs text-paper truncate">{product.name}</p>
-        <p className="text-xs text-mist">{formatPrice(product.price, product.currency)}</p>
+        <p className="text-xs text-mist">{formatPrice(getProductPrice(product, currency), currency)}</p>
       </div>
       <button
         onClick={addToCart}

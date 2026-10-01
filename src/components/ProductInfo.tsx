@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { Product } from '@/types/product'
 import { formatPrice } from '@/lib/format'
-import { store } from '@/lib/store'
+import { getProductPrice } from '@/lib/price'
+import { store, shippingPolicy } from '@/lib/store'
+import { useCurrency } from '@/context/CurrencyContext'
 import type { useProductPurchase } from '@/hooks/useProductPurchase'
 import { SizeSelector } from './SizeSelector'
 import { ColorSelector } from './ColorSelector'
@@ -17,11 +19,14 @@ interface ProductInfoProps {
 export function ProductInfo({ product, purchase }: ProductInfoProps) {
   const { color, setColor, size, selectSize, needsSize, soldOut, addToCart, buyNow } = purchase
   const [guideOpen, setGuideOpen] = useState(false)
+  const { currency } = useCurrency()
+  const price = getProductPrice(product, currency)
+  const policy = shippingPolicy(currency)
 
   return (
     <div>
       <h1 className="font-display text-3xl md:text-4xl text-paper">{product.name}</h1>
-      <p className="mt-2 text-lg text-paper/80">{formatPrice(product.price, product.currency)}</p>
+      <p className="mt-2 text-lg text-paper/80">{formatPrice(price, currency)}</p>
       <p className="mt-5 text-sm text-paper/70 leading-relaxed max-w-md">{product.description}</p>
 
       {soldOut && (
@@ -59,7 +64,7 @@ export function ProductInfo({ product, purchase }: ProductInfoProps) {
               disabled={!size}
               className="w-full py-4 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-60"
             >
-              {size ? `Add to Cart — ${formatPrice(product.price, product.currency)}` : 'Select a Size'}
+              {size ? `Add to Cart — ${formatPrice(price, currency)}` : 'Select a Size'}
             </button>
             <button
               onClick={buyNow}
@@ -71,8 +76,8 @@ export function ProductInfo({ product, purchase }: ProductInfoProps) {
 
           <div className="mt-5 space-y-1.5 text-xs text-mist">
             <p>
-              Free shipping on orders over {formatPrice(store.freeShippingThreshold, product.currency)} &middot;{' '}
-              {formatPrice(store.shippingFlatRate, product.currency)} flat rate otherwise
+              Free shipping on orders over {formatPrice(policy.freeShippingThreshold, currency)} &middot;{' '}
+              {formatPrice(policy.shippingFlatRate, currency)} flat rate otherwise
             </p>
             <p>
               {store.returnWindowDays}-day returns &middot; ships in {store.fulfillmentDaysMin}–
@@ -104,7 +109,7 @@ export function ProductInfo({ product, purchase }: ProductInfoProps) {
         <Accordion title="Shipping & Returns">
           <p>
             Orders ship within {store.fulfillmentDaysMin}–{store.fulfillmentDaysMax} business days. Free shipping on
-            orders over {formatPrice(store.freeShippingThreshold, product.currency)}. Returns accepted within{' '}
+            orders over {formatPrice(policy.freeShippingThreshold, currency)}. Returns accepted within{' '}
             {store.returnWindowDays} days of delivery for unworn items in original condition. Ships to{' '}
             {store.shipsTo}.
           </p>

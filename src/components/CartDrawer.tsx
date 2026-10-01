@@ -1,18 +1,22 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '@/hooks/useCart'
 import { formatPrice } from '@/lib/format'
-import { calculateShipping, amountToFreeShipping, store } from '@/lib/store'
+import { calculateShipping, amountToFreeShipping, shippingPolicy } from '@/lib/store'
+import { useCurrency } from '@/context/CurrencyContext'
 import { CartItem } from './CartItem'
 import { PairsWellWith } from './PairsWellWith'
 import { CloseIcon, BagIcon } from './icons'
 
 export function CartDrawer() {
   const { lines, isOpen, closeCart, subtotal, lastAdded } = useCart()
+  const { currency: activeCurrency } = useCurrency()
+  const currency = lines[0]?.currency ?? activeCurrency
 
-  const shipping = calculateShipping(subtotal)
+  const shipping = calculateShipping(subtotal, currency)
   const total = subtotal + shipping
-  const remaining = amountToFreeShipping(subtotal)
-  const progressPct = Math.min(100, (subtotal / store.freeShippingThreshold) * 100)
+  const remaining = amountToFreeShipping(subtotal, currency)
+  const policy = shippingPolicy(currency)
+  const progressPct = Math.min(100, (subtotal / policy.freeShippingThreshold) * 100)
 
   return (
     <div
@@ -65,7 +69,7 @@ export function CartDrawer() {
               <div className="px-6 py-4 border-b border-line">
                 <p className="text-xs text-paper mb-2">
                   {remaining > 0
-                    ? `Add ${formatPrice(remaining)} more for free shipping`
+                    ? `Shipping is ${formatPrice(10000, currency)}. Add ${formatPrice(remaining, currency)} more and it's free.`
                     : "You've unlocked free shipping"}
                 </p>
                 <div className="h-1 bg-line overflow-hidden">
@@ -85,17 +89,18 @@ export function CartDrawer() {
             <div className="shrink-0 px-6 py-5 border-t border-line space-y-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-mist">Subtotal</span>
-                <span className="text-paper">{formatPrice(subtotal)}</span>
+                <span className="text-paper">{formatPrice(subtotal, currency)}</span>
               </div>
               <p className="text-xs text-mist">
-                Shipping: {shipping === 0 ? 'Free' : formatPrice(shipping)} &middot; taxes calculated at checkout.
+                Shipping: {shipping === 0 ? 'Free' : formatPrice(shipping, currency)} &middot; taxes calculated at
+                checkout.
               </p>
               <Link
                 to="/checkout"
                 onClick={closeCart}
                 className="block w-full text-center py-3.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors"
               >
-                Checkout {formatPrice(total)}
+                Checkout {formatPrice(total, currency)}
               </Link>
               <div className="flex items-center justify-between text-xs">
                 <button onClick={closeCart} className="text-mist hover:text-paper underline underline-offset-4">

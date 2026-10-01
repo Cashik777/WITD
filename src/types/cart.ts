@@ -1,10 +1,12 @@
+import type { Currency } from '@/context/CurrencyContext'
+
 export interface CartLine {
   productId: string
   slug: string
   name: string
   image: string
   price: number
-  currency: string
+  currency: Currency
   size: string
   color: string
   quantity: number

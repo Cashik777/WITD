@@ -17,7 +17,8 @@ export interface Product {
   name: string
   description: string
   idea?: string
-  price: number
+  price: number // CAD — the base/display price
+  priceUSD: number | null // shown/charged to customers detected as non-Canadian; null falls back to a straight read of `price`
   currency: 'CAD' | 'USD'
   category: string // category slug, see models/Category.ts — admin-managed, not a fixed enum
   collection: string

@@ -54,7 +54,7 @@ export default function OrderConfirmation() {
       ) : (
         <p className="mt-8 text-sm text-paper/60 max-w-md mx-auto">
           We couldn&rsquo;t find a payment reference for this page. If you just completed a purchase, check your
-          email for a confirmation from Stripe.
+          email for an order confirmation.
         </p>
       )}
 

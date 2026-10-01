@@ -4,6 +4,7 @@ import { useCart } from '@/hooks/useCart'
 import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
+import { useCurrency } from '@/context/CurrencyContext'
 import { ChevronDown } from '@/components/icons'
 
 const PAYMENTS_NOT_OPEN_MESSAGE = 'Payments are not open yet — your cart is saved.'
@@ -25,6 +26,8 @@ function CheckoutSteps({ current }: { current: number }) {
 
 export default function Checkout() {
   const { lines, subtotal } = useCart()
+  const { currency: activeCurrency } = useCurrency()
+  const currency = lines[0]?.currency ?? activeCurrency
   const { email: accountEmail } = useCustomerAuth()
   const [email, setEmail] = useState('')
   const [couponCode, setCouponCode] = useState('')
@@ -71,7 +74,7 @@ export default function Checkout() {
     return () => window.removeEventListener('pageshow', onPageShow)
   }, [])
 
-  const shipping = calculateShipping(subtotal)
+  const shipping = calculateShipping(subtotal, currency)
   const total = subtotal + shipping
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -93,6 +96,7 @@ export default function Checkout() {
         body: JSON.stringify({
           email: email.trim(),
           couponCode: couponCode.trim() || undefined,
+          currency,
           items: lines.map((l) => ({
             productId: l.productId,
             size: l.size,
@@ -146,7 +150,7 @@ export default function Checkout() {
             {summaryOpen ? 'Hide' : 'Show'} Order Summary &middot; {lines.length} {lines.length === 1 ? 'item' : 'items'}
           </span>
           <span className="flex items-center gap-2">
-            {formatPrice(total)}
+            {formatPrice(total, currency)}
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${summaryOpen ? 'rotate-180' : ''}`} />
           </span>
         </button>
@@ -162,11 +166,11 @@ export default function Checkout() {
             ))}
             <div className="flex justify-between text-sm pt-3 border-t border-line">
               <span className="text-mist">Subtotal</span>
-              <span className="text-paper">{formatPrice(subtotal)}</span>
+              <span className="text-paper">{formatPrice(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-mist">Shipping</span>
-              <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+              <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping, currency)}</span>
             </div>
           </div>
         )}
@@ -195,8 +199,8 @@ export default function Checkout() {
           />
 
           <p className="mt-3 text-xs text-mist leading-relaxed">
-            Shipping address and payment are collected securely on the next step through Stripe Checkout — WITD
-            never sees or stores your card details.
+            Shipping address and payment are collected securely on the next step — WITD never sees or stores your
+            card details.
           </p>
 
           {error && (
@@ -204,7 +208,8 @@ export default function Checkout() {
               <p>{error}</p>
               {error !== PAYMENTS_NOT_OPEN_MESSAGE && (
                 <p className="mt-1 text-xs text-mist">
-                  This storefront is running in test mode without live Stripe/fulfillment credentials connected yet.
+                  This storefront is running in test mode without live payment/fulfillment credentials connected
+                  yet.
                 </p>
               )}
             </div>
@@ -233,15 +238,15 @@ export default function Checkout() {
           </div>
           <div className="flex justify-between text-sm pt-3 border-t border-line">
             <span className="text-mist">Subtotal</span>
-            <span className="text-paper">{formatPrice(subtotal)}</span>
+            <span className="text-paper">{formatPrice(subtotal, currency)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-mist">Shipping</span>
-            <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+            <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping, currency)}</span>
           </div>
           <div className="flex justify-between text-sm pt-3 border-t border-line">
             <span className="text-paper">Total</span>
-            <span className="text-paper">{formatPrice(total)}</span>
+            <span className="text-paper">{formatPrice(total, currency)}</span>
           </div>
         </div>
       </div>

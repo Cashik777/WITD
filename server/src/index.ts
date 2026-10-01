@@ -9,6 +9,7 @@ import { checkoutRouter } from './routes/checkout.js'
 import { webhookRouter } from './routes/webhooks.js'
 import { ordersRouter } from './routes/orders.js'
 import { couponsRouter } from './routes/coupons.js'
+import { geoRouter } from './routes/geo.js'
 import { discordAuthRouter } from './routes/discordAuth.js'
 import { productsRouter } from './routes/products.js'
 import { categoriesRouter } from './routes/categories.js'
@@ -42,6 +43,7 @@ app.use(express.json())
 app.use('/api', checkoutRouter)
 app.use('/api', ordersRouter)
 app.use('/api', couponsRouter)
+app.use('/api', geoRouter)
 app.use('/api', discordAuthRouter)
 app.use('/api', productsRouter)
 app.use('/api', categoriesRouter)

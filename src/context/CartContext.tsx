@@ -1,6 +1,8 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartLine } from '@/types/cart'
 import type { Product } from '@/types/product'
+import { useCurrency } from '@/context/CurrencyContext'
+import { getProductPrice } from '@/lib/price'
 
 const STORAGE_KEY = 'witd:cart'
 
@@ -33,6 +35,7 @@ function loadInitial(): CartLine[] {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { currency, setLocked } = useCurrency()
   const [lines, setLines] = useState<CartLine[]>(loadInitial)
   const [isOpen, setIsOpen] = useState(false)
   const [lastAdded, setLastAdded] = useState<CartLine | null>(null)
@@ -45,14 +48,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines])
 
+  // The currency switcher is locked while the cart has anything in it. Each
+  // line snapshots its price in whichever currency was active when it was
+  // added — letting currency change mid-cart would either need to re-fetch
+  // every product to re-price every line, or leave the cart silently mixing
+  // CAD and USD amounts into one subtotal. Simplest correct behavior: you
+  // can switch currency freely, just not with items already in the cart.
+  useEffect(() => {
+    setLocked(lines.length > 0)
+  }, [lines.length, setLocked])
+
   const addItem = useCallback((product: Product, size: string, color: string, quantity = 1) => {
     const addedLine: CartLine = {
       productId: product.id,
       slug: product.slug,
       name: product.name,
       image: product.imagesByColor[color]?.[0] ?? product.images[0],
-      price: product.price,
-      currency: product.currency,
+      price: getProductPrice(product, currency),
+      currency,
       size,
       color,
       quantity,
@@ -71,7 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
     setLastAdded(addedLine)
     setIsOpen(true)
-  }, [])
+  }, [currency])
 
   const removeItem = useCallback((productId: string, size: string, color: string) => {
     setLines((prev) => prev.filter((l) => !(l.productId === productId && l.size === size && l.color === color)))

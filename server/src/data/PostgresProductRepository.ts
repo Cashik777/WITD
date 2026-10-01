@@ -38,6 +38,12 @@ const CREATE_TABLE_SQL = `
   );
 `
 
+// price_usd was added after the table already existed in production —
+// ADD COLUMN IF NOT EXISTS is safe to re-run and never touches existing rows.
+const MIGRATE_SQL = `
+  ALTER TABLE products ADD COLUMN IF NOT EXISTS price_usd NUMERIC;
+`
+
 function rowToProduct(row: Record<string, unknown>): Product {
   return {
     id: row.id as string,
@@ -46,6 +52,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
     description: row.description as string,
     idea: (row.idea as string | null) ?? undefined,
     price: Number(row.price),
+    priceUSD: row.price_usd != null ? Number(row.price_usd) : null,
     currency: row.currency as Product['currency'],
     category: row.category as Product['category'],
     collection: row.collection as string,
@@ -73,7 +80,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
 }
 
 const INSERT_COLUMNS = `
-  id, slug, name, description, idea, price, currency, category, collection,
+  id, slug, name, description, idea, price, price_usd, currency, category, collection,
   images, hover_image, images_by_color, colors, sizes, available_sizes,
   materials, fit, care_instructions, sku, tags, featured, is_new, bestseller,
   availability, fulfillment_provider, provider_product_id, provider_variant_mappings,
@@ -82,7 +89,7 @@ const INSERT_COLUMNS = `
 
 function toInsertValues(p: Product): unknown[] {
   return [
-    p.id, p.slug, p.name, p.description, p.idea ?? null, p.price, p.currency, p.category, p.collection,
+    p.id, p.slug, p.name, p.description, p.idea ?? null, p.price, p.priceUSD ?? null, p.currency, p.category, p.collection,
     JSON.stringify(p.images), p.hoverImage ?? null, JSON.stringify(p.imagesByColor), JSON.stringify(p.colors),
     JSON.stringify(p.sizes), JSON.stringify(p.availableSizes), p.materials, p.fit, p.careInstructions, p.sku,
     JSON.stringify(p.tags), p.featured, p.new, p.bestseller, p.availability, p.fulfillmentProvider,
@@ -98,6 +105,7 @@ export class PostgresProductRepository implements ProductRepository {
     this.pool = getPool()
     this.ready = this.pool
       .query(CREATE_TABLE_SQL)
+      .then(() => this.pool.query(MIGRATE_SQL))
       .then(async () => {
         const { rows } = await this.pool.query('SELECT COUNT(*) FROM products')
         if (Number(rows[0].count) === 0) {
@@ -110,7 +118,7 @@ export class PostgresProductRepository implements ProductRepository {
   }
 
   private async insert(p: Product): Promise<void> {
-    const placeholders = Array.from({ length: 29 }, (_, i) => `$${i + 1}`).join(',')
+    const placeholders = Array.from({ length: 30 }, (_, i) => `$${i + 1}`).join(',')
     await this.pool.query(`INSERT INTO products (${INSERT_COLUMNS}) VALUES (${placeholders})`, toInsertValues(p))
   }
 
@@ -155,14 +163,14 @@ export class PostgresProductRepository implements ProductRepository {
     const updated: Product = { ...existing, ...patch, updatedAt: new Date().toISOString() }
     await this.pool.query(
       `UPDATE products SET
-        slug=$2, name=$3, description=$4, idea=$5, price=$6, currency=$7, category=$8, collection=$9,
-        images=$10, hover_image=$11, images_by_color=$12, colors=$13, sizes=$14, available_sizes=$15,
-        materials=$16, fit=$17, care_instructions=$18, sku=$19, tags=$20, featured=$21, is_new=$22,
-        bestseller=$23, availability=$24, fulfillment_provider=$25, provider_product_id=$26,
-        provider_variant_mappings=$27, updated_at=$28
+        slug=$2, name=$3, description=$4, idea=$5, price=$6, price_usd=$7, currency=$8, category=$9, collection=$10,
+        images=$11, hover_image=$12, images_by_color=$13, colors=$14, sizes=$15, available_sizes=$16,
+        materials=$17, fit=$18, care_instructions=$19, sku=$20, tags=$21, featured=$22, is_new=$23,
+        bestseller=$24, availability=$25, fulfillment_provider=$26, provider_product_id=$27,
+        provider_variant_mappings=$28, updated_at=$29
       WHERE id=$1`,
       [
-        id, updated.slug, updated.name, updated.description, updated.idea ?? null, updated.price, updated.currency,
+        id, updated.slug, updated.name, updated.description, updated.idea ?? null, updated.price, updated.priceUSD ?? null, updated.currency,
         updated.category, updated.collection, JSON.stringify(updated.images), updated.hoverImage ?? null,
         JSON.stringify(updated.imagesByColor), JSON.stringify(updated.colors), JSON.stringify(updated.sizes),
         JSON.stringify(updated.availableSizes), updated.materials, updated.fit, updated.careInstructions,

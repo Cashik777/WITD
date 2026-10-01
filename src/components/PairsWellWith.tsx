@@ -3,7 +3,9 @@ import type { MouseEvent } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import type { CartLine } from '@/types/cart'
 import { formatPrice } from '@/lib/format'
+import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
+import { useCurrency } from '@/context/CurrencyContext'
 
 // A small, honest cross-sell: other in-stock First Drop pieces not already
 // in the cart. No real "frequently bought together" data exists yet, so
@@ -11,6 +13,7 @@ import { useCart } from '@/hooks/useCart'
 export function PairsWellWith({ lines }: { lines: CartLine[] }) {
   const { products } = useProducts()
   const { addItem } = useCart()
+  const { currency } = useCurrency()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const inCartIds = new Set(lines.map((l) => l.productId))
 
@@ -39,7 +42,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-paper truncate">{p.name}</p>
-              <p className="text-xs text-mist">{formatPrice(p.price, p.currency)}</p>
+              <p className="text-xs text-mist">{formatPrice(getProductPrice(p, currency), currency)}</p>
             </div>
             {pickingId === p.id ? (
               <div className="flex flex-wrap gap-1 justify-end max-w-[140px]">

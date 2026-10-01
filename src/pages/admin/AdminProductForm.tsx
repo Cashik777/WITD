@@ -14,6 +14,7 @@ interface FormState {
   description: string
   idea: string
   price: number
+  priceUSD: number | null
   currency: Product['currency']
   category: string
   collection: string
@@ -40,6 +41,7 @@ const emptyProduct: FormState = {
   description: '',
   idea: '',
   price: 0,
+  priceUSD: null,
   currency: 'CAD',
   category: '',
   collection: 'First Drop',
@@ -97,6 +99,7 @@ export default function AdminProductForm() {
         description: product.description,
         idea: product.idea ?? '',
         price: product.price,
+        priceUSD: product.priceUSD,
         currency: product.currency,
         category: product.category,
         collection: product.collection,
@@ -206,13 +209,25 @@ export default function AdminProductForm() {
           <textarea className={input} rows={2} value={form.idea} onChange={(e) => setForm({ ...form, idea: e.target.value })} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label className={label}>Price</label>
+            <label className={label}>Price (CAD)</label>
             <input required type="number" min={0} step="0.01" className={input} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
           </div>
           <div>
-            <label className={label}>Currency</label>
+            <label className={label}>Price (USD)</label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="defaults to CAD"
+              className={input}
+              value={form.priceUSD ?? ''}
+              onChange={(e) => setForm({ ...form, priceUSD: e.target.value === '' ? null : Number(e.target.value) })}
+            />
+          </div>
+          <div>
+            <label className={label}>Base Currency</label>
             <select className={input} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value as Product['currency'] })}>
               <option value="CAD">CAD</option>
               <option value="USD">USD</option>

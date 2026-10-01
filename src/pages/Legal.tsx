@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { store } from '@/lib/store'
+import { store, shippingPolicy } from '@/lib/store'
+import { formatPrice } from '@/lib/format'
+
+const cadPolicy = shippingPolicy('CAD')
+const usdPolicy = shippingPolicy('USD')
 
 // Matches the label-left / copy-right row pattern already used for
 // Shipping/Returns/Contact on the About page, rather than a generic
@@ -50,7 +54,7 @@ export function Privacy() {
         </p>
         <p>
           <span className="text-paper/85">Payment info</span> — we never see or store your card details. Payment is
-          handled entirely by Stripe; we only receive confirmation that a payment succeeded.
+          handled by our payment processor; we only receive confirmation that a payment succeeded.
         </p>
         <p>
           <span className="text-paper/85">Discord (optional)</span> — if you connect Discord to verify community
@@ -64,14 +68,14 @@ export function Privacy() {
       </Row>
 
       <Row label="Who It's Shared With">
-        <p>Only the services that need it to do their job — nothing is sold to anyone.</p>
+        <p>Only the service providers that need it to do their job — nothing is sold to anyone.</p>
         <p>
-          <span className="text-paper/85">Stripe</span> processes your payment.{' '}
-          <span className="text-paper/85">Printful / Printify</span> print and ship your order, so they receive
-          your name, shipping address, and items ordered. <span className="text-paper/85">Resend</span> sends
-          account-related emails (verification codes, order confirmations).{' '}
-          <span className="text-paper/85">Cloudinary</span> hosts product photography and isn&rsquo;t involved in
-          handling customer data.
+          <span className="text-paper/85">A payment processor</span> handles your payment — we never see or store
+          your card details. <span className="text-paper/85">Print and fulfillment partners</span> print and ship
+          your order, so they receive your name, shipping address, and items ordered.{' '}
+          <span className="text-paper/85">An email provider</span> sends account-related emails (verification
+          codes, order confirmations). <span className="text-paper/85">An image hosting provider</span> hosts
+          product photography and isn&rsquo;t involved in handling customer data.
         </p>
       </Row>
 
@@ -126,18 +130,20 @@ export function Terms() {
 
       <Row label="Orders & Payment">
         <p>
-          Prices are listed in {store.currency} and charged at checkout via Stripe. We validate product, price, and
-          stock server-side at the moment you check out — a price shown to you may change if a listing is updated
-          before you complete payment. An order is confirmed once payment succeeds; you&rsquo;ll get an email
-          confirmation.
+          Prices are shown in CAD or USD depending on your location and charged at checkout accordingly. We
+          validate product, price, and stock server-side at the moment you check out — a price shown to you may
+          change if a listing is updated before you complete payment. An order is confirmed once payment succeeds;
+          you&rsquo;ll get an email confirmation.
         </p>
       </Row>
 
       <Row label="Shipping">
         <p>
           Orders ship within {store.fulfillmentDaysMin}–{store.fulfillmentDaysMax} business days. Shipping is a
-          flat ${store.shippingFlatRate} {store.currency}, free on orders over ${store.freeShippingThreshold}{' '}
-          {store.currency}. We ship to {store.shipsTo}.
+          flat {formatPrice(cadPolicy.shippingFlatRate, 'CAD')}, free on orders over{' '}
+          {formatPrice(cadPolicy.freeShippingThreshold, 'CAD')} ({formatPrice(usdPolicy.shippingFlatRate, 'USD')}{' '}
+          flat / free over {formatPrice(usdPolicy.freeShippingThreshold, 'USD')} for USD orders). We ship to{' '}
+          {store.shipsTo}.
         </p>
       </Row>
 

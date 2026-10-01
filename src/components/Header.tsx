@@ -3,6 +3,9 @@ import { Link, useLocation } from 'react-router-dom'
 import { WitdSymbol } from './WitdSymbol'
 import { SearchIcon, BagIcon, UserIcon, MenuIcon } from './icons'
 import { useCart } from '@/hooks/useCart'
+import { useCurrency } from '@/context/CurrencyContext'
+import { formatPrice } from '@/lib/format'
+import { shippingPolicy } from '@/lib/store'
 import { MobileNav } from './MobileNav'
 
 const navLinks = [
@@ -24,16 +27,42 @@ function isNavLinkActive(to: string, pathname: string, search: string): boolean 
   return linkCollection === currentCollection
 }
 
+function CurrencySwitcher() {
+  const { currency, setCurrency, locked } = useCurrency()
+
+  return (
+    <div
+      className={`flex items-center text-[11px] tracking-widest ${locked ? 'opacity-40' : ''}`}
+      title={locked ? 'Currency is locked while your cart has items' : undefined}
+    >
+      {(['CAD', 'USD'] as const).map((c, i) => (
+        <button
+          key={c}
+          onClick={() => !locked && setCurrency(c)}
+          disabled={locked}
+          className={`px-1.5 ${i === 0 ? '' : 'border-l border-line'} ${
+            currency === c ? 'text-paper' : 'text-mist hover:text-paper/80'
+          } ${locked ? 'cursor-not-allowed' : ''} transition-colors`}
+        >
+          {c}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { itemCount, openCart } = useCart()
+  const { currency } = useCurrency()
+  const policy = shippingPolicy(currency)
   const location = useLocation()
 
   return (
     <>
       <div className="sticky top-0 z-50 bg-black border-b border-line">
         <p className="max-w-content mx-auto px-5 md:px-8 h-9 flex items-center justify-center text-center text-[11px] tracking-wide text-paper/70">
-          Free shipping over $150 &nbsp;/&nbsp; Free 14-day returns
+          Free shipping over {formatPrice(policy.freeShippingThreshold, currency)} &nbsp;/&nbsp; Free 14-day returns
         </p>
       </div>
       <header className="sticky top-9 z-40 bg-black/95 backdrop-blur border-b border-line">
@@ -72,6 +101,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-4 md:gap-5 text-paper">
+            <CurrencySwitcher />
             <Link to="/search" aria-label="Search" className="hover:opacity-70 transition-opacity">
               <SearchIcon />
             </Link>

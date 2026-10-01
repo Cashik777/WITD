@@ -2,7 +2,9 @@ import { useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import type { Product } from '@/types/product'
 import { formatPrice } from '@/lib/format'
+import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
+import { useCurrency } from '@/context/CurrencyContext'
 
 const colorSwatch: Record<string, string> = {
   Black: '#141412',
@@ -15,6 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
   const [pickingSize, setPickingSize] = useState(false)
   const { addItem, openCart } = useCart()
+  const { currency } = useCurrency()
   const soldOut = product.availability === 'sold_out'
 
   const openSizePicker = (e: MouseEvent) => {
@@ -123,7 +126,7 @@ export function ProductCard({ product }: { product: Product }) {
             ))}
           </div>
         </div>
-        <span className="text-sm text-paper/80 whitespace-nowrap">{formatPrice(product.price, product.currency)}</span>
+        <span className="text-sm text-paper/80 whitespace-nowrap">{formatPrice(getProductPrice(product, currency), currency)}</span>
       </div>
     </Link>
   )

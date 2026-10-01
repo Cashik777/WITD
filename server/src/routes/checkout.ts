@@ -19,8 +19,25 @@ interface CheckoutRequestItem {
 }
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
-const FREE_SHIPPING_THRESHOLD = 150
-const FLAT_SHIPPING = 12
+
+// Flat shipping is deliberately well above what Printful actually charges us
+// per order (see the real per-destination rates checked against the live
+// API — mostly $7-16 CAD) — the gap is intentional, to make "just add a
+// little more for free shipping" a real nudge toward the threshold instead
+// of a rounding error.
+const SHIPPING_POLICY = {
+  CAD: { freeThreshold: 150, flatRate: 30 },
+  USD: { freeThreshold: 120, flatRate: 24 },
+} as const
+
+function resolveCurrency(raw: unknown): 'CAD' | 'USD' {
+  return raw === 'USD' ? 'USD' : 'CAD'
+}
+
+function priceFor(product: Product, currency: 'CAD' | 'USD'): number {
+  if (currency === 'USD') return product.priceUSD ?? product.price
+  return product.price
+}
 
 checkoutRouter.post('/create-checkout-session', async (req, res) => {
   try {
@@ -41,10 +58,15 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       return res.status(400).json({ error: 'A valid email is required to check out.' })
     }
 
+    // Which price list to charge from — client-selected (geo-detected or
+    // manually switched), not a security-sensitive value like price itself.
+    // The actual dollar amount always comes from the product record below,
+    // never from the browser.
+    const currency = resolveCurrency(req.body?.currency)
+
     // --- Server-side validation. Nothing about price, product identity, or
     // stock comes from the browser past this point. ---
     const items: OrderItem[] = []
-    let currency: Product['currency'] | undefined
     for (const raw of rawItems) {
       const product = await productRepository.findById(raw.productId)
       if (!product) {
@@ -66,15 +88,9 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
         size: raw.size,
         color: raw.color,
         quantity,
-        unitPrice: product.price, // server-side price — the only price Stripe ever sees
+        unitPrice: priceFor(product, currency), // server-side price — the only price Stripe ever sees
       })
-      if (!currency) currency = product.currency
     }
-
-    // items.length is guaranteed >0 here (rawItems was checked above and
-    // every raw item either resolves to a product or returns early), so the
-    // loop always ran and set this.
-    if (!currency) throw new Error('unreachable: currency was never set')
 
     const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
 
@@ -100,7 +116,8 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       appliedCouponCode = coupon.code
     }
 
-    const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING
+    const policy = SHIPPING_POLICY[currency]
+    const shipping = subtotal >= policy.freeThreshold ? 0 : policy.flatRate
     const total = subtotal - discount + shipping
     const percentOff = appliedCouponCode ? discount / subtotal * 100 : 0
 
