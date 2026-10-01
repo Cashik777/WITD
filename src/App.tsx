@@ -25,10 +25,21 @@ import AdminOrders from '@/pages/admin/AdminOrders'
 import AdminCategories from '@/pages/admin/AdminCategories'
 
 function ScrollToTop() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   useEffect(() => {
+    // Footer/Checkout etc. link to /about#shipping, #returns, #contact —
+    // this used to force scroll-to-top on every route change regardless of
+    // hash, so those anchor links silently landed at the top of the page
+    // instead of the section they pointed to.
+    if (hash) {
+      const el = document.getElementById(hash.slice(1))
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+        return
+      }
+    }
     window.scrollTo(0, 0)
-  }, [pathname])
+  }, [pathname, hash])
   return null
 }
 

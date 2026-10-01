@@ -40,6 +40,9 @@ export function ProductCard({ product }: { product: Product }) {
       className="group block"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onTouchStart={() => setHovered(true)}
+      onTouchEnd={() => setHovered(false)}
+      onTouchCancel={() => setHovered(false)}
     >
       <div className="relative aspect-[4/5] bg-[#151412] overflow-hidden">
         <img

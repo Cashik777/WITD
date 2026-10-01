@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Hero } from '@/components/Hero'
 import { ProductGrid } from '@/components/ProductGrid'
@@ -6,6 +7,47 @@ import { CommunitySection } from '@/components/CommunitySection'
 import { Newsletter } from '@/components/Newsletter'
 import { IdeaVisual } from '@/components/IdeaVisual'
 import { useProducts } from '@/hooks/useProducts'
+import type { Product } from '@/types/product'
+
+// Plain group-hover only responds to a real mouse — on touch, nothing ever
+// triggers it, so the back-view photo never showed on a phone. Local hover
+// state driven by both mouse and touch events fixes that (matches the same
+// pattern ProductCard.tsx already uses for the shop grid).
+function FeaturedCard({ product }: { product: Product }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <Link
+      to={`/product/${product.slug}`}
+      className="block"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onTouchStart={() => setHovered(true)}
+      onTouchEnd={() => setHovered(false)}
+      onTouchCancel={() => setHovered(false)}
+    >
+      <div className="relative aspect-[3/4] bg-[#151412] overflow-hidden">
+        <img
+          src={product.images[0]}
+          alt={product.name}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-witd ${
+            hovered ? 'scale-105' : ''
+          } ${hovered && product.hoverImage ? 'opacity-0' : ''}`}
+        />
+        {product.hoverImage && (
+          <img
+            src={product.hoverImage}
+            alt=""
+            aria-hidden="true"
+            className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-700 ease-witd ${
+              hovered ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        )}
+      </div>
+      <p className="mt-4 font-display text-lg text-paper">{product.name}</p>
+    </Link>
+  )
+}
 
 export default function Home() {
   const { products } = useProducts()
@@ -51,26 +93,7 @@ export default function Home() {
         <h2 className="font-display text-2xl md:text-3xl text-paper mb-10">Featured Pieces</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {featured.map((product) => (
-            <Link key={product.id} to={`/product/${product.slug}`} className="group block">
-              <div className="relative aspect-[3/4] bg-[#151412] overflow-hidden">
-                <img
-                  src={product.images[0]}
-                  alt={product.name}
-                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-witd group-hover:scale-105 ${
-                    product.hoverImage ? 'group-hover:opacity-0' : ''
-                  }`}
-                />
-                {product.hoverImage && (
-                  <img
-                    src={product.hoverImage}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover scale-105 opacity-0 transition-opacity duration-700 ease-witd group-hover:opacity-100"
-                  />
-                )}
-              </div>
-              <p className="mt-4 font-display text-lg text-paper">{product.name}</p>
-            </Link>
+            <FeaturedCard key={product.id} product={product} />
           ))}
         </div>
       </section>
