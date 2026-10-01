@@ -7,6 +7,7 @@ import { Reviews } from '@/components/Reviews'
 import { StickyMobileBuyBar } from '@/components/StickyMobileBuyBar'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { useProductPurchase } from '@/hooks/useProductPurchase'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function ProductDetail() {
   const { getProductBySlug, getRelatedProducts, loading } = useProducts()
@@ -14,6 +15,7 @@ export default function ProductDetail() {
   const product = slug ? getProductBySlug(slug) : undefined
   const recentlyViewed = useRecentlyViewed(product?.id)
   const purchase = useProductPurchase(product)
+  useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
 
   if (!product) return loading ? null : <Navigate to="/404" replace />
 

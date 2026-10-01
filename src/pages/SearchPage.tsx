@@ -3,12 +3,14 @@ import { useProducts } from '@/hooks/useProducts'
 import { searchProducts } from '@/lib/search'
 import { SearchBar } from '@/components/SearchBar'
 import { ProductGrid } from '@/components/ProductGrid'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function SearchPage() {
   const { products } = useProducts()
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const results = searchProducts(products, query)
+  useDocumentMeta(query ? `"${query}" — Search — WITD` : 'Search — WITD')
 
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-12 md:py-16">

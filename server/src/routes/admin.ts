@@ -143,6 +143,20 @@ adminRouter.get('/orders', async (_req, res) => {
   res.json({ orders })
 })
 
+// Deliberately only for abandoned/test checkouts, not a general "cancel an
+// order" tool — paymentStatus !== 'pending' means Stripe actually processed
+// something for it (paid, refunded, etc.), and deleting that row would
+// destroy real accounting history rather than just clearing clutter.
+adminRouter.delete('/orders/:id', async (req, res) => {
+  const order = await orderRepository.findById(req.params.id)
+  if (!order) return res.status(404).json({ error: 'Order not found.' })
+  if (order.paymentStatus !== 'pending') {
+    return res.status(409).json({ error: 'Only pending (abandoned/test) orders can be deleted.' })
+  }
+  const removed = await orderRepository.remove(req.params.id)
+  res.json({ removed })
+})
+
 adminRouter.get('/categories', async (_req, res) => {
   const categories = await categoryRepository.findAll()
   res.json({ categories })

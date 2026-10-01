@@ -179,4 +179,10 @@ export class PostgresOrderRepository implements OrderRepository {
     )
     return updated
   }
+
+  async remove(id: string): Promise<boolean> {
+    await this.ready
+    const { rowCount } = await this.pool.query('DELETE FROM orders WHERE id = $1', [id])
+    return (rowCount ?? 0) > 0
+  }
 }

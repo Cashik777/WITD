@@ -7,6 +7,7 @@ import { FilterPanel } from '@/components/FilterPanel'
 import { FilterDrawer } from '@/components/FilterDrawer'
 import { activeFilterChips } from '@/lib/filters'
 import { ChevronDown, CloseIcon } from '@/components/icons'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import type { SortOption } from '@/types/product'
 
 const sortLabels: Record<SortOption, string> = {
@@ -17,6 +18,7 @@ const sortLabels: Record<SortOption, string> = {
 }
 
 export default function Shop() {
+  useDocumentMeta('Shop — WITD', 'Browse the First Drop — streetwear for those awake inside the dream.')
   const { products, categoryNames } = useProducts()
   const [searchParams] = useSearchParams()
   const { category: categoryParam } = useParams<{ category?: string }>()

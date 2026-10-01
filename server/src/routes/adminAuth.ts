@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import { timingSafeEqual } from 'crypto'
 import { userRepository } from '../data/usersDb.js'
 import { hashPassword, verifyPassword, signSession, isAuthConfigured } from '../lib/auth.js'
@@ -9,7 +10,18 @@ export const adminAuthRouter = Router()
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000
 const isHttps = (process.env.FRONTEND_URL || '').startsWith('https')
 
-adminAuthRouter.post('/login', async (req, res) => {
+// There's only ever one real admin account — 10 attempts per 15 minutes per
+// IP is generous for a human who mistyped a password, but shuts down a
+// credential-stuffing script long before it gets anywhere.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Try again later.' },
+})
+
+adminAuthRouter.post('/login', loginLimiter, async (req, res) => {
   if (!isAuthConfigured) {
     return res.status(503).json({ error: 'Admin login is not configured yet.' })
   }

@@ -3,9 +3,11 @@ import { useCart } from '@/hooks/useCart'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { CartItem } from '@/components/CartItem'
 
 export default function CartPage() {
+  useDocumentMeta('Cart — WITD')
   const { lines, subtotal } = useCart()
   const { currency: activeCurrency } = useCurrency()
   const currency = lines[0]?.currency ?? activeCurrency

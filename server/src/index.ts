@@ -5,6 +5,7 @@ import { existsSync } from 'fs'
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
 import { checkoutRouter } from './routes/checkout.js'
 import { webhookRouter } from './routes/webhooks.js'
 import { ordersRouter } from './routes/orders.js'
@@ -17,6 +18,7 @@ import { adminAuthRouter } from './routes/adminAuth.js'
 import { adminRouter } from './routes/admin.js'
 import { accountRouter } from './routes/account.js'
 import { newsletterRouter } from './routes/newsletter.js'
+import { sitemapRouter } from './routes/sitemap.js'
 import { isStripeConfigured } from './lib/stripe.js'
 import { isAuthConfigured } from './lib/auth.js'
 
@@ -25,6 +27,13 @@ const app = express()
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4242
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
+// contentSecurityPolicy and crossOriginEmbedderPolicy are off: the frontend
+// relies on React inline style props (blocked by a default style-src) and
+// loads Google Fonts + Cloudinary-hosted product images cross-origin
+// (blocked by default COEP) — a default-strict CSP would break real pages,
+// not just tighten headers. Everything else here (HSTS, nosniff, frameguard,
+// hidePoweredBy, referrer policy) is safe with zero risk of breakage.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }))
 app.use(cors({ origin: FRONTEND_URL, credentials: true }))
 app.use(cookieParser())
 
@@ -55,6 +64,12 @@ app.use('/api', newsletterRouter)
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true })
 })
+
+// Mounted at the root (not /api) since /sitemap.xml is where crawlers and
+// robots.txt's Sitemap: directive expect to find it — must come before the
+// SPA catch-all below, which otherwise matches any non-/api path and would
+// serve index.html instead of the XML.
+app.use(sitemapRouter)
 
 // Serve the built frontend (repo root `npm run build`) so one process on one
 // port can host the whole site behind a reverse proxy — only used when the

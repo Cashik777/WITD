@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function Community() {
+  useDocumentMeta('Community — WITD', 'The WITD community space is opening soon.')
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-20 md:py-28">
       <div className="max-w-2xl">

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WitdSymbol } from '@/components/WitdSymbol'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 // Focuses (scales up, brightens) whichever philosophy section is centered
 // in the viewport as the page scrolls, and dims the rest — makes reading
@@ -40,6 +41,7 @@ function FocusSection({ children, className = '' }: { children: ReactNode; class
 }
 
 export default function About() {
+  useDocumentMeta('About — WITD', 'The idea behind WITD, shipping, returns, and how to reach us.')
   return (
     <div>
       <section className="max-w-content mx-auto px-5 md:px-8 pt-16 pb-20 md:pt-24 md:pb-28">

@@ -5,6 +5,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { ChevronDown } from '@/components/icons'
 
 const PAYMENTS_NOT_OPEN_MESSAGE = 'Payments are not open yet — your cart is saved.'
@@ -25,6 +26,7 @@ function CheckoutSteps({ current }: { current: number }) {
 }
 
 export default function Checkout() {
+  useDocumentMeta('Checkout — WITD')
   const { lines, subtotal } = useCart()
   const { currency: activeCurrency } = useCurrency()
   const currency = lines[0]?.currency ?? activeCurrency

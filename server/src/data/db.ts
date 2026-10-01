@@ -30,6 +30,7 @@ export interface OrderRepository {
   findAll(): Promise<Order[]>
   create(order: Order): Promise<Order>
   update(id: string, patch: Partial<Order>): Promise<Order | null>
+  remove(id: string): Promise<boolean>
   ping(): Promise<boolean>
 }
 
@@ -79,6 +80,15 @@ class InMemoryOrderRepository implements OrderRepository {
     const updated = { ...existing, ...patch, updatedAt: new Date().toISOString() }
     this.orders.set(id, updated)
     return updated
+  }
+
+  async remove(id: string): Promise<boolean> {
+    const existing = this.orders.get(id)
+    if (!existing) return false
+    this.orders.delete(id)
+    this.byStripeSession.delete(existing.stripeSessionId)
+    this.byOrderNumber.delete(existing.orderNumber.toUpperCase())
+    return true
   }
 }
 

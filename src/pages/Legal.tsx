@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { store, shippingPolicy } from '@/lib/store'
 import { formatPrice } from '@/lib/format'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 const cadPolicy = shippingPolicy('CAD')
 const usdPolicy = shippingPolicy('USD')
@@ -31,6 +32,7 @@ function Hero({ title }: { title: string }) {
 }
 
 export function Privacy() {
+  useDocumentMeta('Privacy Policy — WITD', 'What WITD collects when you use wakeinthedream.com, why, and who it is shared with.')
   return (
     <div>
       <Hero title="Privacy Policy" />
@@ -120,6 +122,7 @@ export function Privacy() {
 }
 
 export function Terms() {
+  useDocumentMeta('Terms of Service — WITD', 'The terms that apply when you place an order or use wakeinthedream.com.')
   return (
     <div>
       <Hero title="Terms of Service" />
