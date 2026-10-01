@@ -18,12 +18,7 @@ import { adminRouter } from './routes/admin.js'
 import { accountRouter } from './routes/account.js'
 import { newsletterRouter } from './routes/newsletter.js'
 import { isStripeConfigured } from './lib/stripe.js'
-import { orderRepository, isUsingDatabase } from './data/db.js'
-import { productRepository } from './data/productsDb.js'
-import { isDiscordConfigured } from './lib/discord.js'
 import { isAuthConfigured } from './lib/auth.js'
-import { isCloudinaryConfigured } from './lib/cloudinary.js'
-import { isEmailConfigured, isNewsletterConfigured } from './lib/email.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -52,21 +47,13 @@ app.use('/api/admin', adminRouter)
 app.use('/api', accountRouter)
 app.use('/api', newsletterRouter)
 
-app.get('/api/health', async (_req, res) => {
-  res.json({
-    ok: true,
-    stripeConfigured: isStripeConfigured,
-    printfulConfigured: Boolean(process.env.PRINTFUL_API_KEY && process.env.PRINTFUL_STORE_ID),
-    printifyConfigured: Boolean(process.env.PRINTIFY_API_KEY && process.env.PRINTIFY_SHOP_ID),
-    databaseConfigured: isUsingDatabase,
-    databaseConnected: await orderRepository.ping(),
-    productsDbConnected: await productRepository.ping(),
-    discordConfigured: isDiscordConfigured,
-    authConfigured: isAuthConfigured,
-    uploadsConfigured: isCloudinaryConfigured,
-    emailConfigured: isEmailConfigured,
-    newsletterConfigured: isNewsletterConfigured,
-  })
+// Public and unauthenticated (Render's own health check, and an external
+// uptime ping hit this to keep the free-tier instance from spinning down) —
+// deliberately bare so it never reveals which third-party services this
+// storefront runs on. The detailed breakdown lives at /api/admin/health
+// instead, behind the same session auth as the rest of the admin panel.
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true })
 })
 
 // Serve the built frontend (repo root `npm run build`) so one process on one

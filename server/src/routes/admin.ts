@@ -3,13 +3,34 @@ import multer from 'multer'
 import { randomUUID } from 'crypto'
 import { requireAdmin } from '../lib/requireAdmin.js'
 import { productRepository } from '../data/productsDb.js'
-import { orderRepository } from '../data/db.js'
+import { orderRepository, isUsingDatabase } from '../data/db.js'
 import { categoryRepository } from '../data/categoriesDb.js'
 import { isCloudinaryConfigured, uploadImage } from '../lib/cloudinary.js'
+import { isStripeConfigured } from '../lib/stripe.js'
+import { isDiscordConfigured } from '../lib/discord.js'
+import { isAuthConfigured } from '../lib/auth.js'
+import { isEmailConfigured, isNewsletterConfigured } from '../lib/email.js'
 import type { Product } from '../models/Product.js'
 
 export const adminRouter = Router()
 adminRouter.use(requireAdmin)
+
+adminRouter.get('/health', async (_req, res) => {
+  res.json({
+    ok: true,
+    stripeConfigured: isStripeConfigured,
+    printfulConfigured: Boolean(process.env.PRINTFUL_API_KEY && process.env.PRINTFUL_STORE_ID),
+    printifyConfigured: Boolean(process.env.PRINTIFY_API_KEY && process.env.PRINTIFY_SHOP_ID),
+    databaseConfigured: isUsingDatabase,
+    databaseConnected: await orderRepository.ping(),
+    productsDbConnected: await productRepository.ping(),
+    discordConfigured: isDiscordConfigured,
+    authConfigured: isAuthConfigured,
+    uploadsConfigured: isCloudinaryConfigured,
+    emailConfigured: isEmailConfigured,
+    newsletterConfigured: isNewsletterConfigured,
+  })
+})
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
