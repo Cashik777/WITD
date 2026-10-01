@@ -53,6 +53,24 @@ export default function Checkout() {
     if (accountEmail) setEmail(accountEmail)
   }, [accountEmail])
 
+  // handleCheckout's success path never resets `loading` — it doesn't need
+  // to, since window.location.href = url is about to navigate away from
+  // this page entirely. But if the browser restores this exact page from
+  // bfcache (hitting Back from Stripe, or from anywhere after), that stuck
+  // loading=true comes back with it — the button is permanently disabled,
+  // stuck on "Redirecting to payment…", with no way to retry. This is
+  // exactly what breaks after editing the cart (e.g. dropping back under
+  // the free-shipping threshold) and returning to checkout. pageshow's
+  // `persisted` flag is true specifically for a bfcache restore, so reset
+  // loading there instead of on every normal mount.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setLoading(false)
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
+
   const shipping = calculateShipping(subtotal)
   const total = subtotal + shipping
 
