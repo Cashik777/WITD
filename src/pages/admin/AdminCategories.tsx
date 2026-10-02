@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { adminApi } from '@/lib/adminApi'
 import type { Category } from '@/types/category'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function AdminCategories() {
+  useDocumentMeta('Categories — WITD Admin')
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

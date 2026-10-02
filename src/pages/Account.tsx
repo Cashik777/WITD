@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 import { formatPrice } from '@/lib/format'
 import { Accordion } from '@/components/Accordion'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 interface AccountOrder {
   orderNumber: string
@@ -292,6 +293,7 @@ function AuthForms() {
 }
 
 export default function Account() {
+  useDocumentMeta('Account — WITD')
   const { email, loading, logout } = useCustomerAuth()
 
   if (loading) return null

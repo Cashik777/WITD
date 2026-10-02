@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function AdminLogin() {
+  useDocumentMeta('Admin Login — WITD')
   const { email, login } = useAdminAuth()
   const navigate = useNavigate()
   const [formEmail, setFormEmail] = useState('')

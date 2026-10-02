@@ -4,8 +4,10 @@ import { adminApi } from '@/lib/adminApi'
 import { formatPrice } from '@/lib/format'
 import { categoryOptions } from '@/lib/filters'
 import type { Product } from '@/types/product'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function AdminProducts() {
+  useDocumentMeta('Products — WITD Admin')
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

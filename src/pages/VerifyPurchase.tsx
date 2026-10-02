@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 const ERROR_MESSAGES: Record<string, string> = {
   expired: 'That verification link expired. Please verify your purchase again.',
@@ -9,6 +10,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 export default function VerifyPurchase() {
+  useDocumentMeta('Verify Your Purchase — WITD')
   const [searchParams] = useSearchParams()
   const callbackSuccess = searchParams.get('success') === '1'
   const callbackError = searchParams.get('error')

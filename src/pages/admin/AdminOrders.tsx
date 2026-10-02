@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { adminApi } from '@/lib/adminApi'
 import { formatPrice } from '@/lib/format'
+import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 interface AdminOrder {
   id: string
@@ -15,6 +16,7 @@ interface AdminOrder {
 }
 
 export default function AdminOrders() {
+  useDocumentMeta('Orders — WITD Admin')
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
