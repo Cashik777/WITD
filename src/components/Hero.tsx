@@ -23,8 +23,13 @@ const MOBILE_VIEWBOX = `${CENTER.x - 400} ${CENTER.y - 400} 800 800`
 
 // Lags behind the page scroll instead of moving 1:1 with it — scrolling
 // down still sends it up and off, just more slowly, so it doesn't vanish as
-// abruptly as plain in-flow content would.
-const PARALLAX_LAG = 0.35
+// abruptly as plain in-flow content would. Desktop needs a much stronger lag
+// than mobile: a mouse wheel or Page Down covers far more scroll distance
+// per input than a touch swipe does, so the same lag value that reads as
+// "lingers nicely" on a phone blew past the hero on a desktop in a couple of
+// wheel notches.
+const PARALLAX_LAG_MOBILE = 0.35
+const PARALLAX_LAG_DESKTOP = 0.62
 
 export function Hero() {
   const ring1Ref = useRef<SVGCircleElement>(null)
@@ -35,11 +40,20 @@ export function Hero() {
   const pupilRef = useRef<SVGCircleElement>(null)
   const parallaxRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
+  // The scroll handler below is set up once (empty dep array, so it isn't
+  // re-attached on every breakpoint change) and needs the current
+  // mobile/desktop value inside a long-lived closure — a ref, not the state
+  // variable itself, is what stays fresh there.
+  const isMobileRef = useRef(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
     setIsMobile(mq.matches)
-    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    isMobileRef.current = mq.matches
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches)
+      isMobileRef.current = e.matches
+    }
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
@@ -61,7 +75,8 @@ export function Hero() {
 
     const apply = () => {
       const y = window.scrollY
-      if (parallaxRef.current) parallaxRef.current.style.transform = `translateY(${y * PARALLAX_LAG}px)`
+      const lag = isMobileRef.current ? PARALLAX_LAG_MOBILE : PARALLAX_LAG_DESKTOP
+      if (parallaxRef.current) parallaxRef.current.style.transform = `translateY(${y * lag}px)`
       if (ring1Ref.current) ring1Ref.current.style.transform = `rotate(${y * 0.04}deg)`
       if (ring2Ref.current) ring2Ref.current.style.transform = `rotate(${-y * 0.07}deg)`
       if (arc1Ref.current) arc1Ref.current.style.transform = `rotate(${y * 0.1}deg)`

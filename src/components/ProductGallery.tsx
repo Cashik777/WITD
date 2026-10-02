@@ -1,4 +1,35 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
+
+// Desktop-only hover zoom: follows the cursor instead of just scaling from
+// the center, so whatever part of the garment you're pointing at is what
+// gets magnified — a flat center-zoom would usually magnify the wrong spot.
+function ZoomableImage({ src, alt }: { src: string; alt: string }) {
+  const [zoomed, setZoomed] = useState(false)
+  const [origin, setOrigin] = useState('50% 50%')
+
+  const onMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setOrigin(`${x}% ${y}%`)
+  }
+
+  return (
+    <div
+      className="aspect-[4/5] bg-[#151412] overflow-hidden cursor-zoom-in"
+      onMouseEnter={() => setZoomed(true)}
+      onMouseLeave={() => setZoomed(false)}
+      onMouseMove={onMouseMove}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover transition-transform duration-300 ease-out"
+        style={{ transform: zoomed ? 'scale(1.9)' : 'scale(1)', transformOrigin: origin }}
+      />
+    </div>
+  )
+}
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0)
@@ -47,9 +78,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
       <div className="hidden md:grid grid-cols-2 gap-3">
         {images.map((img, i) => (
-          <div key={img + i} className="aspect-[4/5] bg-[#151412] overflow-hidden">
-            <img src={img} alt={name} className="w-full h-full object-cover" />
-          </div>
+          <ZoomableImage key={img + i} src={img} alt={name} />
         ))}
       </div>
     </div>
