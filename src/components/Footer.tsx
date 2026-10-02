@@ -1,6 +1,15 @@
 import { Link } from 'react-router-dom'
 import { WitdSymbol } from './WitdSymbol'
 
+const socialLinks = [
+  { label: 'Instagram', href: 'https://www.instagram.com/wakeinthedream/' },
+  { label: 'TikTok', href: 'https://www.tiktok.com/@wake.in.the.dream' },
+  { label: 'X', href: 'https://x.com/WakeInTheDream' },
+  { label: 'YouTube', href: 'https://www.youtube.com/channel/UCZBcpjr5Cs3xxTqEB1xvYtA' },
+  { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61595157624382' },
+  { label: 'Pinterest', href: 'https://ca.pinterest.com/WakeInTheDream/' },
+]
+
 const columns = [
   {
     heading: 'Shop',
@@ -67,10 +76,16 @@ export function Footer() {
 
       <div className="max-w-content mx-auto px-5 md:px-8 py-6 border-t border-line flex flex-col md:flex-row gap-3 items-center justify-between">
         <p className="text-xs text-mist">&copy; {new Date().getFullYear()} WITD. All rights reserved.</p>
-        <div className="flex gap-5">
-          {['Instagram', 'TikTok', 'X'].map((social) => (
-            <a key={social} href="#" className="relative inline-block group text-xs text-mist hover:text-paper transition-colors duration-200">
-              {social}
+        <div className="flex flex-wrap gap-5">
+          {socialLinks.map((social) => (
+            <a
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative inline-block group text-xs text-mist hover:text-paper transition-colors duration-200"
+            >
+              {social.label}
               <span className="absolute left-0 -bottom-0.5 h-px w-full bg-paper scale-x-0 origin-left transition-transform duration-300 ease-witd group-hover:scale-x-100" />
             </a>
           ))}
