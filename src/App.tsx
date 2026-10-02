@@ -26,6 +26,15 @@ import AdminCategories from '@/pages/admin/AdminCategories'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
+  // The browser's own scroll restoration races our hash-driven smooth scroll
+  // below — on a production build it was winning, snapping the page back to
+  // 0 mid-animation right after we scrolled to an anchor. 'manual' hands all
+  // scroll-position responsibility to this component instead.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
   useEffect(() => {
     // Footer/Checkout etc. link to /about#shipping, #returns, #contact —
     // this used to force scroll-to-top on every route change regardless of
