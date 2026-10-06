@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 
-// Max zoom is deliberately capped near the real ceiling of the source
-// photography, not an arbitrary "feels nice" number: the product shots are
-// 1000x1000px, but object-cover on this slide's 4:5 box already downscales
-// them to roughly 49% of native resolution at 1x on a typical phone width —
-// so ~2x of further zoom lands right back at native pixel density, and
-// anything past that is just upscaling blur, not real detail.
-const MOBILE_MAX_ZOOM = 2.2
-const DOUBLE_TAP_ZOOM = 2
+// Max zoom is capped conservatively because the real ceiling is lower than
+// it first looks: the source photos are 1000x1000px, and accounting for
+// device pixel ratio (not just CSS pixels) — a ~3x-DPR phone needs roughly
+// 3 source pixels per CSS pixel to stay crisp, but object-cover on this
+// slide's 4:5 box already only provides ~2.3x at 1x zoom, before any
+// pinch/tap zoom is even applied. There is effectively no truly "free"
+// zoom headroom left once DPR is in the picture — every bit of additional
+// scale is visible upscaling, not revealed detail. 1.4x/1.5x keeps that
+// softening subtle instead of obviously blurry. A real fix (zooming in
+// with no quality loss) needs higher-resolution source photography, not a
+// bigger multiplier here — flagged separately, this is a content gap, not
+// a code one.
+const MOBILE_MAX_ZOOM = 1.4
+const DOUBLE_TAP_ZOOM = 1.5
 
 // Desktop-only hover zoom: follows the cursor instead of just scaling from
 // the center, so whatever part of the garment you're pointing at is what
