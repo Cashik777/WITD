@@ -1,19 +1,13 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 
-// Max zoom is capped conservatively because the real ceiling is lower than
-// it first looks: the source photos are 1000x1000px, and accounting for
-// device pixel ratio (not just CSS pixels) — a ~3x-DPR phone needs roughly
-// 3 source pixels per CSS pixel to stay crisp, but object-cover on this
-// slide's 4:5 box already only provides ~2.3x at 1x zoom, before any
-// pinch/tap zoom is even applied. There is effectively no truly "free"
-// zoom headroom left once DPR is in the picture — every bit of additional
-// scale is visible upscaling, not revealed detail. 1.4x/1.5x keeps that
-// softening subtle instead of obviously blurry. A real fix (zooming in
-// with no quality loss) needs higher-resolution source photography, not a
-// bigger multiplier here — flagged separately, this is a content gap, not
-// a code one.
-const MOBILE_MAX_ZOOM = 1.4
-const DOUBLE_TAP_ZOOM = 1.5
+// Source photos are 2000x2000px (Lanczos-upscaled + unsharp-masked from the
+// original 1000x1000 Printful mockups — see scripts/upscale_products.py —
+// since Printful's own API/dashboard both cap mockup exports at 1000px).
+// That doubles the real sampling headroom a zoom can draw on before the
+// browser's own interpolation becomes visible, so these caps sit close to
+// the original pre-mitigation values again.
+const MOBILE_MAX_ZOOM = 2.2
+const DOUBLE_TAP_ZOOM = 2
 
 // Desktop-only hover zoom: follows the cursor instead of just scaling from
 // the center, so whatever part of the garment you're pointing at is what
@@ -40,7 +34,7 @@ function ZoomableImage({ src, alt }: { src: string; alt: string }) {
         src={src}
         alt={alt}
         className="w-full h-full object-cover transition-transform duration-300 ease-out"
-        style={{ transform: zoomed ? 'scale(1.9)' : 'scale(1)', transformOrigin: origin }}
+        style={{ transform: zoomed ? 'scale(2.2)' : 'scale(1)', transformOrigin: origin }}
       />
     </div>
   )
