@@ -59,6 +59,10 @@ function productFromBody(body: Record<string, unknown>, existing?: Product): Omi
       body.priceUSD !== undefined && body.priceUSD !== null && body.priceUSD !== ''
         ? Number(body.priceUSD)
         : (existing?.priceUSD ?? null),
+    priceEUR:
+      body.priceEUR !== undefined && body.priceEUR !== null && body.priceEUR !== ''
+        ? Number(body.priceEUR)
+        : (existing?.priceEUR ?? null),
     currency: (body.currency as Product['currency']) ?? existing?.currency ?? 'CAD',
     category: (body.category as string) ?? existing?.category ?? '',
     collection: (body.collection as string) ?? existing?.collection ?? 'First Drop',

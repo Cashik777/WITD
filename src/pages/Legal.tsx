@@ -6,6 +6,7 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 const cadPolicy = shippingPolicy('CAD')
 const usdPolicy = shippingPolicy('USD')
+const eurPolicy = shippingPolicy('EUR')
 
 // Matches the label-left / copy-right row pattern already used for
 // Shipping/Returns/Contact on the About page, rather than a generic
@@ -133,7 +134,7 @@ export function Terms() {
 
       <Row label="Orders & Payment">
         <p>
-          Prices are shown in CAD or USD depending on your location and charged at checkout accordingly. We
+          Prices are shown in CAD, USD, or EUR depending on your location and charged at checkout accordingly. We
           validate product, price, and stock server-side at the moment you check out — a price shown to you may
           change if a listing is updated before you complete payment. An order is confirmed once payment succeeds;
           you&rsquo;ll get an email confirmation.
@@ -145,7 +146,9 @@ export function Terms() {
           Orders ship within {store.fulfillmentDaysMin}–{store.fulfillmentDaysMax} business days. Shipping is a
           flat {formatPrice(cadPolicy.shippingFlatRate, 'CAD')}, free on orders over{' '}
           {formatPrice(cadPolicy.freeShippingThreshold, 'CAD')} ({formatPrice(usdPolicy.shippingFlatRate, 'USD')}{' '}
-          flat / free over {formatPrice(usdPolicy.freeShippingThreshold, 'USD')} for USD orders). We ship to{' '}
+          flat / free over {formatPrice(usdPolicy.freeShippingThreshold, 'USD')} for USD orders,{' '}
+          {formatPrice(eurPolicy.shippingFlatRate, 'EUR')} flat / free over{' '}
+          {formatPrice(eurPolicy.freeShippingThreshold, 'EUR')} for EUR orders). We ship to{' '}
           {store.shipsTo}.
         </p>
       </Row>

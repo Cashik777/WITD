@@ -29,8 +29,22 @@ async function detectCountry(req: import('express').Request): Promise<string | n
   }
 }
 
+// Eurozone + the broader EU/EEA markets we now ship to — anyone detected in
+// one of these gets EUR pricing by default (still switchable by hand).
+const EUR_COUNTRIES = new Set([
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU',
+  'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES',
+  'SE', 'IS', 'LI', 'NO', 'CH',
+])
+
+function currencyForCountry(country: string | null): 'CAD' | 'USD' | 'EUR' {
+  if (country === 'CA') return 'CAD'
+  if (country && EUR_COUNTRIES.has(country)) return 'EUR'
+  return 'USD'
+}
+
 geoRouter.get('/geo', async (req, res) => {
   const country = await detectCountry(req)
-  const currency = country === 'CA' ? 'CAD' : 'USD'
+  const currency = currencyForCountry(country)
   res.json({ country, currency })
 })

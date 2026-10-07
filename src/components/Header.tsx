@@ -35,7 +35,7 @@ function CurrencySwitcher() {
       className={`flex items-center text-[11px] tracking-widest ${locked ? 'opacity-40' : ''}`}
       title={locked ? 'Currency is locked while your cart has items' : undefined}
     >
-      {(['CAD', 'USD'] as const).map((c, i) => (
+      {(['CAD', 'USD', 'EUR'] as const).map((c, i) => (
         <button
           key={c}
           onClick={() => !locked && setCurrency(c)}

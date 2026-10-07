@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
-export type Currency = 'CAD' | 'USD'
+export type Currency = 'CAD' | 'USD' | 'EUR'
 
 const STORAGE_KEY = 'witd:currency'
 
@@ -27,7 +27,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (saved === 'CAD' || saved === 'USD') {
+    if (saved === 'CAD' || saved === 'USD' || saved === 'EUR') {
       setCurrencyState(saved)
       setReady(true)
       return
@@ -35,7 +35,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     fetch('/api/geo')
       .then((res) => res.json())
       .then((data: { currency?: string }) => {
-        if (data.currency === 'USD') setCurrencyState('USD')
+        if (data.currency === 'USD' || data.currency === 'EUR') setCurrencyState(data.currency)
       })
       .catch(() => {
         /* geo lookup failing just means we stay on the CAD default */

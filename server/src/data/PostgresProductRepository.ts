@@ -38,10 +38,12 @@ const CREATE_TABLE_SQL = `
   );
 `
 
-// price_usd was added after the table already existed in production —
-// ADD COLUMN IF NOT EXISTS is safe to re-run and never touches existing rows.
+// price_usd/price_eur were added after the table already existed in
+// production — ADD COLUMN IF NOT EXISTS is safe to re-run and never touches
+// existing rows.
 const MIGRATE_SQL = `
   ALTER TABLE products ADD COLUMN IF NOT EXISTS price_usd NUMERIC;
+  ALTER TABLE products ADD COLUMN IF NOT EXISTS price_eur NUMERIC;
 `
 
 function rowToProduct(row: Record<string, unknown>): Product {
@@ -53,6 +55,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
     idea: (row.idea as string | null) ?? undefined,
     price: Number(row.price),
     priceUSD: row.price_usd != null ? Number(row.price_usd) : null,
+    priceEUR: row.price_eur != null ? Number(row.price_eur) : null,
     currency: row.currency as Product['currency'],
     category: row.category as Product['category'],
     collection: row.collection as string,
@@ -80,7 +83,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
 }
 
 const INSERT_COLUMNS = `
-  id, slug, name, description, idea, price, price_usd, currency, category, collection,
+  id, slug, name, description, idea, price, price_usd, price_eur, currency, category, collection,
   images, hover_image, images_by_color, colors, sizes, available_sizes,
   materials, fit, care_instructions, sku, tags, featured, is_new, bestseller,
   availability, fulfillment_provider, provider_product_id, provider_variant_mappings,
@@ -89,7 +92,7 @@ const INSERT_COLUMNS = `
 
 function toInsertValues(p: Product): unknown[] {
   return [
-    p.id, p.slug, p.name, p.description, p.idea ?? null, p.price, p.priceUSD ?? null, p.currency, p.category, p.collection,
+    p.id, p.slug, p.name, p.description, p.idea ?? null, p.price, p.priceUSD ?? null, p.priceEUR ?? null, p.currency, p.category, p.collection,
     JSON.stringify(p.images), p.hoverImage ?? null, JSON.stringify(p.imagesByColor), JSON.stringify(p.colors),
     JSON.stringify(p.sizes), JSON.stringify(p.availableSizes), p.materials, p.fit, p.careInstructions, p.sku,
     JSON.stringify(p.tags), p.featured, p.new, p.bestseller, p.availability, p.fulfillmentProvider,
@@ -118,7 +121,7 @@ export class PostgresProductRepository implements ProductRepository {
   }
 
   private async insert(p: Product): Promise<void> {
-    const placeholders = Array.from({ length: 30 }, (_, i) => `$${i + 1}`).join(',')
+    const placeholders = Array.from({ length: 31 }, (_, i) => `$${i + 1}`).join(',')
     await this.pool.query(`INSERT INTO products (${INSERT_COLUMNS}) VALUES (${placeholders})`, toInsertValues(p))
   }
 
@@ -163,14 +166,14 @@ export class PostgresProductRepository implements ProductRepository {
     const updated: Product = { ...existing, ...patch, updatedAt: new Date().toISOString() }
     await this.pool.query(
       `UPDATE products SET
-        slug=$2, name=$3, description=$4, idea=$5, price=$6, price_usd=$7, currency=$8, category=$9, collection=$10,
-        images=$11, hover_image=$12, images_by_color=$13, colors=$14, sizes=$15, available_sizes=$16,
-        materials=$17, fit=$18, care_instructions=$19, sku=$20, tags=$21, featured=$22, is_new=$23,
-        bestseller=$24, availability=$25, fulfillment_provider=$26, provider_product_id=$27,
-        provider_variant_mappings=$28, updated_at=$29
+        slug=$2, name=$3, description=$4, idea=$5, price=$6, price_usd=$7, price_eur=$8, currency=$9, category=$10, collection=$11,
+        images=$12, hover_image=$13, images_by_color=$14, colors=$15, sizes=$16, available_sizes=$17,
+        materials=$18, fit=$19, care_instructions=$20, sku=$21, tags=$22, featured=$23, is_new=$24,
+        bestseller=$25, availability=$26, fulfillment_provider=$27, provider_product_id=$28,
+        provider_variant_mappings=$29, updated_at=$30
       WHERE id=$1`,
       [
-        id, updated.slug, updated.name, updated.description, updated.idea ?? null, updated.price, updated.priceUSD ?? null, updated.currency,
+        id, updated.slug, updated.name, updated.description, updated.idea ?? null, updated.price, updated.priceUSD ?? null, updated.priceEUR ?? null, updated.currency,
         updated.category, updated.collection, JSON.stringify(updated.images), updated.hoverImage ?? null,
         JSON.stringify(updated.imagesByColor), JSON.stringify(updated.colors), JSON.stringify(updated.sizes),
         JSON.stringify(updated.availableSizes), updated.materials, updated.fit, updated.careInstructions,

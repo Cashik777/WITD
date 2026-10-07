@@ -24,18 +24,24 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 // per order (see the real per-destination rates checked against the live
 // API — mostly $7-16 CAD) — the gap is intentional, to make "just add a
 // little more for free shipping" a real nudge toward the threshold instead
-// of a rounding error.
+// of a rounding error. The EUR rate is a conservative estimate (Printful's
+// EU destinations typically run a bit above US international) pending a
+// real-rate check the way CAD/USD got — revisit before volume gets large.
 const SHIPPING_POLICY = {
   CAD: { freeThreshold: 150, flatRate: 30 },
   USD: { freeThreshold: 120, flatRate: 24 },
+  EUR: { freeThreshold: 140, flatRate: 28 },
 } as const
 
-function resolveCurrency(raw: unknown): 'CAD' | 'USD' {
-  return raw === 'USD' ? 'USD' : 'CAD'
+function resolveCurrency(raw: unknown): 'CAD' | 'USD' | 'EUR' {
+  if (raw === 'USD') return 'USD'
+  if (raw === 'EUR') return 'EUR'
+  return 'CAD'
 }
 
-function priceFor(product: Product, currency: 'CAD' | 'USD'): number {
+function priceFor(product: Product, currency: 'CAD' | 'USD' | 'EUR'): number {
   if (currency === 'USD') return product.priceUSD ?? product.price
+  if (currency === 'EUR') return product.priceEUR ?? product.price
   return product.price
 }
 
@@ -209,7 +215,17 @@ async function buildSessionParams(args: {
       shipping > 0
         ? [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: shipping * 100, currency }, display_name: 'Standard Shipping' } }]
         : [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: 0, currency }, display_name: 'Free Shipping' } }],
-    shipping_address_collection: { allowed_countries: ['CA', 'US'] },
+    // Keep in sync with the EUR_COUNTRIES list in routes/geo.ts — that one
+    // decides default currency, this one decides who Stripe will actually
+    // let check out.
+    shipping_address_collection: {
+      allowed_countries: [
+        'CA', 'US',
+        'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU',
+        'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES',
+        'SE', 'IS', 'LI', 'NO', 'CH',
+      ],
+    },
     success_url: `${FRONTEND_URL}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${FRONTEND_URL}/cart`,
     metadata: { orderId },
