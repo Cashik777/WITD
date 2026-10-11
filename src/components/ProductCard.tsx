@@ -5,13 +5,7 @@ import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
-
-const colorSwatch: Record<string, string> = {
-  Black: '#141412',
-  White: '#F4F2EC',
-  'Off-White': '#E8E3D6',
-  'Dark Stone': '#4A473F',
-}
+import { colorSwatch } from '@/lib/colorSwatch'
 
 export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
