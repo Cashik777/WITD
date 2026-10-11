@@ -99,5 +99,11 @@ export function CursorTrail({ color = '#F4F2EC', className = '' }: { color?: str
     }
   }, [color])
 
-  return <canvas ref={canvasRef} className={`absolute inset-0 pointer-events-none ${className}`} aria-hidden="true" />
+  return (
+    <canvas
+      ref={canvasRef}
+      className={`absolute inset-0 w-full h-full pointer-events-none ${className}`}
+      aria-hidden="true"
+    />
+  )
 }
