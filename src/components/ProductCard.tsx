@@ -107,7 +107,7 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="mt-3.5 flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-sm text-paper">{product.name}</h3>
           <div className="mt-1.5 flex gap-1.5">
             {product.colors.map((c) => (
