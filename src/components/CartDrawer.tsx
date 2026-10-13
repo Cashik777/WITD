@@ -69,7 +69,7 @@ export function CartDrawer() {
               <div className="px-6 py-4 border-b border-line">
                 <p className="text-xs text-paper mb-2">
                   {remaining > 0
-                    ? `Shipping is ${formatPrice(10000, currency)}. Add ${formatPrice(remaining, currency)} more and it's free.`
+                    ? `Shipping is ${formatPrice(policy.shippingFlatRate, currency)}. Add ${formatPrice(remaining, currency)} more and it's free.`
                     : "You've unlocked free shipping"}
                 </p>
                 <div className="h-1 bg-line overflow-hidden">
