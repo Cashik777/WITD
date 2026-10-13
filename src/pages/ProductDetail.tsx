@@ -36,7 +36,7 @@ export default function ProductDetail() {
         <span className="text-paper/70">{product.name}</span>
       </nav>
 
-      <div className="grid md:grid-cols-2 gap-10 md:gap-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
         <ProductGallery images={galleryImages} name={product.name} />
         <ProductInfo product={product} purchase={purchase} />
       </div>

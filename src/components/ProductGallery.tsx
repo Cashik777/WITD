@@ -214,7 +214,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
       <div
         ref={trackRef}
         onScroll={onTrackScroll}
-        className="flex md:hidden overflow-x-auto snap-x snap-mandatory aspect-[4/5] bg-[#151412] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory aspect-[4/5] bg-[#151412] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {images.map((img, i) => (
           <MobileZoomableImage key={img + i} src={img} alt={name} isActive={active === i} />
