@@ -79,16 +79,6 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* Small stacked square in the opposite corner from New/Sold Out/Low
-            Stock so it never collides with them, and short enough per line
-            that it can't wrap across the garment underneath. */}
-        {product.bestseller && !soldOut && (
-          <div className="absolute top-3 right-3 flex flex-col items-center leading-tight text-[9px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1.5 border border-line">
-            <span>Best</span>
-            <span>Seller</span>
-          </div>
-        )}
-
         {!soldOut && !pickingSize && (
           <button
             onClick={openSizePicker}
@@ -118,6 +108,9 @@ export function ProductCard({ product }: { product: Product }) {
 
       <div className="mt-3.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
+          {product.bestseller && (
+            <p className="text-[10px] tracking-widest uppercase text-paper/50 mb-1">Bestseller</p>
+          )}
           <h3 className="text-sm text-paper">{product.name}</h3>
           <div className="mt-1.5 flex gap-1.5">
             {product.colors.map((c) => (
