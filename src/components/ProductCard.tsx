@@ -61,10 +61,15 @@ export function ProductCard({ product }: { product: Product }) {
           />
         )}
 
-        {(product.new || soldOut || product.availability === 'low_stock') && (
+        {(product.new || product.bestseller || soldOut || product.availability === 'low_stock') && (
           <div className="absolute top-3 left-3 flex gap-2">
             {product.new && !soldOut && (
               <span className="text-[10px] tracking-widest uppercase bg-paper text-black px-2 py-1">New</span>
+            )}
+            {product.bestseller && !soldOut && (
+              <span className="text-[10px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1 border border-line">
+                Bestseller
+              </span>
             )}
             {soldOut && (
               <span className="text-[10px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1 border border-line">
