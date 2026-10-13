@@ -35,11 +35,6 @@ interface FormState {
   fulfillmentProvider: Product['fulfillmentProvider']
 }
 
-interface ColorImages {
-  front: string
-  back: string
-}
-
 const emptyProduct: FormState = {
   name: '',
   slug: '',
@@ -76,7 +71,7 @@ export default function AdminProductForm() {
   const [colorsInput, setColorsInput] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
-  const [colorImages, setColorImages] = useState<Record<string, ColorImages>>({})
+  const [colorImages, setColorImages] = useState<Record<string, string[]>>({})
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -132,12 +127,7 @@ export default function AdminProductForm() {
       setColorsInput(product.colors.join(', '))
       setTagsInput(product.tags.join(', '))
       setColorImages(
-        Object.fromEntries(
-          Object.entries(product.imagesByColor).map(([color, imgs]) => [
-            color,
-            { front: imgs[0] ?? '', back: imgs[1] ?? '' },
-          ])
-        )
+        Object.fromEntries(Object.entries(product.imagesByColor).map(([color, imgs]) => [color, [...imgs]]))
       )
     })
   }, [id, isEdit])
@@ -151,15 +141,34 @@ export default function AdminProductForm() {
     }))
   }
 
-  const handleSlotUpload = async (color: string, slot: keyof ColorImages, file: File) => {
-    const key = `${color}:${slot}`
+  // Every color always shows at least a Front + Back slot; beyond that,
+  // the array only grows when "+" is clicked, so slotsFor() pads a
+  // shorter/missing entry up to 2 purely for display.
+  const slotsFor = (map: Record<string, string[]>, color: string): string[] => {
+    const stored = map[color] ?? []
+    return stored.length >= 2 ? stored : [...stored, ...Array(2 - stored.length).fill('')]
+  }
+
+  const getSlots = (color: string) => slotsFor(colorImages, color)
+
+  const addSlot = (color: string) => {
+    setColorImages((prev) => ({ ...prev, [color]: [...slotsFor(prev, color), ''] }))
+  }
+
+  const removeSlot = (color: string, index: number) => {
+    setColorImages((prev) => ({ ...prev, [color]: slotsFor(prev, color).filter((_, i) => i !== index) }))
+  }
+
+  const handleSlotUpload = async (color: string, index: number, file: File) => {
+    const key = `${color}:${index}`
     setUploadingKey(key)
     setError(null)
     try {
       const { url } = await adminApi.uploadImage(file)
       setColorImages((prev) => {
-        const current = prev[color] ?? { front: '', back: '' }
-        return { ...prev, [color]: { ...current, [slot]: url } }
+        const slots = [...slotsFor(prev, color)]
+        slots[index] = url
+        return { ...prev, [color]: slots }
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
@@ -168,25 +177,13 @@ export default function AdminProductForm() {
     }
   }
 
-  const removeSlotImage = (color: string, slot: keyof ColorImages) => {
-    setColorImages((prev) => {
-      const current = prev[color] ?? { front: '', back: '' }
-      return { ...prev, [color]: { ...current, [slot]: '' } }
-    })
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setError(null)
     const colors = colorsInput.split(',').map((c) => c.trim()).filter(Boolean)
     const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean)
-    const imagesByColor = Object.fromEntries(
-      colors.map((c) => {
-        const ci = colorImages[c] ?? { front: '', back: '' }
-        return [c, [ci.front, ci.back].filter(Boolean)]
-      })
-    )
+    const imagesByColor = Object.fromEntries(colors.map((c) => [c, getSlots(c).filter(Boolean)]))
     const images = colors.length > 0 ? imagesByColor[colors[0]] ?? [] : []
     const hoverImage = images[1] ?? ''
     const payload = { ...form, colors, tags, images, hoverImage, imagesByColor }
@@ -376,58 +373,80 @@ export default function AdminProductForm() {
         <div>
           <label className={label}>Product Photos</label>
           <p className="text-xs text-mist mb-3">
-            Upload a front (required) and back (optional) photo for each color — type colors above first.
+            Upload a front (required) and back (optional) photo for each color — type colors above first. Use + to
+            add extra photos, × to remove any of them.
           </p>
           {colorList.length === 0 ? (
             <p className="text-xs text-mist">Add colors above first — photo slots appear here per color.</p>
           ) : (
             <div className="space-y-4">
               {colorList.map((color) => {
-                const ci = colorImages[color] ?? { front: '', back: '' }
+                const slots = getSlots(color)
                 return (
                   <div key={color} className="border border-mist/30 p-3">
                     <p className="text-xs tracking-widest uppercase text-paper mb-2">{color}</p>
-                    <div className="flex gap-4 flex-wrap">
-                      {(['front', 'back'] as const).map((slot) => {
-                        const url = ci[slot]
-                        const key = `${color}:${slot}`
+                    <div className="flex gap-4 flex-wrap items-start">
+                      {slots.map((url, index) => {
+                        const key = `${color}:${index}`
                         const isUploading = uploadingKey === key
+                        const slotLabel = index === 0 ? 'Front' : index === 1 ? 'Back (optional)' : `Photo ${index + 1}`
                         return (
-                          <div key={slot}>
-                            <p className="text-[10px] tracking-widest uppercase text-mist mb-1">
-                              {slot}
-                              {slot === 'back' ? ' (optional)' : ''}
-                            </p>
+                          <div key={index}>
+                            <p className="text-[10px] tracking-widest uppercase text-mist mb-1">{slotLabel}</p>
                             {url ? (
                               <div className="relative w-20 h-24 bg-[#151412]">
                                 <img src={url} alt="" className="w-full h-full object-cover" />
                                 <button
                                   type="button"
-                                  onClick={() => removeSlotImage(color, slot)}
+                                  onClick={() => removeSlot(color, index)}
                                   className="absolute -top-2 -right-2 w-5 h-5 bg-paper text-black text-xs rounded-full"
+                                  title="Remove this photo"
                                 >
                                   ×
                                 </button>
                               </div>
                             ) : (
-                              <label className="flex items-center justify-center w-20 h-24 bg-[#151412] border border-dashed border-mist/40 text-[10px] text-mist text-center px-1 cursor-pointer">
-                                {isUploading ? 'Uploading…' : 'Upload'}
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  disabled={isUploading}
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0]
-                                    if (file) handleSlotUpload(color, slot, file)
-                                    e.target.value = ''
-                                  }}
-                                />
-                              </label>
+                              <div className="relative w-20 h-24">
+                                <label className="flex items-center justify-center w-20 h-24 bg-[#151412] border border-dashed border-mist/40 text-[10px] text-mist text-center px-1 cursor-pointer">
+                                  {isUploading ? 'Uploading…' : 'Upload'}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    disabled={isUploading}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0]
+                                      if (file) handleSlotUpload(color, index, file)
+                                      e.target.value = ''
+                                    }}
+                                  />
+                                </label>
+                                {index >= 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSlot(color, index)}
+                                    className="absolute -top-2 -right-2 w-5 h-5 bg-paper text-black text-xs rounded-full"
+                                    title="Remove this slot"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </div>
                         )
                       })}
+                      <div>
+                        <p className="text-[10px] tracking-widest uppercase text-mist mb-1">&nbsp;</p>
+                        <button
+                          type="button"
+                          onClick={() => addSlot(color)}
+                          className="w-20 h-24 border border-dashed border-mist/40 text-mist hover:border-paper hover:text-paper transition-colors text-xl flex items-center justify-center"
+                          title="Add another photo"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
