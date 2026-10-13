@@ -62,7 +62,7 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         {(product.new || product.bestseller || soldOut || product.availability === 'low_stock') && (
-          <div className="absolute top-3 left-3 flex gap-2">
+          <div className="absolute top-3 left-3 right-3 flex flex-wrap gap-2">
             {product.new && !soldOut && (
               <span className="text-[10px] tracking-widest uppercase bg-paper text-black px-2 py-1">New</span>
             )}
