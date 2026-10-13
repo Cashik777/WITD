@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { useProducts } from '@/hooks/useProducts'
 import { useFilteredProducts } from '@/hooks/useFilteredProducts'
 import { ProductGrid } from '@/components/ProductGrid'
@@ -17,7 +17,19 @@ const sortLabels: Record<SortOption, string> = {
   'price-desc': 'Price: High to Low',
 }
 
+// Every nav entry point into this page (header "Shop"/"New Drop", footer
+// "Bestsellers", category tabs, etc.) renders the same /shop route without
+// unmounting it, so local filter state (seeded once from the URL) used to
+// go stale when navigating between them client-side — e.g. landing on
+// ?collection=Bestsellers then clicking "Shop" kept the Bestsellers filter
+// applied instead of clearing it. Remounting on every path/query change
+// forces filter state to re-seed fresh from the new URL each time.
 export default function Shop() {
+  const location = useLocation()
+  return <ShopView key={location.pathname + location.search} />
+}
+
+function ShopView() {
   useDocumentMeta('Shop — WITD', 'Browse the First Drop — streetwear for those awake inside the dream.')
   const { products, categoryNames } = useProducts()
   const [searchParams] = useSearchParams()
