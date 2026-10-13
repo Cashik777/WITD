@@ -61,15 +61,10 @@ export function ProductCard({ product }: { product: Product }) {
           />
         )}
 
-        {(product.new || product.bestseller || soldOut || product.availability === 'low_stock') && (
-          <div className="absolute top-3 left-3 right-3 flex flex-wrap gap-2">
+        {(product.new || soldOut || product.availability === 'low_stock') && (
+          <div className="absolute top-3 left-3 flex gap-2">
             {product.new && !soldOut && (
               <span className="text-[10px] tracking-widest uppercase bg-paper text-black px-2 py-1">New</span>
-            )}
-            {product.bestseller && !soldOut && (
-              <span className="text-[10px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1 border border-line">
-                Bestseller
-              </span>
             )}
             {soldOut && (
               <span className="text-[10px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1 border border-line">
@@ -81,6 +76,16 @@ export function ProductCard({ product }: { product: Product }) {
                 Low Stock
               </span>
             )}
+          </div>
+        )}
+
+        {/* Small stacked square in the opposite corner from New/Sold Out/Low
+            Stock so it never collides with them, and short enough per line
+            that it can't wrap across the garment underneath. */}
+        {product.bestseller && !soldOut && (
+          <div className="absolute top-3 right-3 flex flex-col items-center leading-tight text-[9px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1.5 border border-line">
+            <span>Best</span>
+            <span>Seller</span>
           </div>
         )}
 
