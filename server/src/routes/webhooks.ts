@@ -5,7 +5,7 @@ import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { orderRepository } from '../data/db.js'
 import { productRepository } from '../data/productsDb.js'
 import { getFulfillmentProvider } from '../lib/fulfillment/index.js'
-import { sendOrderConfirmationEmail, sendShippingNotificationEmail } from '../lib/email.js'
+import { sendOrderConfirmationEmail, sendInProductionEmail, sendShippingNotificationEmail } from '../lib/email.js'
 
 export const webhookRouter = Router()
 
@@ -149,7 +149,7 @@ webhookRouter.post('/printful', async (req: Request, res) => {
   let payload: {
     type?: string
     data?: {
-      order?: { external_id?: string }
+      order?: { external_id?: string; status?: string }
       shipment?: { tracking_number?: string; tracking_url?: string }
     }
   }
@@ -192,6 +192,20 @@ webhookRouter.post('/printful', async (req: Request, res) => {
       await orderRepository.update(order.id, { fulfillmentStatus: 'failed' })
     } else if (payload.type === 'order_canceled') {
       await orderRepository.update(order.id, { fulfillmentStatus: 'cancelled' })
+    } else if (payload.type === 'order_updated' && payload.data?.order?.status === 'inprocess') {
+      // Printful's own order.status (draft/pending/inprocess/onhold/partial/
+      // fulfilled/canceled/failed) — "inprocess" is the closest real signal
+      // to "now being made." No dedicated webhook event exists for this, so
+      // order_updated plus this status check is the only way to catch it.
+      const alreadyInProduction = order.fulfillmentStatus === 'in_production'
+      const updated = await orderRepository.update(order.id, { fulfillmentStatus: 'in_production' })
+      if (!alreadyInProduction && updated) {
+        try {
+          await sendInProductionEmail(updated)
+        } catch (emailErr) {
+          console.error(`In-production notification email failed for order ${order.id}`, emailErr)
+        }
+      }
     }
   } catch (err) {
     // Never throw here: an unhandled error would surface as a 500, and

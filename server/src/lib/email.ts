@@ -311,23 +311,10 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   await sendEmail(to, `Order confirmed — ${order.orderNumber}`, html)
 }
 
-// Fired when fulfillmentStatus transitions to 'shipped' — either the
-// Printful webhook (routes/webhooks.ts) or a manual admin edit
-// (routes/admin.ts) can trigger that transition, so both call this. Without
-// it, a customer's only way to learn their order shipped was to go check
-// the account page themselves; nothing ever pushed the news to them.
-export async function sendShippingNotificationEmail(order: Order): Promise<void> {
-  const to = order.customer.email
-  if (!to) {
-    console.warn(`[email] Order ${order.orderNumber} has no customer email — skipping shipping notice.`)
-    return
-  }
-  if (!isEmailConfigured) {
-    console.warn(`[email] RESEND_API_KEY not set — shipping notice for ${order.orderNumber} not sent.`)
-    return
-  }
-
-  const itemLines = order.items
+// Compact item list (no price — these fire after checkout, not at it) shared
+// by every fulfillment-lifecycle email below.
+function renderItemList(order: Order): string {
+  return order.items
     .map(
       (item, i) => `
         <tr>
@@ -353,6 +340,88 @@ export async function sendShippingNotificationEmail(order: Order): Promise<void>
         </tr>`
     )
     .join('')
+}
+
+// Shared by every fulfillment-lifecycle email (production/shipped/delivered)
+// — same seal-block treatment the order-confirmation email uses for its
+// order number, just showing whatever's most relevant at this stage.
+function renderSealBlock(label: string, value: string): string {
+  return `
+    <tr>
+      <td style="padding: 0 36px;">
+        ${hairlineRule}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="center" style="padding: 22px 0; font-family: ${sans}; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: ${mist};">
+              ${label}<br />
+              <span style="font-size: 15px; letter-spacing: 3px; color: ${ink};">${value}</span>
+            </td>
+          </tr>
+        </table>
+        ${hairlineRule}
+      </td>
+    </tr>`
+}
+
+// Fired when fulfillmentStatus transitions to 'in_production' — Printful's
+// order_updated webhook reports this when their status becomes "inprocess"
+// (see routes/webhooks.ts). Lets the customer know the order moved past
+// "placed" into actually being made, before there's a tracking number yet.
+export async function sendInProductionEmail(order: Order): Promise<void> {
+  const to = order.customer.email
+  if (!to) {
+    console.warn(`[email] Order ${order.orderNumber} has no customer email — skipping production notice.`)
+    return
+  }
+  if (!isEmailConfigured) {
+    console.warn(`[email] RESEND_API_KEY not set — production notice for ${order.orderNumber} not sent.`)
+    return
+  }
+
+  const bodyHtml = `
+    ${renderSealBlock('Order&nbsp;No.', order.orderNumber)}
+
+    <tr>
+      <td style="padding: 36px 36px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${renderItemList(order)}
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding: 32px 36px 0;">
+        <p style="margin: 0; font-family: ${sans}; font-size: 12px; line-height: 1.8; color: ${mist};">
+          Your pieces are being made right now. We&rsquo;ll send a tracking link the moment they ship.
+        </p>
+      </td>
+    </tr>`
+
+  const html = renderEmailShell({
+    docTitle: 'In Production — WITD',
+    title: 'In Production',
+    subtitle: 'Your pieces are being made.',
+    bodyHtml,
+  })
+
+  await sendEmail(to, `Your order is in production — ${order.orderNumber}`, html)
+}
+
+// Fired when fulfillmentStatus transitions to 'shipped' — either the
+// Printful webhook (routes/webhooks.ts) or a manual admin edit
+// (routes/admin.ts) can trigger that transition, so both call this. Without
+// it, a customer's only way to learn their order shipped was to go check
+// the account page themselves; nothing ever pushed the news to them.
+export async function sendShippingNotificationEmail(order: Order): Promise<void> {
+  const to = order.customer.email
+  if (!to) {
+    console.warn(`[email] Order ${order.orderNumber} has no customer email — skipping shipping notice.`)
+    return
+  }
+  if (!isEmailConfigured) {
+    console.warn(`[email] RESEND_API_KEY not set — shipping notice for ${order.orderNumber} not sent.`)
+    return
+  }
 
   const trackButton = order.trackingUrl
     ? `<tr>
@@ -365,27 +434,14 @@ export async function sendShippingNotificationEmail(order: Order): Promise<void>
     : ''
 
   const bodyHtml = `
-    <tr>
-      <td style="padding: 0 36px;">
-        ${hairlineRule}
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td align="center" style="padding: 22px 0; font-family: ${sans}; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: ${mist};">
-              ${order.trackingNumber ? 'Tracking&nbsp;No.' : 'Order&nbsp;No.'}<br />
-              <span style="font-size: 15px; letter-spacing: 3px; color: ${ink};">${order.trackingNumber ?? order.orderNumber}</span>
-            </td>
-          </tr>
-        </table>
-        ${hairlineRule}
-      </td>
-    </tr>
+    ${renderSealBlock(order.trackingNumber ? 'Tracking&nbsp;No.' : 'Order&nbsp;No.', order.trackingNumber ?? order.orderNumber)}
 
     ${trackButton}
 
     <tr>
       <td style="padding: 36px 36px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          ${itemLines}
+          ${renderItemList(order)}
         </table>
       </td>
     </tr>
@@ -407,6 +463,53 @@ export async function sendShippingNotificationEmail(order: Order): Promise<void>
   })
 
   await sendEmail(to, `Your order has shipped — ${order.orderNumber}`, html)
+}
+
+// Fired when fulfillmentStatus transitions to 'delivered'. Printful has no
+// reliable "delivered" signal of its own (that's carrier-level, not
+// fulfillment-level), so unlike the two emails above, nothing calls this
+// automatically from the Printful webhook today — it only fires from a
+// manual admin edit (routes/admin.ts), once someone's actually confirmed
+// via the tracking link that the package arrived.
+export async function sendDeliveredEmail(order: Order): Promise<void> {
+  const to = order.customer.email
+  if (!to) {
+    console.warn(`[email] Order ${order.orderNumber} has no customer email — skipping delivered notice.`)
+    return
+  }
+  if (!isEmailConfigured) {
+    console.warn(`[email] RESEND_API_KEY not set — delivered notice for ${order.orderNumber} not sent.`)
+    return
+  }
+
+  const bodyHtml = `
+    ${renderSealBlock('Order&nbsp;No.', order.orderNumber)}
+
+    <tr>
+      <td style="padding: 36px 36px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${renderItemList(order)}
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding: 32px 36px 0;">
+        <p style="margin: 0; font-family: ${sans}; font-size: 12px; line-height: 1.8; color: ${mist};">
+          It found you. Keep this order number with your email on hand to verify the purchase for community
+          access.
+        </p>
+      </td>
+    </tr>`
+
+  const html = renderEmailShell({
+    docTitle: 'Delivered — WITD',
+    title: 'Delivered',
+    subtitle: 'It found you.',
+    bodyHtml,
+  })
+
+  await sendEmail(to, `Your order has arrived — ${order.orderNumber}`, html)
 }
 
 // Adds an address to the Resend Audience backing the "Enter the dream"
