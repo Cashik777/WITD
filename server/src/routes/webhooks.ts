@@ -5,7 +5,7 @@ import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { orderRepository } from '../data/db.js'
 import { productRepository } from '../data/productsDb.js'
 import { getFulfillmentProvider } from '../lib/fulfillment/index.js'
-import { sendOrderConfirmationEmail } from '../lib/email.js'
+import { sendOrderConfirmationEmail, sendShippingNotificationEmail } from '../lib/email.js'
 
 export const webhookRouter = Router()
 
@@ -173,11 +173,21 @@ webhookRouter.post('/printful', async (req: Request, res) => {
   try {
     if (payload.type === 'package_shipped') {
       const shipment = payload.data?.shipment
-      await orderRepository.update(order.id, {
+      const alreadyShipped = order.fulfillmentStatus === 'shipped'
+      const updated = await orderRepository.update(order.id, {
         fulfillmentStatus: 'shipped',
         trackingNumber: shipment?.tracking_number ?? null,
         trackingUrl: shipment?.tracking_url ?? null,
       })
+      // Only notify on the first shipped transition — Printful can resend a
+      // webhook delivery, and that must not re-email the customer.
+      if (!alreadyShipped && updated) {
+        try {
+          await sendShippingNotificationEmail(updated)
+        } catch (emailErr) {
+          console.error(`Shipping notification email failed for order ${order.id}`, emailErr)
+        }
+      }
     } else if (payload.type === 'order_failed') {
       await orderRepository.update(order.id, { fulfillmentStatus: 'failed' })
     } else if (payload.type === 'order_canceled') {

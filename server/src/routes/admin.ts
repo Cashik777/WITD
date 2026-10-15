@@ -9,7 +9,7 @@ import { isCloudinaryConfigured, uploadImage } from '../lib/cloudinary.js'
 import { isStripeConfigured } from '../lib/stripe.js'
 import { isDiscordConfigured } from '../lib/discord.js'
 import { isAuthConfigured } from '../lib/auth.js'
-import { isEmailConfigured, isNewsletterConfigured } from '../lib/email.js'
+import { isEmailConfigured, isNewsletterConfigured, sendShippingNotificationEmail } from '../lib/email.js'
 import type { Product } from '../models/Product.js'
 import type { Order } from '../models/Order.js'
 
@@ -172,6 +172,18 @@ adminRouter.patch('/orders/:id', async (req, res) => {
   }
 
   const updated = await orderRepository.update(order.id, patch)
+
+  // Same transition-triggered notification as the Printful webhook (see
+  // routes/webhooks.ts) — covers Printify orders and any case where a human
+  // is setting "shipped" by hand instead of a webhook doing it.
+  if (updated && patch.fulfillmentStatus === 'shipped' && order.fulfillmentStatus !== 'shipped') {
+    try {
+      await sendShippingNotificationEmail(updated)
+    } catch (emailErr) {
+      console.error(`Shipping notification email failed for order ${order.id}`, emailErr)
+    }
+  }
+
   res.json({ order: updated })
 })
 

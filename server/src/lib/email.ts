@@ -311,6 +311,104 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   await sendEmail(to, `Order confirmed — ${order.orderNumber}`, html)
 }
 
+// Fired when fulfillmentStatus transitions to 'shipped' — either the
+// Printful webhook (routes/webhooks.ts) or a manual admin edit
+// (routes/admin.ts) can trigger that transition, so both call this. Without
+// it, a customer's only way to learn their order shipped was to go check
+// the account page themselves; nothing ever pushed the news to them.
+export async function sendShippingNotificationEmail(order: Order): Promise<void> {
+  const to = order.customer.email
+  if (!to) {
+    console.warn(`[email] Order ${order.orderNumber} has no customer email — skipping shipping notice.`)
+    return
+  }
+  if (!isEmailConfigured) {
+    console.warn(`[email] RESEND_API_KEY not set — shipping notice for ${order.orderNumber} not sent.`)
+    return
+  }
+
+  const itemLines = order.items
+    .map(
+      (item, i) => `
+        <tr>
+          <td style="padding: ${i === 0 ? '0' : '18px'} 0 18px; ${i === order.items.length - 1 ? '' : `border-bottom: 1px solid ${line};`} vertical-align: top;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                ${
+                  item.image
+                    ? `<td style="width: 48px; padding-right: 14px; vertical-align: top;">
+                        <img src="${item.image}" width="48" height="60" alt="" style="display: block; border: 1px solid ${line};" />
+                      </td>`
+                    : ''
+                }
+                <td style="font-family: ${serif}; font-size: 15px; color: ${ink}; vertical-align: top;">
+                  ${item.name}
+                  <div style="font-family: ${sans}; font-size: 12px; color: ${mist}; margin-top: 4px; letter-spacing: 0.2px;">
+                    ${item.color} &nbsp;&middot;&nbsp; ${item.size} &nbsp;&middot;&nbsp; Qty ${item.quantity}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`
+    )
+    .join('')
+
+  const trackButton = order.trackingUrl
+    ? `<tr>
+        <td align="center" style="padding: 24px 36px 0;">
+          <a href="${order.trackingUrl}" style="display: inline-block; font-family: ${sans}; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: ${ink}; border: 1px solid ${mist}; padding: 14px 32px;">
+            Track Package
+          </a>
+        </td>
+      </tr>`
+    : ''
+
+  const bodyHtml = `
+    <tr>
+      <td style="padding: 0 36px;">
+        ${hairlineRule}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="center" style="padding: 22px 0; font-family: ${sans}; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: ${mist};">
+              ${order.trackingNumber ? 'Tracking&nbsp;No.' : 'Order&nbsp;No.'}<br />
+              <span style="font-size: 15px; letter-spacing: 3px; color: ${ink};">${order.trackingNumber ?? order.orderNumber}</span>
+            </td>
+          </tr>
+        </table>
+        ${hairlineRule}
+      </td>
+    </tr>
+
+    ${trackButton}
+
+    <tr>
+      <td style="padding: 36px 36px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${itemLines}
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding: 32px 36px 0;">
+        <p style="margin: 0; font-family: ${sans}; font-size: 12px; line-height: 1.8; color: ${mist};">
+          Order ${order.orderNumber}. Delivery times vary by destination — the tracking link above has the
+          latest from the carrier.
+        </p>
+      </td>
+    </tr>`
+
+  const html = renderEmailShell({
+    docTitle: 'Order Shipped — WITD',
+    title: 'On Its Way',
+    subtitle: 'The dream is in transit.',
+    bodyHtml,
+  })
+
+  await sendEmail(to, `Your order has shipped — ${order.orderNumber}`, html)
+}
+
 // Adds an address to the Resend Audience backing the "Enter the dream"
 // newsletter signup (see Newsletter.tsx). Resend's contacts endpoint upserts
 // by email, so re-subscribing an existing address is a harmless no-op.
