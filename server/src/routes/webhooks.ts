@@ -5,6 +5,7 @@ import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { orderRepository } from '../data/db.js'
 import { productRepository } from '../data/productsDb.js'
 import { getFulfillmentProvider } from '../lib/fulfillment/index.js'
+import { sendOrderConfirmationEmail } from '../lib/email.js'
 
 export const webhookRouter = Router()
 
@@ -114,6 +115,15 @@ webhookRouter.post('/stripe', async (req: Request, res) => {
         // instead of throwing, which would make Stripe re-send the webhook.
         console.error(`Fulfillment submission failed for order ${order.id}`, fulfillmentErr)
         await orderRepository.update(order.id, { fulfillmentStatus: 'failed' })
+      }
+
+      // Same reasoning as fulfillment above: payment already succeeded, so a
+      // failed email send must never throw (which would make Stripe retry
+      // the whole webhook and resubmit fulfillment).
+      try {
+        await sendOrderConfirmationEmail(paidOrder)
+      } catch (emailErr) {
+        console.error(`Order confirmation email failed for order ${order.id}`, emailErr)
       }
     }
 
