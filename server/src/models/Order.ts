@@ -16,6 +16,7 @@ export interface OrderItem {
   color: string
   quantity: number
   unitPrice: number // dollars, validated server-side at order-creation time
+  image?: string // snapshot of the product's photo at order time, for receipts/emails
 }
 
 export interface ShippingAddress {
@@ -49,5 +50,6 @@ export interface Order {
   fulfillmentProvider: 'printful' | 'printify' | 'mock' | null
   fulfillmentOrderId: string | null
   trackingNumber: string | null
+  trackingUrl: string | null
   discordVerifiedAt: string | null
 }

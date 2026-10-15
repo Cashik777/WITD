@@ -195,6 +195,7 @@ accountRouter.get('/account/orders', requireCustomer, async (req: CustomerReques
       createdAt: o.createdAt,
       items: o.items,
       trackingNumber: o.trackingNumber,
+      trackingUrl: o.trackingUrl,
     })),
   })
 })

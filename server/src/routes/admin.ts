@@ -11,6 +11,7 @@ import { isDiscordConfigured } from '../lib/discord.js'
 import { isAuthConfigured } from '../lib/auth.js'
 import { isEmailConfigured, isNewsletterConfigured } from '../lib/email.js'
 import type { Product } from '../models/Product.js'
+import type { Order } from '../models/Order.js'
 
 export const adminRouter = Router()
 adminRouter.use(requireAdmin)
@@ -145,6 +146,33 @@ adminRouter.post('/upload', upload.single('file'), async (req, res) => {
 adminRouter.get('/orders', async (_req, res) => {
   const orders = await orderRepository.findAll()
   res.json({ orders })
+})
+
+// Manual fallback for fulfillment/tracking info — the Printful webhook (see
+// routes/webhooks.ts) fills this in automatically for Printful orders, but
+// this covers Printify orders (no webhook wired up yet), a missed/failed
+// webhook delivery, or correcting a mistake.
+const EDITABLE_FULFILLMENT_STATUSES = ['pending', 'submitted', 'in_production', 'shipped', 'delivered', 'cancelled', 'failed']
+adminRouter.patch('/orders/:id', async (req, res) => {
+  const order = await orderRepository.findById(req.params.id)
+  if (!order) return res.status(404).json({ error: 'Order not found.' })
+
+  const patch: { fulfillmentStatus?: Order['fulfillmentStatus']; trackingNumber?: string | null; trackingUrl?: string | null } = {}
+  if (req.body?.fulfillmentStatus !== undefined) {
+    if (!EDITABLE_FULFILLMENT_STATUSES.includes(req.body.fulfillmentStatus)) {
+      return res.status(400).json({ error: 'Invalid fulfillment status.' })
+    }
+    patch.fulfillmentStatus = req.body.fulfillmentStatus
+  }
+  if (req.body?.trackingNumber !== undefined) {
+    patch.trackingNumber = String(req.body.trackingNumber).trim() || null
+  }
+  if (req.body?.trackingUrl !== undefined) {
+    patch.trackingUrl = String(req.body.trackingUrl).trim() || null
+  }
+
+  const updated = await orderRepository.update(order.id, patch)
+  res.json({ order: updated })
 })
 
 // Deliberately only for abandoned/test checkouts, not a general "cancel an

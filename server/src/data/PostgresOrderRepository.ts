@@ -33,6 +33,7 @@ const MIGRATE_SQL = `
   ALTER TABLE orders ADD COLUMN IF NOT EXISTS discord_verified_at TIMESTAMPTZ;
   ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC NOT NULL DEFAULT 0;
   ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
+  ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url TEXT;
   CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
 `
 
@@ -58,6 +59,7 @@ function rowToOrder(row: Record<string, unknown>): Order {
     fulfillmentProvider: row.fulfillment_provider as Order['fulfillmentProvider'],
     fulfillmentOrderId: (row.fulfillment_order_id as string | null) ?? null,
     trackingNumber: (row.tracking_number as string | null) ?? null,
+    trackingUrl: (row.tracking_url as string | null) ?? null,
     discordVerifiedAt: row.discord_verified_at ? (row.discord_verified_at as Date).toISOString() : null,
   }
 }
@@ -123,8 +125,8 @@ export class PostgresOrderRepository implements OrderRepository {
       `INSERT INTO orders (
         id, order_number, stripe_session_id, payment_status, fulfillment_status, customer_email,
         items, subtotal, discount, coupon_code, shipping, tax, total, currency, shipping_address,
-        created_at, updated_at, fulfillment_provider, fulfillment_order_id, tracking_number, discord_verified_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+        created_at, updated_at, fulfillment_provider, fulfillment_order_id, tracking_number, tracking_url, discord_verified_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
       [
         order.id,
         order.orderNumber,
@@ -146,6 +148,7 @@ export class PostgresOrderRepository implements OrderRepository {
         order.fulfillmentProvider,
         order.fulfillmentOrderId,
         order.trackingNumber,
+        order.trackingUrl,
         order.discordVerifiedAt,
       ]
     )
@@ -161,7 +164,7 @@ export class PostgresOrderRepository implements OrderRepository {
       `UPDATE orders SET
         stripe_session_id = $2, payment_status = $3, fulfillment_status = $4, customer_email = $5,
         shipping_address = $6, updated_at = $7, fulfillment_provider = $8,
-        fulfillment_order_id = $9, tracking_number = $10, discord_verified_at = $11
+        fulfillment_order_id = $9, tracking_number = $10, tracking_url = $11, discord_verified_at = $12
       WHERE id = $1`,
       [
         id,
@@ -174,6 +177,7 @@ export class PostgresOrderRepository implements OrderRepository {
         updated.fulfillmentProvider,
         updated.fulfillmentOrderId,
         updated.trackingNumber,
+        updated.trackingUrl,
         updated.discordVerifiedAt,
       ]
     )

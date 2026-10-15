@@ -137,3 +137,58 @@ webhookRouter.post('/stripe', async (req: Request, res) => {
     res.status(500).send('Internal error.')
   }
 })
+
+// Mounted under the same /api/webhooks express.raw() middleware as the
+// Stripe route above (see index.ts) — Printful's payload is JSON too, so it
+// just needs a manual JSON.parse of the raw buffer. Printful's legacy
+// store-webhooks API doesn't sign requests the way Stripe does, so there's
+// no signature to verify; the only thing that gates an update is matching a
+// real order by the external_id we set at submission time (see
+// PrintfulProvider.createOrder), which an outside caller can't guess.
+webhookRouter.post('/printful', async (req: Request, res) => {
+  let payload: {
+    type?: string
+    data?: {
+      order?: { external_id?: string }
+      shipment?: { tracking_number?: string; tracking_url?: string }
+    }
+  }
+  try {
+    payload = JSON.parse(req.body.toString('utf8'))
+  } catch {
+    return res.status(400).send('Invalid JSON.')
+  }
+
+  const externalId = payload.data?.order?.external_id
+  if (!externalId) {
+    return res.status(200).send('No external_id — ignored.')
+  }
+
+  const order = await orderRepository.findById(externalId)
+  if (!order) {
+    console.error(`Printful webhook for unknown order ${externalId} — ignored.`)
+    return res.status(200).send('No matching order — ignored.')
+  }
+
+  try {
+    if (payload.type === 'package_shipped') {
+      const shipment = payload.data?.shipment
+      await orderRepository.update(order.id, {
+        fulfillmentStatus: 'shipped',
+        trackingNumber: shipment?.tracking_number ?? null,
+        trackingUrl: shipment?.tracking_url ?? null,
+      })
+    } else if (payload.type === 'order_failed') {
+      await orderRepository.update(order.id, { fulfillmentStatus: 'failed' })
+    } else if (payload.type === 'order_canceled') {
+      await orderRepository.update(order.id, { fulfillmentStatus: 'cancelled' })
+    }
+  } catch (err) {
+    // Never throw here: an unhandled error would surface as a 500, and
+    // Printful retries failed webhook deliveries — better to log and accept
+    // the delivery than risk duplicate side effects downstream.
+    console.error(`Failed to apply Printful webhook (${payload.type}) for order ${order.id}`, err)
+  }
+
+  res.status(200).send('OK')
+})

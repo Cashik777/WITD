@@ -13,6 +13,7 @@ interface AccountOrder {
   currency: string
   createdAt: string
   trackingNumber: string | null
+  trackingUrl: string | null
   items: { name: string; size: string; color: string; quantity: number }[]
 }
 
@@ -64,7 +65,23 @@ function OrderHistory() {
                   <p className="text-sm text-paper">{formatPrice(o.total, o.currency)}</p>
                   <p className="text-xs text-mist">
                     {o.paymentStatus} · {o.fulfillmentStatus}
-                    {o.trackingNumber ? ` · ${o.trackingNumber}` : ''}
+                    {o.trackingNumber && (
+                      <>
+                        {' · '}
+                        {o.trackingUrl ? (
+                          <a
+                            href={o.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2 hover:text-paper"
+                          >
+                            Track: {o.trackingNumber}
+                          </a>
+                        ) : (
+                          o.trackingNumber
+                        )}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

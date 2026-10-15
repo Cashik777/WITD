@@ -95,6 +95,7 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
         color: raw.color,
         quantity,
         unitPrice: priceFor(product, currency), // server-side price — the only price Stripe ever sees
+        image: product.imagesByColor[raw.color]?.[0] ?? product.images[0],
       })
     }
 
@@ -153,6 +154,7 @@ checkoutRouter.post('/create-checkout-session', async (req, res) => {
       fulfillmentProvider: null,
       fulfillmentOrderId: null,
       trackingNumber: null,
+      trackingUrl: null,
       discordVerifiedAt: null,
     }
 

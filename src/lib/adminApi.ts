@@ -20,6 +20,8 @@ export const adminApi = {
     request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteProduct: (id: string) => request(`/admin/products/${id}`, { method: 'DELETE' }),
   listOrders: () => request('/admin/orders'),
+  updateOrder: (id: string, body: { fulfillmentStatus?: string; trackingNumber?: string; trackingUrl?: string }) =>
+    request(`/admin/orders/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   listCategories: () => request('/admin/categories'),
   createCategory: (body: { name: string; parentId?: string | null }) =>
     request('/admin/categories', { method: 'POST', body: JSON.stringify(body) }),
