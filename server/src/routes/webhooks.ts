@@ -5,7 +5,8 @@ import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { orderRepository } from '../data/db.js'
 import { productRepository } from '../data/productsDb.js'
 import { getFulfillmentProvider } from '../lib/fulfillment/index.js'
-import { sendOrderConfirmationEmail, sendInProductionEmail, sendShippingNotificationEmail } from '../lib/email.js'
+import { sendOrderConfirmationEmail, sendInProductionEmail, sendShippingNotificationEmail, sendDeliveredEmail } from '../lib/email.js'
+import { registerTracking } from '../lib/aftership.js'
 
 export const webhookRouter = Router()
 
@@ -150,7 +151,7 @@ webhookRouter.post('/printful', async (req: Request, res) => {
     type?: string
     data?: {
       order?: { external_id?: string; status?: string }
-      shipment?: { tracking_number?: string; tracking_url?: string }
+      shipment?: { tracking_number?: string; tracking_url?: string; carrier?: string }
     }
   }
   try {
@@ -187,6 +188,17 @@ webhookRouter.post('/printful', async (req: Request, res) => {
         } catch (emailErr) {
           console.error(`Shipping notification email failed for order ${order.id}`, emailErr)
         }
+        // Hand the tracking number to AfterShip so it can watch the carrier
+        // and tell us (via the /aftership route below) when it's actually
+        // delivered — Printful itself never knows that part. A no-op if
+        // AFTERSHIP_API_KEY isn't set yet.
+        if (shipment?.tracking_number) {
+          try {
+            await registerTracking(shipment.tracking_number, shipment.carrier)
+          } catch (trackingErr) {
+            console.error(`AfterShip tracking registration failed for order ${order.id}`, trackingErr)
+          }
+        }
       }
     } else if (payload.type === 'order_failed') {
       await orderRepository.update(order.id, { fulfillmentStatus: 'failed' })
@@ -212,6 +224,47 @@ webhookRouter.post('/printful', async (req: Request, res) => {
     // Printful retries failed webhook deliveries — better to log and accept
     // the delivery than risk duplicate side effects downstream.
     console.error(`Failed to apply Printful webhook (${payload.type}) for order ${order.id}`, err)
+  }
+
+  res.status(200).send('OK')
+})
+
+// Mounted under the same /api/webhooks express.raw() middleware. AfterShip
+// fires this whenever a carrier status changes for a tracking number we
+// registered in the package_shipped handler above — "Delivered" is the one
+// status this whole file cares about; everything else (InTransit,
+// OutForDelivery, etc.) is deliberately ignored, matching "don't build
+// unused state" elsewhere in this codebase. Matched to an order by
+// trackingNumber rather than any AfterShip-side id, since that's the only
+// identifier both sides agree on.
+webhookRouter.post('/aftership', async (req: Request, res) => {
+  let payload: { msg?: { tracking_number?: string; tag?: string } }
+  try {
+    payload = JSON.parse(req.body.toString('utf8'))
+  } catch {
+    return res.status(400).send('Invalid JSON.')
+  }
+
+  const trackingNumber = payload.msg?.tracking_number
+  if (!trackingNumber || payload.msg?.tag !== 'Delivered') {
+    return res.status(200).send('Not a delivered update — ignored.')
+  }
+
+  const order = await orderRepository.findByTrackingNumber(trackingNumber)
+  if (!order) {
+    console.error(`AfterShip webhook for unknown tracking number ${trackingNumber} — ignored.`)
+    return res.status(200).send('No matching order — ignored.')
+  }
+
+  if (order.fulfillmentStatus !== 'delivered') {
+    const updated = await orderRepository.update(order.id, { fulfillmentStatus: 'delivered' })
+    if (updated) {
+      try {
+        await sendDeliveredEmail(updated)
+      } catch (emailErr) {
+        console.error(`Delivered notification email failed for order ${order.id}`, emailErr)
+      }
+    }
   }
 
   res.status(200).send('OK')

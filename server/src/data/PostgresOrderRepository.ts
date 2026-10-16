@@ -104,6 +104,12 @@ export class PostgresOrderRepository implements OrderRepository {
     return rows[0] ? rowToOrder(rows[0]) : null
   }
 
+  async findByTrackingNumber(trackingNumber: string): Promise<Order | null> {
+    await this.ready
+    const { rows } = await this.pool.query('SELECT * FROM orders WHERE tracking_number = $1', [trackingNumber])
+    return rows[0] ? rowToOrder(rows[0]) : null
+  }
+
   async findByEmail(email: string): Promise<Order[]> {
     await this.ready
     const { rows } = await this.pool.query(
