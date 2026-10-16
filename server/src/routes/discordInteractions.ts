@@ -43,7 +43,7 @@ async function handleLeaderboard(): Promise<string> {
 
 // Mounted with express.raw() in index.ts — Discord's Ed25519 signature check
 // needs the exact raw request body, same reasoning as the Stripe webhook.
-discordInteractionsRouter.post('/discord/interactions', async (req: Request, res) => {
+discordInteractionsRouter.post('/', async (req: Request, res) => {
   if (!PUBLIC_KEY) {
     return res.status(503).send('Discord interactions not configured.')
   }

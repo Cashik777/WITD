@@ -45,8 +45,11 @@ app.use(cookieParser())
 app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
 
 // Same reasoning as the Stripe webhook above — Discord's Ed25519 signature
-// check needs the exact raw body.
-app.use('/api', express.raw({ type: 'application/json' }), discordInteractionsRouter)
+// check needs the exact raw body. Mounted on the EXACT path, not a shared
+// '/api' prefix — a shared prefix would run express.raw() in front of every
+// other /api/* route too, consuming the body stream before express.json()
+// below ever saw it, silently turning every other route's req.body empty.
+app.use('/api/discord/interactions', express.raw({ type: 'application/json' }), discordInteractionsRouter)
 
 app.use(express.json())
 app.use('/api', checkoutRouter)
