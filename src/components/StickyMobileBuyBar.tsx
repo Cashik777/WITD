@@ -41,6 +41,18 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
 
   if (soldOut || !visible) return null
 
+  // Unlike the primary buy button up top, this one must never be a dead tap
+  // target — a customer who scrolled past the size selector and taps
+  // "Select a Size" down here should land back on it, not hit a disabled
+  // button that does nothing.
+  const handleClick = () => {
+    if (size) {
+      addToCart()
+      return
+    }
+    document.getElementById('size-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
   return (
     <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-black border-t border-line px-5 py-3 flex items-center gap-3">
       <div className="min-w-0 flex-1">
@@ -48,9 +60,8 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
         <p className="text-xs text-mist">{formatPrice(getProductPrice(product, currency), currency)}</p>
       </div>
       <button
-        onClick={addToCart}
-        disabled={!size}
-        className="shrink-0 px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase disabled:opacity-60"
+        onClick={handleClick}
+        className="shrink-0 px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase"
       >
         {size ? 'Add to Cart' : 'Select a Size'}
       </button>

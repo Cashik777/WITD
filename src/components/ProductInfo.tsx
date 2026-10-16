@@ -38,7 +38,7 @@ export function ProductInfo({ product, purchase }: ProductInfoProps) {
       <div className="mt-8 space-y-7">
         {product.colors.length > 0 && <ColorSelector colors={product.colors} selected={color} onSelect={setColor} />}
 
-        <div>
+        <div id="size-selector">
           <SizeSelector
             sizes={product.sizes}
             availableSizes={soldOut ? [] : product.availableSizes}
