@@ -16,6 +16,7 @@ import {
   sendShippingNotificationEmail,
   sendDeliveredEmail,
 } from '../lib/email.js'
+import { isAfterShipConfigured } from '../lib/aftership.js'
 import type { Product } from '../models/Product.js'
 import type { Order } from '../models/Order.js'
 
@@ -36,6 +37,7 @@ adminRouter.get('/health', async (_req, res) => {
     uploadsConfigured: isCloudinaryConfigured,
     emailConfigured: isEmailConfigured,
     newsletterConfigured: isNewsletterConfigured,
+    aftershipConfigured: isAfterShipConfigured,
   })
 })
 
