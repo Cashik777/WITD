@@ -46,3 +46,7 @@ services:
         sync: false
       - key: DISCORD_ROLE_ID
         sync: false
+      - key: DISCORD_PROXY_URL
+        sync: false
+      - key: DISCORD_PROXY_SECRET
+        sync: false

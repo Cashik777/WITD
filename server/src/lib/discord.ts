@@ -15,6 +15,22 @@ export const isDiscordConfigured = Boolean(
 
 const STATE_TTL_MS = 15 * 60 * 1000 // 15 minutes to complete the Discord auth flow
 
+// Render's free-tier outbound IP is shared with unrelated tenants and got
+// Cloudflare-rate-limited on discord.com's token endpoint (not by us — some
+// other tenant's traffic). Routing server-to-server Discord calls through a
+// small Cloudflare Worker proxy (our own, not Discord's) sidesteps that
+// shared IP entirely. Falls back to calling discord.com directly if the
+// proxy isn't configured (e.g. local dev).
+const PROXY_URL = process.env.DISCORD_PROXY_URL
+const PROXY_SECRET = process.env.DISCORD_PROXY_SECRET
+
+function discordFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const base = PROXY_URL ? PROXY_URL.replace(/\/$/, '') : 'https://discord.com'
+  const headers = new Headers(init.headers)
+  if (PROXY_URL && PROXY_SECRET) headers.set('x-proxy-secret', PROXY_SECRET)
+  return fetch(`${base}${path}`, { ...init, headers })
+}
+
 function callbackUrl(): string {
   const base = process.env.FRONTEND_URL || 'http://localhost:5173'
   return `${base}/api/discord/callback`
@@ -61,7 +77,7 @@ export function buildAuthorizeUrl(state: string): string {
 }
 
 export async function exchangeCodeForToken(code: string): Promise<string> {
-  const res = await fetch('https://discord.com/api/oauth2/token', {
+  const res = await discordFetch('/api/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -81,7 +97,7 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
 // and assigns the VERIFIED role — the "add guild member" call only applies
 // `roles` on first join, so an existing member needs a separate role PUT.
 export async function addMemberToGuildWithRole(accessToken: string): Promise<void> {
-  const meRes = await fetch('https://discord.com/api/v10/users/@me', {
+  const meRes = await discordFetch('/api/v10/users/@me', {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!meRes.ok) throw new Error('Could not identify Discord user.')
@@ -91,7 +107,7 @@ export async function addMemberToGuildWithRole(accessToken: string): Promise<voi
   const roleId = process.env.DISCORD_ROLE_ID
   const botAuth = `Bot ${process.env.DISCORD_BOT_TOKEN}`
 
-  const joinRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${me.id}`, {
+  const joinRes = await discordFetch(`/api/v10/guilds/${guildId}/members/${me.id}`, {
     method: 'PUT',
     headers: { Authorization: botAuth, 'Content-Type': 'application/json' },
     body: JSON.stringify({ access_token: accessToken, roles: [roleId] }),
@@ -99,7 +115,7 @@ export async function addMemberToGuildWithRole(accessToken: string): Promise<voi
 
   if (joinRes.status === 204) {
     // Already a member — `roles` in the join body is ignored in this case.
-    const roleRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${me.id}/roles/${roleId}`, {
+    const roleRes = await discordFetch(`/api/v10/guilds/${guildId}/members/${me.id}/roles/${roleId}`, {
       method: 'PUT',
       headers: { Authorization: botAuth },
     })
