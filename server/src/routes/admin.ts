@@ -161,16 +161,32 @@ adminRouter.get('/orders', async (_req, res) => {
 // this covers Printify orders (no webhook wired up yet), a missed/failed
 // webhook delivery, or correcting a mistake.
 const EDITABLE_FULFILLMENT_STATUSES = ['pending', 'submitted', 'in_production', 'shipped', 'delivered', 'cancelled', 'failed']
+// paymentStatus is editable too, e.g. to correct a disputed/manually-settled
+// order. Deliberately NOT wired to fulfillment submission or the order
+// confirmation email the way the real Stripe webhook is — those should only
+// ever fire from an actual payment event, never a manual status edit.
+const EDITABLE_PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded']
 adminRouter.patch('/orders/:id', async (req, res) => {
   const order = await orderRepository.findById(req.params.id)
   if (!order) return res.status(404).json({ error: 'Order not found.' })
 
-  const patch: { fulfillmentStatus?: Order['fulfillmentStatus']; trackingNumber?: string | null; trackingUrl?: string | null } = {}
+  const patch: {
+    fulfillmentStatus?: Order['fulfillmentStatus']
+    paymentStatus?: Order['paymentStatus']
+    trackingNumber?: string | null
+    trackingUrl?: string | null
+  } = {}
   if (req.body?.fulfillmentStatus !== undefined) {
     if (!EDITABLE_FULFILLMENT_STATUSES.includes(req.body.fulfillmentStatus)) {
       return res.status(400).json({ error: 'Invalid fulfillment status.' })
     }
     patch.fulfillmentStatus = req.body.fulfillmentStatus
+  }
+  if (req.body?.paymentStatus !== undefined) {
+    if (!EDITABLE_PAYMENT_STATUSES.includes(req.body.paymentStatus)) {
+      return res.status(400).json({ error: 'Invalid payment status.' })
+    }
+    patch.paymentStatus = req.body.paymentStatus
   }
   if (req.body?.trackingNumber !== undefined) {
     patch.trackingNumber = String(req.body.trackingNumber).trim() || null
