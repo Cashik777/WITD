@@ -30,3 +30,5 @@ services:
         sync: false
       - key: AFTERSHIP_API_KEY
         sync: false
+      - key: AFTERSHIP_WEBHOOK_SECRET
+        sync: false

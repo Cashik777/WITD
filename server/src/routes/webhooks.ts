@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import type { Request } from 'express'
+import { createHmac, timingSafeEqual } from 'crypto'
 import type Stripe from 'stripe'
 import { stripe, isStripeConfigured } from '../lib/stripe.js'
 import { orderRepository } from '../data/db.js'
@@ -229,6 +230,8 @@ webhookRouter.post('/printful', async (req: Request, res) => {
   res.status(200).send('OK')
 })
 
+const aftershipWebhookSecret = process.env.AFTERSHIP_WEBHOOK_SECRET
+
 // Mounted under the same /api/webhooks express.raw() middleware. AfterShip
 // fires this whenever a carrier status changes for a tracking number we
 // registered in the package_shipped handler above — "Delivered" is the one
@@ -238,6 +241,22 @@ webhookRouter.post('/printful', async (req: Request, res) => {
 // trackingNumber rather than any AfterShip-side id, since that's the only
 // identifier both sides agree on.
 webhookRouter.post('/aftership', async (req: Request, res) => {
+  // Every notification is signed with the webhook secret shown in
+  // AfterShip's dashboard (Settings -> Webhooks) — base64(HMAC-SHA256(raw
+  // body, secret)) in the aftership-hmac-sha256 header. timingSafeEqual
+  // needs equal-length buffers, so a length mismatch is checked first
+  // rather than letting it throw.
+  if (aftershipWebhookSecret) {
+    const signature = req.headers['aftership-hmac-sha256']
+    const expected = createHmac('sha256', aftershipWebhookSecret).update(req.body).digest('base64')
+    const actual = Buffer.from(typeof signature === 'string' ? signature : '', 'utf8')
+    const expectedBuf = Buffer.from(expected, 'utf8')
+    if (actual.length !== expectedBuf.length || !timingSafeEqual(actual, expectedBuf)) {
+      console.error('AfterShip webhook signature verification failed')
+      return res.status(400).send('Invalid signature.')
+    }
+  }
+
   let payload: { msg?: { tracking_number?: string; tag?: string } }
   try {
     payload = JSON.parse(req.body.toString('utf8'))
