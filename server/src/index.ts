@@ -12,6 +12,7 @@ import { ordersRouter } from './routes/orders.js'
 import { couponsRouter } from './routes/coupons.js'
 import { geoRouter } from './routes/geo.js'
 import { discordAuthRouter } from './routes/discordAuth.js'
+import { discordInteractionsRouter } from './routes/discordInteractions.js'
 import { productsRouter } from './routes/products.js'
 import { categoriesRouter } from './routes/categories.js'
 import { adminAuthRouter } from './routes/adminAuth.js'
@@ -42,6 +43,10 @@ app.use(cookieParser())
 // the global express.json() below, and matched by exact path so json()
 // never touches it.
 app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
+
+// Same reasoning as the Stripe webhook above — Discord's Ed25519 signature
+// check needs the exact raw body.
+app.use('/api', express.raw({ type: 'application/json' }), discordInteractionsRouter)
 
 app.use(express.json())
 app.use('/api', checkoutRouter)

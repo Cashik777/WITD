@@ -32,3 +32,17 @@ services:
         sync: false
       - key: AFTERSHIP_WEBHOOK_SECRET
         sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_APPLICATION_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_PUBLIC_KEY
+        sync: false
+      - key: DISCORD_GUILD_ID
+        sync: false
+      - key: DISCORD_CHANNEL_ID
+        sync: false
+      - key: DISCORD_ROLE_ID
+        sync: false
