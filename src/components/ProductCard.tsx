@@ -6,6 +6,7 @@ import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
 import { colorSwatch } from '@/lib/colorSwatch'
+import { cloudinaryResize } from '@/lib/cloudinaryImage'
 
 export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
@@ -43,7 +44,7 @@ export function ProductCard({ product }: { product: Product }) {
     >
       <div className="relative aspect-[4/5] bg-[#151412] overflow-hidden">
         <img
-          src={product.images[0]}
+          src={cloudinaryResize(product.images[0], 600, 750)}
           alt={product.name}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-witd ${
             hovered && product.hoverImage ? 'opacity-0' : 'opacity-100'
@@ -52,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
         />
         {product.hoverImage && (
           <img
-            src={product.hoverImage}
+            src={cloudinaryResize(product.hoverImage, 600, 750)}
             alt=""
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-witd ${
               hovered ? 'opacity-100' : 'opacity-0'

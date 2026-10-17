@@ -7,6 +7,24 @@ const NEWSLETTER_AUDIENCE_ID = process.env.RESEND_NEWSLETTER_AUDIENCE_ID
 export const isEmailConfigured = Boolean(RESEND_API_KEY)
 export const isNewsletterConfigured = Boolean(RESEND_API_KEY && NEWSLETTER_AUDIENCE_ID)
 
+// Same reasoning as src/lib/cloudinaryImage.ts on the frontend: stored
+// product photos are one full-resolution (1920x2400) file regardless of
+// where they're used — these emails were embedding that same file at a
+// 56x70 or 48x60 display size. Resizing server-side keeps the email itself
+// small (faster to load, less likely to get clipped by Gmail's 102 KB
+// inline-image-heavy clipping behavior). Forces JPEG rather than f_auto's
+// WebP/AVIF — unlike a browser, Outlook and other mail clients won't
+// reliably send an Accept header Cloudinary can negotiate against, and a
+// broken product photo in a receipt is worse than a slightly bigger one.
+// The new step must land right before /v<version>/, not right after
+// '/upload/' — see the frontend version of this function for why.
+function cloudinaryResize(url: string, width: number, height: number): string {
+  const match = url.match(/^(.*\/upload\/)(.*?)(\/v\d+\/.*)$/)
+  if (!match) return url
+  const [, prefix, existingTransforms, versionAndPath] = match
+  return `${prefix}${existingTransforms}/w_${width},h_${height},c_fill,f_jpg,q_auto${versionAndPath}`
+}
+
 // Shared visual language for every transactional email — one dark card on a
 // starfield void, one serif/sans pairing, one wordmark. Email-safe font
 // stacks: a serif display face for anything that wants the site's Fraunces
@@ -202,7 +220,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
                 ${
                   item.image
                     ? `<td style="width: 56px; padding-right: 16px; vertical-align: top;">
-                        <img src="${item.image}" width="56" height="70" alt="" style="display: block; border: 1px solid ${line};" />
+                        <img src="${cloudinaryResize(item.image!, 112, 140)}" width="56" height="70" alt="" style="display: block; border: 1px solid ${line};" />
                       </td>`
                     : ''
                 }
@@ -324,7 +342,7 @@ function renderItemList(order: Order): string {
                 ${
                   item.image
                     ? `<td style="width: 48px; padding-right: 14px; vertical-align: top;">
-                        <img src="${item.image}" width="48" height="60" alt="" style="display: block; border: 1px solid ${line};" />
+                        <img src="${cloudinaryResize(item.image!, 96, 120)}" width="48" height="60" alt="" style="display: block; border: 1px solid ${line};" />
                       </td>`
                     : ''
                 }

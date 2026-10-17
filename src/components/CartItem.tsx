@@ -2,6 +2,7 @@ import type { CartLine } from '@/types/cart'
 import { formatPrice } from '@/lib/format'
 import { useCart } from '@/hooks/useCart'
 import { MinusIcon, PlusIcon, CloseIcon } from './icons'
+import { cloudinaryResize } from '@/lib/cloudinaryImage'
 
 export function CartItem({ line }: { line: CartLine }) {
   const { updateQuantity, removeItem } = useCart()
@@ -9,7 +10,7 @@ export function CartItem({ line }: { line: CartLine }) {
   return (
     <div className="flex gap-4 py-5 border-b border-line">
       <div className="w-20 h-24 bg-[#151412] shrink-0 overflow-hidden">
-        <img src={line.image} alt={line.name} className="w-full h-full object-cover" />
+        <img src={cloudinaryResize(line.image, 200, 240)} alt={line.name} className="w-full h-full object-cover" />
       </div>
 
       <div className="flex-1 min-w-0">

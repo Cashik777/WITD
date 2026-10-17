@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
+import { cloudinaryResize } from '@/lib/cloudinaryImage'
 
 // A small, honest cross-sell: other in-stock First Drop pieces not already
 // in the cart. No real "frequently bought together" data exists yet, so
@@ -38,7 +39,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
         {suggestions.map((p) => (
           <div key={p.id} className="flex items-center gap-3">
             <div className="w-12 h-14 bg-[#151412] shrink-0 overflow-hidden">
-              <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+              <img src={cloudinaryResize(p.images[0], 180, 210)} alt={p.name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-paper truncate">{p.name}</p>

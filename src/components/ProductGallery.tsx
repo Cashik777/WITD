@@ -1,4 +1,11 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { cloudinaryResize } from '@/lib/cloudinaryImage'
+
+// Larger than other image contexts on the site — both the desktop hover
+// zoom and the mobile pinch zoom scale this same loaded image up to ~2.2x,
+// so it needs real headroom above its on-screen display size to stay sharp.
+const GALLERY_WIDTH = 1400
+const GALLERY_HEIGHT = 1750
 
 // Source photos are 2000x2000px (Lanczos-upscaled + unsharp-masked from the
 // original 1000x1000 Printful mockups — see scripts/upscale_products.py —
@@ -217,7 +224,12 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory aspect-square bg-[#151412] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {images.map((img, i) => (
-          <MobileZoomableImage key={img + i} src={img} alt={name} isActive={active === i} />
+          <MobileZoomableImage
+            key={img + i}
+            src={cloudinaryResize(img, GALLERY_WIDTH, GALLERY_HEIGHT)}
+            alt={name}
+            isActive={active === i}
+          />
         ))}
       </div>
       {images.length > 1 && (
@@ -233,7 +245,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
       <div className="hidden md:grid grid-cols-2 gap-3">
         {images.map((img, i) => (
-          <ZoomableImage key={img + i} src={img} alt={name} />
+          <ZoomableImage key={img + i} src={cloudinaryResize(img, GALLERY_WIDTH, GALLERY_HEIGHT)} alt={name} />
         ))}
       </div>
     </div>

@@ -9,6 +9,7 @@ import { IdeaVisual } from '@/components/IdeaVisual'
 import { useProducts } from '@/hooks/useProducts'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import type { Product } from '@/types/product'
+import { cloudinaryResize } from '@/lib/cloudinaryImage'
 
 // Plain group-hover only responds to a real mouse — on touch, nothing ever
 // triggers it, so the back-view photo never showed on a phone. Local hover
@@ -28,7 +29,7 @@ function FeaturedCard({ product }: { product: Product }) {
     >
       <div className="relative aspect-[3/4] bg-[#151412] overflow-hidden">
         <img
-          src={product.images[0]}
+          src={cloudinaryResize(product.images[0], 900, 1200)}
           alt={product.name}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-witd ${
             hovered ? 'scale-105' : ''
@@ -36,7 +37,7 @@ function FeaturedCard({ product }: { product: Product }) {
         />
         {product.hoverImage && (
           <img
-            src={product.hoverImage}
+            src={cloudinaryResize(product.hoverImage, 900, 1200)}
             alt=""
             aria-hidden="true"
             className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-700 ease-witd ${
