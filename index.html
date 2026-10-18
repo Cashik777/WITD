@@ -17,9 +17,19 @@
     <meta name="twitter:description" content="Clothing for those awake inside the dream." />
     <meta name="twitter:image" content="https://wakeinthedream.com/assets/og/og-image.png" />
     <link rel="icon" href="/assets/brand/witd-symbol.svg" type="image/svg+xml" />
+    <link rel="ai-catalog" href="/ai-catalog.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Loaded non-render-blocking: preload fetches the CSS at high priority
+         without delaying first paint, then the onload swap applies it once
+         it arrives. display=swap in the URL means text still renders
+         immediately in a fallback font either way. The <noscript> fallback
+         covers the no-JS case. -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    </noscript>
   </head>
   <body class="bg-black text-paper">
     <div id="root"></div>

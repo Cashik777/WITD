@@ -1,0 +1,21 @@
+# WITD — Wake In The Dream
+
+> Independent streetwear ecommerce storefront. Minimal, philosophical, premium clothing — not a generic AI-fashion brand.
+
+## Docs
+
+- [Home](https://wakeinthedream.com/): brand intro and current drop
+- [Shop](https://wakeinthedream.com/shop): full product catalog, filterable by category
+- [About](https://wakeinthedream.com/about): brand philosophy, shipping, returns, contact
+- [Community](https://wakeinthedream.com/community): Discord community access for customers
+
+## APIs
+
+- [Product catalog (JSON)](https://wakeinthedream.com/api/products): all products, prices, colors, sizes, stock
+- [Categories (JSON)](https://wakeinthedream.com/api/categories): category and subcategory tree
+
+## Optional
+
+- [Sitemap](https://wakeinthedream.com/sitemap.xml)
+- [Privacy Policy](https://wakeinthedream.com/privacy)
+- [Terms](https://wakeinthedream.com/terms)

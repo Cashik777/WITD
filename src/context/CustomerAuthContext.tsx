@@ -42,9 +42,9 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetch('/api/account/me', { credentials: 'include' })
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => (res.ok ? res.json() : { customer: null }))
       .then((data) => {
-        if (data) applyAccountData(data)
+        if (data.customer) applyAccountData(data.customer)
       })
       .catch(() => setEmail(null))
       .finally(() => setLoading(false))

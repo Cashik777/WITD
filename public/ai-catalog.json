@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:ard:wakeinthedream.com:resource:storefront",
+      "displayName": "WITD Storefront",
+      "type": "text/html",
+      "url": "https://wakeinthedream.com/",
+      "representativeQueries": [
+        "shop WITD streetwear",
+        "what does WITD sell",
+        "browse the WITD new drop"
+      ]
+    },
+    {
+      "identifier": "urn:ard:wakeinthedream.com:resource:products-api",
+      "displayName": "WITD Product Catalog API",
+      "type": "application/json",
+      "url": "https://wakeinthedream.com/api/products",
+      "representativeQueries": [
+        "list WITD products and prices",
+        "is this WITD t-shirt in stock",
+        "what sizes and colors does this WITD product come in"
+      ]
+    }
+  ]
+}

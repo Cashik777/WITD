@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { customerRepository } from '../data/customersDb.js'
 import { orderRepository } from '../data/db.js'
 import type { Customer } from '../models/Customer.js'
-import { hashPassword, verifyPassword, signSession, isAuthConfigured } from '../lib/auth.js'
+import { hashPassword, verifyPassword, signSession, verifySession, isAuthConfigured } from '../lib/auth.js'
 import { requireCustomer, CUSTOMER_SESSION_COOKIE, type CustomerRequest } from '../lib/requireCustomer.js'
 import { sendVerificationEmail } from '../lib/email.js'
 import {
@@ -148,8 +148,16 @@ accountRouter.post('/account/logout', (_req, res) => {
   res.json({ ok: true })
 })
 
-accountRouter.get('/account/me', requireCustomer, (req: CustomerRequest, res) => {
-  res.json(req.customer)
+// Unlike the routes below, this is a session *probe*, not a protected
+// resource — every page load calls it just to ask "is anyone logged in?",
+// so for the common anonymous visitor it must not 401 (the browser logs
+// every non-2xx fetch as a console error regardless of how the JS handles
+// it, which was tripping Lighthouse's Best Practices audit on every page).
+accountRouter.get('/account/me', async (req, res) => {
+  const token = req.cookies?.[CUSTOMER_SESSION_COOKIE]
+  const customerId = token ? verifySession(token) : null
+  const customer = customerId ? await customerRepository.findById(customerId) : null
+  res.json({ customer: customer ? profileResponse(customer) : null })
 })
 
 // Entirely optional, filled in from the account page after signup — see the
