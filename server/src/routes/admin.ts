@@ -5,7 +5,6 @@ import { requireAdmin } from '../lib/requireAdmin.js'
 import { productRepository } from '../data/productsDb.js'
 import { orderRepository, isUsingDatabase } from '../data/db.js'
 import { categoryRepository } from '../data/categoriesDb.js'
-import { isCloudinaryConfigured, uploadImage } from '../lib/cloudinary.js'
 import { isStripeConfigured } from '../lib/stripe.js'
 import { isDiscordConfigured } from '../lib/discord.js'
 import { isAuthConfigured } from '../lib/auth.js'
@@ -34,7 +33,7 @@ adminRouter.get('/health', async (_req, res) => {
     productsDbConnected: await productRepository.ping(),
     discordConfigured: isDiscordConfigured,
     authConfigured: isAuthConfigured,
-    uploadsConfigured: isCloudinaryConfigured,
+    uploadsConfigured: false,
     emailConfigured: isEmailConfigured,
     newsletterConfigured: isNewsletterConfigured,
     aftershipConfigured: isAfterShipConfigured,
@@ -135,20 +134,16 @@ adminRouter.delete('/products/:id', async (req, res) => {
   res.json({ ok: true })
 })
 
-adminRouter.post('/upload', upload.single('file'), async (req, res) => {
-  if (!isCloudinaryConfigured) {
-    return res.status(503).json({ error: 'Image uploads are not configured yet.' })
-  }
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded.' })
-  }
-  try {
-    const url = await uploadImage(req.file.buffer)
-    res.json({ url })
-  } catch (err) {
-    console.error('Image upload failed', err)
-    res.status(500).json({ error: 'Upload failed. Please try again.' })
-  }
+// Cloudinary (the only image host this ever uploaded to) is no longer used —
+// its free-tier credits got burned by the AI background-removal add-on and
+// the account was deactivated. Product photos are now committed to the repo
+// as static files (see scripts/migrate_product_images.cjs) and served
+// straight from this server, which has no persistent disk to save a live
+// upload to anyway — Render wipes anything not in the git-built image on
+// every deploy. A new product's photos go through that script, not this
+// endpoint.
+adminRouter.post('/upload', upload.single('file'), async (_req, res) => {
+  res.status(503).json({ error: 'Image uploads are not available — add new product photos via the image pipeline script instead.' })
 })
 
 adminRouter.get('/orders', async (_req, res) => {

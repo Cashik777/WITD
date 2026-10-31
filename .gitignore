@@ -11,3 +11,6 @@ server/.env
 *.tsbuildinfo
 /vite.config.js
 /vite.config.d.ts
+
+# Content pipeline lives in its own private repo (Cashik777/witd-content)
+content/

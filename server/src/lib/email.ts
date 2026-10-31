@@ -3,26 +3,23 @@ import type { Order } from '../models/Order.js'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const EMAIL_FROM = process.env.EMAIL_FROM || 'WITD <noreply@wakeinthedream.com>'
 const NEWSLETTER_AUDIENCE_ID = process.env.RESEND_NEWSLETTER_AUDIENCE_ID
+// Product photos are served from this same backend's own /products static
+// route now (see scripts/migrate_product_images.cjs) — unlike the site's own
+// pages, an email client has no "relative to this origin" context, so image
+// src attributes need the full absolute URL.
+const SITE_URL = process.env.FRONTEND_URL || 'https://wakeinthedream.com'
 
 export const isEmailConfigured = Boolean(RESEND_API_KEY)
 export const isNewsletterConfigured = Boolean(RESEND_API_KEY && NEWSLETTER_AUDIENCE_ID)
 
-// Same reasoning as src/lib/cloudinaryImage.ts on the frontend: stored
-// product photos are one full-resolution (1920x2400) file regardless of
-// where they're used — these emails were embedding that same file at a
-// 56x70 or 48x60 display size. Resizing server-side keeps the email itself
-// small (faster to load, less likely to get clipped by Gmail's 102 KB
-// inline-image-heavy clipping behavior). Forces JPEG rather than f_auto's
-// WebP/AVIF — unlike a browser, Outlook and other mail clients won't
-// reliably send an Accept header Cloudinary can negotiate against, and a
-// broken product photo in a receipt is worse than a slightly bigger one.
-// The new step must land right before /v<version>/, not right after
-// '/upload/' — see the frontend version of this function for why.
-function cloudinaryResize(url: string, width: number, height: number): string {
-  const match = url.match(/^(.*\/upload\/)(.*?)(\/v\d+\/.*)$/)
-  if (!match) return url
-  const [, prefix, existingTransforms, versionAndPath] = match
-  return `${prefix}${existingTransforms}/w_${width},h_${height},c_fill,f_jpg,q_auto${versionAndPath}`
+// Same reasoning as src/lib/productImage.ts on the frontend: photos are
+// pre-rendered locally (scripts/migrate_product_images.cjs) into every fixed
+// size actually used, including these 112x140 / 96x120 email sizes — already
+// flattened onto the brand's dark canvas and encoded as JPEG, which is what
+// keeps emails small and renders reliably in Outlook and other clients that
+// don't handle transparency or modern formats well.
+function productImage(base: string, width: number, height: number): string {
+  return `${SITE_URL}${base}-${width}x${height}.jpg`
 }
 
 // Shared visual language for every transactional email — one dark card on a
@@ -206,10 +203,11 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
     return
   }
 
-  // Product photos are already padded to a fixed 4:5 ratio on a near-black
-  // background (see cloudinary.ts), so a plain width/height resize to
-  // another 4:5 box (56x70) never distorts or needs cropping — no
-  // object-fit required, which email clients support inconsistently anyway.
+  // Product photos are already flattened to a fixed 4:5 ratio on the brand's
+  // dark background (see scripts/migrate_product_images.cjs), so a plain
+  // width/height resize to another 4:5 box (56x70) never distorts or needs
+  // cropping — no object-fit required, which email clients support
+  // inconsistently anyway.
   const itemRows = order.items
     .map(
       (item, i) => `
@@ -220,7 +218,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
                 ${
                   item.image
                     ? `<td style="width: 56px; padding-right: 16px; vertical-align: top;">
-                        <img src="${cloudinaryResize(item.image!, 112, 140)}" width="56" height="70" alt="" style="display: block; border: 1px solid ${line};" />
+                        <img src="${productImage(item.image!, 112, 140)}" width="56" height="70" alt="" style="display: block; border: 1px solid ${line};" />
                       </td>`
                     : ''
                 }
@@ -342,7 +340,7 @@ function renderItemList(order: Order): string {
                 ${
                   item.image
                     ? `<td style="width: 48px; padding-right: 14px; vertical-align: top;">
-                        <img src="${cloudinaryResize(item.image!, 96, 120)}" width="48" height="60" alt="" style="display: block; border: 1px solid ${line};" />
+                        <img src="${productImage(item.image!, 96, 120)}" width="48" height="60" alt="" style="display: block; border: 1px solid ${line};" />
                       </td>`
                     : ''
                 }

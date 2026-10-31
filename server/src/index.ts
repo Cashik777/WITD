@@ -30,10 +30,10 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 // contentSecurityPolicy and crossOriginEmbedderPolicy are off: the frontend
 // relies on React inline style props (blocked by a default style-src) and
-// loads Google Fonts + Cloudinary-hosted product images cross-origin
-// (blocked by default COEP) — a default-strict CSP would break real pages,
-// not just tighten headers. Everything else here (HSTS, nosniff, frameguard,
-// hidePoweredBy, referrer policy) is safe with zero risk of breakage.
+// loads Google Fonts cross-origin (blocked by default COEP) — a
+// default-strict CSP would break real pages, not just tighten headers.
+// Everything else here (HSTS, nosniff, frameguard, hidePoweredBy, referrer
+// policy) is safe with zero risk of breakage.
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }))
 app.use(cors({ origin: FRONTEND_URL, credentials: true }))
 app.use(cookieParser())

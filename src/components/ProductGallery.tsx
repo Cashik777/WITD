@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { cloudinaryResize } from '@/lib/cloudinaryImage'
+import { productImage } from '@/lib/productImage'
 
 // Larger than other image contexts on the site — both the desktop hover
 // zoom and the mobile pinch zoom scale this same loaded image up to ~2.2x,
@@ -226,7 +226,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         {images.map((img, i) => (
           <MobileZoomableImage
             key={img + i}
-            src={cloudinaryResize(img, GALLERY_WIDTH, GALLERY_HEIGHT)}
+            src={productImage(img, GALLERY_WIDTH, GALLERY_HEIGHT)}
             alt={name}
             isActive={active === i}
           />
@@ -245,7 +245,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
       <div className="hidden md:grid grid-cols-2 gap-3">
         {images.map((img, i) => (
-          <ZoomableImage key={img + i} src={cloudinaryResize(img, GALLERY_WIDTH, GALLERY_HEIGHT)} alt={name} />
+          <ZoomableImage key={img + i} src={productImage(img, GALLERY_WIDTH, GALLERY_HEIGHT)} alt={name} />
         ))}
       </div>
     </div>

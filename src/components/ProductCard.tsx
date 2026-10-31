@@ -6,7 +6,7 @@ import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
 import { colorSwatch } from '@/lib/colorSwatch'
-import { cloudinaryResize } from '@/lib/cloudinaryImage'
+import { productImage } from '@/lib/productImage'
 
 export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
@@ -44,8 +44,8 @@ export function ProductCard({ product }: { product: Product }) {
     >
       <div className="relative aspect-[4/5] bg-[#151412] overflow-hidden">
         <img
-          src={cloudinaryResize(product.images[0], 600, 750)}
-          srcSet={`${cloudinaryResize(product.images[0], 400, 500)} 400w, ${cloudinaryResize(product.images[0], 600, 750)} 600w`}
+          src={productImage(product.images[0], 600, 750)}
+          srcSet={`${productImage(product.images[0], 400, 500)} 400w, ${productImage(product.images[0], 600, 750)} 600w`}
           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
           alt={product.name}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-witd ${
@@ -55,8 +55,8 @@ export function ProductCard({ product }: { product: Product }) {
         />
         {product.hoverImage && (
           <img
-            src={cloudinaryResize(product.hoverImage, 600, 750)}
-            srcSet={`${cloudinaryResize(product.hoverImage, 400, 500)} 400w, ${cloudinaryResize(product.hoverImage, 600, 750)} 600w`}
+            src={productImage(product.hoverImage, 600, 750)}
+            srcSet={`${productImage(product.hoverImage, 400, 500)} 400w, ${productImage(product.hoverImage, 600, 750)} 600w`}
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
             alt=""
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-witd ${
