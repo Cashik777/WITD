@@ -47,23 +47,39 @@ export async function uploadProductImage(buffer: Buffer): Promise<string> {
     throw new Error('R2 is not configured.')
   }
   const id = randomUUID()
-  await Promise.all(
-    SIZES.map(async ([w, h]) => {
-      const jpeg = await sharp(buffer)
-        .trim()
-        .flatten({ background: BG })
-        .resize(w, h, { fit: 'contain', background: BG })
-        .jpeg({ quality: 82 })
-        .toBuffer()
-      await client.send(
-        new PutObjectCommand({
-          Bucket: BUCKET,
-          Key: `uploads/${id}-${w}x${h}.jpg`,
-          Body: jpeg,
-          ContentType: 'image/jpeg',
-        })
-      )
-    })
-  )
+
+  // Decode + trim + flatten + cap to a sane working size ONCE, up front — a
+  // raw phone photo can be 4000px+ on a side, and re-decoding/re-processing
+  // that from scratch for all 8 target sizes, in parallel, on this free-tier
+  // instance's single CPU core, was enough to peg it hard enough that the
+  // *whole server* stopped responding to any request (confirmed: the site
+  // and even /api/health went unresponsive right after an admin upload, not
+  // just the upload itself). 1750 is the largest dimension any SIZES entry
+  // needs, so nothing downstream loses quality versus processing the
+  // original directly.
+  const base = await sharp(buffer)
+    .trim()
+    .flatten({ background: BG })
+    .resize(1750, 1750, { fit: 'inside', withoutEnlargement: true })
+    .toBuffer()
+
+  // Sequential, not Promise.all — this runs in the background while the
+  // admin panel shows "Uploading…", nobody's blocked waiting on it being
+  // fast, so trading a few extra seconds for a flat CPU profile instead of
+  // an 8-way spike is the right trade on a single-core instance.
+  for (const [w, h] of SIZES) {
+    const jpeg = await sharp(base)
+      .resize(w, h, { fit: 'contain', background: BG })
+      .jpeg({ quality: 82 })
+      .toBuffer()
+    await client.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: `uploads/${id}-${w}x${h}.jpg`,
+        Body: jpeg,
+        ContentType: 'image/jpeg',
+      })
+    )
+  }
   return `${PUBLIC_URL}/uploads/${id}`
 }
