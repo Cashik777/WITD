@@ -28,9 +28,4 @@ export const adminApi = {
   updateCategory: (id: string, body: { name?: string; parentId?: string | null }) =>
     request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteCategory: (id: string) => request(`/admin/categories/${id}`, { method: 'DELETE' }),
-  uploadImage: (file: File) => {
-    const form = new FormData()
-    form.append('file', file)
-    return request('/admin/upload', { method: 'POST', body: form })
-  },
 }

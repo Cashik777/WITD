@@ -97,9 +97,19 @@ async function run() {
         if (!src) continue
         for (const [w, h] of SIZES) {
           const outPath = path.join(outProductDir, `${cs}-${view}-${w}x${h}.jpg`)
+          // .trim() first: Printful's mockup canvas leaves a lot of empty
+          // transparent margin around the actual garment (confirmed directly
+          // on the trucker cap — only 1445 of 2000px tall was real content).
+          // 'contain' (not 'cover') after that: a cap's trimmed box is much
+          // more landscape than a tee's, so cropping it to fill a 4:5 box
+          // zoomed in hard and cut the brim off — 'contain' always shows the
+          // whole garment, scaled to fit, padding any leftover with the same
+          // dark background flatten() already applied. Matches Cloudinary's
+          // original c_pad behavior instead of its c_fill.
           await sharp(src)
+            .trim()
             .flatten({ background: BG })
-            .resize(w, h, { fit: 'cover', position: 'center' })
+            .resize(w, h, { fit: 'contain', background: BG })
             .jpeg({ quality: 82 })
             .toFile(outPath)
         }

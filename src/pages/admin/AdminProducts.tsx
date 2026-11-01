@@ -5,6 +5,7 @@ import { formatPrice } from '@/lib/format'
 import { categoryOptions } from '@/lib/filters'
 import type { Product } from '@/types/product'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
+import { productImage } from '@/lib/productImage'
 
 export default function AdminProducts() {
   useDocumentMeta('Products — WITD Admin')
@@ -103,7 +104,7 @@ export default function AdminProducts() {
           {filtered.map((p) => (
             <div key={p.id} className="flex items-center gap-4 px-4 py-3">
               <div className="w-12 h-14 bg-[#151412] shrink-0 overflow-hidden">
-                {p.images[0] && <img src={p.images[0]} alt="" className="w-full h-full object-cover" />}
+                {p.images[0] && <img src={productImage(p.images[0], 96, 120)} alt="" className="w-full h-full object-cover" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-paper truncate">{p.name}</p>
