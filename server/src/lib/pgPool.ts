@@ -21,6 +21,18 @@ export function getPool(): pg.Pool {
       connectionTimeoutMillis: 10_000,
       idleTimeoutMillis: 30_000,
     })
+    // Neon (serverless Postgres) can close an idle connection from its side
+    // at any moment, slightly outside pg's own idleTimeoutMillis — that
+    // surfaces as an 'error' event on the pool from a client that's just
+    // sitting idle, not in the middle of a query. node-pg's own docs call
+    // this out explicitly: an EventEmitter's 'error' event with no listener
+    // throws all the way to the top and kills the whole process. This is
+    // what actually crashed the server (confirmed via Render's logs — the
+    // stack trace bottoms out in pg/lib/connection.js's socket handler, not
+    // in any of our own request code), nothing to do with image uploads.
+    sharedPool.on('error', (err) => {
+      console.error('Unexpected Postgres pool error (idle client) — not fatal:', err)
+    })
   }
   return sharedPool
 }
