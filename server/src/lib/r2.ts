@@ -63,23 +63,33 @@ export async function uploadProductImage(buffer: Buffer): Promise<string> {
     .resize(1750, 1750, { fit: 'inside', withoutEnlargement: true })
     .toBuffer()
 
-  // Sequential, not Promise.all — this runs in the background while the
-  // admin panel shows "Uploading…", nobody's blocked waiting on it being
-  // fast, so trading a few extra seconds for a flat CPU profile instead of
-  // an 8-way spike is the right trade on a single-core instance.
+  // The CPU-bound resize+encode step runs sequentially, from the already-
+  // shrunk `base` above — that's the part that pegs the single CPU core, and
+  // each of these is cheap once it's working from a ≤1750px source rather
+  // than the original upload. The R2 PUT for each one, though, is network
+  // I/O, not CPU — it doesn't contend for the core the sharp calls do, so
+  // those are fired off in parallel and awaited together at the end. First
+  // version made *both* steps sequential, which was safe but slow enough
+  // (8 serialized network round-trips to R2) to blow past Render's gateway
+  // timeout on a large photo and come back as a 502, even though the upload
+  // was actually still fine.
+  const uploads: Promise<unknown>[] = []
   for (const [w, h] of SIZES) {
     const jpeg = await sharp(base)
       .resize(w, h, { fit: 'contain', background: BG })
       .jpeg({ quality: 82 })
       .toBuffer()
-    await client.send(
-      new PutObjectCommand({
-        Bucket: BUCKET,
-        Key: `uploads/${id}-${w}x${h}.jpg`,
-        Body: jpeg,
-        ContentType: 'image/jpeg',
-      })
+    uploads.push(
+      client.send(
+        new PutObjectCommand({
+          Bucket: BUCKET,
+          Key: `uploads/${id}-${w}x${h}.jpg`,
+          Body: jpeg,
+          ContentType: 'image/jpeg',
+        })
+      )
     )
   }
+  await Promise.all(uploads)
   return `${PUBLIC_URL}/uploads/${id}`
 }
