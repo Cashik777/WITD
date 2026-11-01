@@ -73,6 +73,7 @@ export default function AdminProductForm() {
   const [tagsInput, setTagsInput] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [colorImages, setColorImages] = useState<Record<string, string[]>>({})
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -159,12 +160,22 @@ export default function AdminProductForm() {
     setColorImages((prev) => ({ ...prev, [color]: slotsFor(prev, color).filter((_, i) => i !== index) }))
   }
 
-  const setSlotPath = (color: string, index: number, value: string) => {
-    setColorImages((prev) => {
-      const slots = [...slotsFor(prev, color)]
-      slots[index] = value
-      return { ...prev, [color]: slots }
-    })
+  const handleSlotUpload = async (color: string, index: number, file: File) => {
+    const key = `${color}:${index}`
+    setUploadingKey(key)
+    setError(null)
+    try {
+      const { url } = await adminApi.uploadImage(file)
+      setColorImages((prev) => {
+        const slots = [...slotsFor(prev, color)]
+        slots[index] = url
+        return { ...prev, [color]: slots }
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed.')
+    } finally {
+      setUploadingKey(null)
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -363,11 +374,9 @@ export default function AdminProductForm() {
         <div>
           <label className={label}>Product Photos</label>
           <p className="text-xs text-mist mb-3">
-            There's no upload button here anymore — new photos are flattened and resized locally (see
-            scripts/migrate_product_images.cjs), not through this form, since Render has nowhere persistent to save a
-            live upload to. Send the new photos over and ask for the path, then paste it into a slot below (e.g.{' '}
-            <code className="text-paper/70">/products/{form.slug || 'slug'}/black-front</code>). Type colors above
-            first; use + to add extra photos, × to remove any of them.
+            Upload a front (required) and back (optional) photo for each color — type colors above first. Use + to
+            add extra photos, × to remove any of them. Upload a transparent PNG (the same export Printful's mockup
+            generator makes) — it gets flattened onto the brand's dark background and resized automatically.
           </p>
           {colorList.length === 0 ? (
             <p className="text-xs text-mist">Add colors above first — photo slots appear here per color.</p>
@@ -380,6 +389,8 @@ export default function AdminProductForm() {
                     <p className="text-xs tracking-widest uppercase text-paper mb-2">{color}</p>
                     <div className="flex gap-4 flex-wrap items-start">
                       {slots.map((url, index) => {
+                        const key = `${color}:${index}`
+                        const isUploading = uploadingKey === key
                         const slotLabel = index === 0 ? 'Front' : index === 1 ? 'Back (optional)' : `Photo ${index + 1}`
                         return (
                           <div key={index}>
@@ -397,15 +408,21 @@ export default function AdminProductForm() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="relative w-20">
-                                <input
-                                  type="text"
-                                  placeholder="/products/…/black-front"
-                                  className="w-20 h-24 bg-[#151412] border border-dashed border-mist/40 text-[9px] text-paper text-center px-1 outline-none focus:border-mist"
-                                  onBlur={(e) => {
-                                    if (e.target.value.trim()) setSlotPath(color, index, e.target.value.trim())
-                                  }}
-                                />
+                              <div className="relative w-20 h-24">
+                                <label className="flex items-center justify-center w-20 h-24 bg-[#151412] border border-dashed border-mist/40 text-[10px] text-mist text-center px-1 cursor-pointer">
+                                  {isUploading ? 'Uploading…' : 'Upload'}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    disabled={isUploading}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0]
+                                      if (file) handleSlotUpload(color, index, file)
+                                      e.target.value = ''
+                                    }}
+                                  />
+                                </label>
                                 {index >= 2 && (
                                   <button
                                     type="button"

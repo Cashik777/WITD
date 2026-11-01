@@ -5,6 +5,7 @@ import { requireAdmin } from '../lib/requireAdmin.js'
 import { productRepository } from '../data/productsDb.js'
 import { orderRepository, isUsingDatabase } from '../data/db.js'
 import { categoryRepository } from '../data/categoriesDb.js'
+import { isR2Configured, uploadProductImage } from '../lib/r2.js'
 import { isStripeConfigured } from '../lib/stripe.js'
 import { isDiscordConfigured } from '../lib/discord.js'
 import { isAuthConfigured } from '../lib/auth.js'
@@ -33,7 +34,7 @@ adminRouter.get('/health', async (_req, res) => {
     productsDbConnected: await productRepository.ping(),
     discordConfigured: isDiscordConfigured,
     authConfigured: isAuthConfigured,
-    uploadsConfigured: false,
+    uploadsConfigured: isR2Configured,
     emailConfigured: isEmailConfigured,
     newsletterConfigured: isNewsletterConfigured,
     aftershipConfigured: isAfterShipConfigured,
@@ -142,8 +143,28 @@ adminRouter.delete('/products/:id', async (req, res) => {
 // upload to anyway — Render wipes anything not in the git-built image on
 // every deploy. A new product's photos go through that script, not this
 // endpoint.
-adminRouter.post('/upload', upload.single('file'), async (_req, res) => {
-  res.status(503).json({ error: 'Image uploads are not available — add new product photos via the image pipeline script instead.' })
+// Cloudinary (the original image host) was dropped after its free-tier
+// account got deactivated — the bulk catalog now lives as static files
+// committed to the repo (scripts/migrate_product_images.cjs), but a live
+// admin upload still needs *somewhere* persistent to land, since Render's
+// own filesystem is wiped on every deploy. R2 fills that gap: same
+// trim+flatten+resize pipeline as the migration script, uploaded straight
+// to a public bucket, returning a base path that fits into images /
+// hoverImage / imagesByColor exactly like any other product photo.
+adminRouter.post('/upload', upload.single('file'), async (req, res) => {
+  if (!isR2Configured) {
+    return res.status(503).json({ error: 'Image uploads are not configured yet.' })
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded.' })
+  }
+  try {
+    const url = await uploadProductImage(req.file.buffer)
+    res.json({ url })
+  } catch (err) {
+    console.error('Image upload failed', err)
+    res.status(500).json({ error: 'Upload failed. Please try again.' })
+  }
 })
 
 adminRouter.get('/orders', async (_req, res) => {
