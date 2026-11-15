@@ -28,7 +28,7 @@ export default function ProductDetail() {
   const { getProductBySlug, getRelatedProducts, loading } = useProducts()
   const { slug } = useParams<{ slug: string }>()
   const product = slug ? getProductBySlug(slug) : undefined
-  const recentlyViewed = trimToFullRows(useRecentlyViewed(product?.id))
+  const recentlyViewedRaw = useRecentlyViewed(product?.id)
   const purchase = useProductPurchase(product)
   const [guideOpen, setGuideOpen] = useState(false)
   useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
@@ -36,6 +36,12 @@ export default function ProductDetail() {
   if (!product) return loading ? null : <Navigate to="/404" replace />
 
   const related = trimToFullRows(getRelatedProducts(product))
+  // Recently Viewed shouldn't repeat whatever You May Also Like is already
+  // showing right above it on the same page — seeing the same tee twice in
+  // two different "here's something for you" lists reads as a bug, not two
+  // genuinely different recommendations.
+  const relatedIds = new Set(related.map((p) => p.id))
+  const recentlyViewed = trimToFullRows(recentlyViewedRaw.filter((p) => !relatedIds.has(p.id)))
   const galleryImages = (purchase.color && product.imagesByColor[purchase.color]) || product.images
 
   return (
