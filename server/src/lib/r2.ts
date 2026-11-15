@@ -48,17 +48,25 @@ export async function uploadProductImage(buffer: Buffer): Promise<string> {
   }
   const id = randomUUID()
 
-  // Decode + trim + flatten + cap to a sane working size ONCE, up front — a
-  // raw phone photo can be 4000px+ on a side, and re-decoding/re-processing
-  // that from scratch for all 8 target sizes, in parallel, on this free-tier
+  // Decode + flatten + cap to a sane working size ONCE, up front — a raw
+  // phone photo can be 4000px+ on a side, and re-decoding/re-processing that
+  // from scratch for all 8 target sizes, in parallel, on this free-tier
   // instance's single CPU core, was enough to peg it hard enough that the
   // *whole server* stopped responding to any request (confirmed: the site
   // and even /api/health went unresponsive right after an admin upload, not
   // just the upload itself). 1750 is the largest dimension any SIZES entry
   // needs, so nothing downstream loses quality versus processing the
   // original directly.
+  //
+  // No .trim() here (unlike scripts/migrate_product_images.cjs, where every
+  // source photo comes from the same Printful mockup generator and is
+  // reliably framed identically) — two admin-uploaded photos that are
+  // otherwise the same size can still have a pixel or two of difference in
+  // where their actual content starts, and trim()'s bounding-box detection
+  // is sensitive enough to that that two "same size" uploads came out
+  // cropped to visibly different scales. Working from the untouched source
+  // means two identically-framed photos stay identically framed.
   const base = await sharp(buffer)
-    .trim()
     .flatten({ background: BG })
     .resize(1750, 1750, { fit: 'inside', withoutEnlargement: true })
     .toBuffer()

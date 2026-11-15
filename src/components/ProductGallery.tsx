@@ -198,6 +198,21 @@ function MobileZoomableImage({ src, alt, isActive }: { src: string; alt: string;
   )
 }
 
+// Left/right chevron for the desktop carousel's prev/next buttons.
+function Arrow({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+      <path
+        d={direction === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -215,13 +230,20 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
     setActive(Math.round(el.scrollLeft / el.clientWidth))
   }
 
+  // Wraps at both ends — with only an arrow (no page-number readout), a
+  // dead stop at the last photo reads as "broken button," not "end of list."
+  const goTo = (delta: number) => setActive((a) => (a + delta + images.length) % images.length)
+
   return (
     <div>
-      {/* Mobile: swipeable track with dots. Desktop: large two-column stack. */}
+      {/* Mobile: swipeable track with dots. aspect-[4/5] matches the photos'
+          own ratio (GALLERY_WIDTH/HEIGHT below) — this used to be
+          aspect-square, which made object-cover crop a meaningful strip off
+          the top and bottom of every photo on a phone. */}
       <div
         ref={trackRef}
         onScroll={onTrackScroll}
-        className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory aspect-square bg-[#151412] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory aspect-[4/5] bg-[#151412] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {images.map((img, i) => (
           <MobileZoomableImage
@@ -243,10 +265,39 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
         </div>
       )}
 
-      <div className="hidden md:grid grid-cols-2 gap-3">
-        {images.map((img, i) => (
-          <ZoomableImage key={img + i} src={productImage(img, GALLERY_WIDTH, GALLERY_HEIGHT)} alt={name} />
-        ))}
+      {/* Desktop: one photo at a time with prev/next arrows, not a static
+          grid of every angle at once — a 2-column grid of 4 photos read as
+          four small squares instead of one photo worth looking closely at. */}
+      <div className="hidden md:block relative">
+        <ZoomableImage src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)} alt={name} />
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => goTo(-1)}
+              aria-label="Previous photo"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
+            >
+              <Arrow direction="left" />
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(1)}
+              aria-label="Next photo"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
+            >
+              <Arrow direction="right" />
+            </button>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {images.map((img, i) => (
+                <span
+                  key={img + i}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${active === i ? 'bg-paper' : 'bg-paper/40'}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
