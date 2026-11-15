@@ -114,9 +114,9 @@ export function ProductDetailsAccordion({ product, onOpenGuide }: { product: Pro
   const policy = shippingPolicy(currency)
 
   return (
-    <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-start">
+    <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
       {product.idea ? (
-        <p className="font-display text-2xl md:text-3xl lg:text-4xl text-paper/90 leading-snug max-w-lg">
+        <p className="font-display text-2xl md:text-3xl lg:text-4xl text-paper/90 leading-snug max-w-lg mx-auto text-center">
           {product.idea}
         </p>
       ) : (
