@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Hero } from '@/components/Hero'
+import { StickyMobileShopBar } from '@/components/StickyMobileShopBar'
 import { ProductGrid } from '@/components/ProductGrid'
 import { ManifestoSection } from '@/components/ManifestoSection'
 import { CommunitySection } from '@/components/CommunitySection'
@@ -107,6 +108,8 @@ export default function Home() {
       <ManifestoSection />
       <CommunitySection />
       <Newsletter />
+
+      <StickyMobileShopBar />
     </div>
   )
 }

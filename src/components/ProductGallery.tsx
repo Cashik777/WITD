@@ -277,7 +277,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           Capped at max-w-md rather than filling the whole half-width column
           — at a normal desktop window that column is wide enough to blow
           the photo up to an uncomfortable, hard-to-take-in size. */}
-      <div className="hidden md:block relative max-w-md">
+      <div className="hidden md:block relative max-w-md mx-auto">
         <ZoomableImage
           src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)}
           alt={name}

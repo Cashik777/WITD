@@ -104,7 +104,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section className="relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-black">
+    <section id="hero-section" className="relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-black">
       <div ref={parallaxRef} className="absolute inset-0">
         <svg
           viewBox={isMobile ? MOBILE_VIEWBOX : DESKTOP_VIEWBOX}
