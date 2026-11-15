@@ -19,7 +19,10 @@ const DOUBLE_TAP_ZOOM = 2
 // Desktop-only hover zoom: follows the cursor instead of just scaling from
 // the center, so whatever part of the garment you're pointing at is what
 // gets magnified — a flat center-zoom would usually magnify the wrong spot.
-function ZoomableImage({ src, alt }: { src: string; alt: string }) {
+// onClick advances to the next photo — a second, more discoverable way to
+// page through besides the small arrow buttons, since clicking the photo
+// itself is what most people try first.
+function ZoomableImage({ src, alt, onClick }: { src: string; alt: string; onClick?: () => void }) {
   const [zoomed, setZoomed] = useState(false)
   const [origin, setOrigin] = useState('50% 50%')
 
@@ -32,10 +35,11 @@ function ZoomableImage({ src, alt }: { src: string; alt: string }) {
 
   return (
     <div
-      className="aspect-[4/5] bg-[#151412] overflow-hidden cursor-zoom-in"
+      className="aspect-[4/5] bg-[#151412] overflow-hidden cursor-pointer"
       onMouseEnter={() => setZoomed(true)}
       onMouseLeave={() => setZoomed(false)}
       onMouseMove={onMouseMove}
+      onClick={onClick}
     >
       <img
         src={src}
@@ -51,11 +55,13 @@ function ZoomableImage({ src, alt }: { src: string; alt: string }) {
 // Previously there was no touch handling at all here, so a pinch gesture
 // fell through to the browser's own default — which zooms the *entire
 // page* (header, nav, everything), not just the image. `touch-action:
-// pan-x` on the container is what actually fixes that: it tells the browser
-// "only native single-finger horizontal panning is allowed here," which
-// both preserves the existing swipe-between-photos gesture AND excludes
-// native pinch-zoom outright, leaving pinch free for this component's own
-// JS handling without the two fighting each other.
+// pan-x pan-y` on the container excludes native pinch-zoom (so it's free
+// for this component's own JS handling below) while still letting the
+// browser handle both horizontal swipe-between-photos AND normal vertical
+// page scroll natively. This was `pan-x` only at first, which does stop
+// pinch-zoom but also blocks *all* vertical panning through this element —
+// on a phone, where the gallery fills most of the screen width, that left
+// only the narrow margins beside it to scroll the page at all.
 //
 // Gesture state lives in a ref and is applied straight to the img's own
 // style, the same direct-DOM pattern Hero.tsx/IdeaVisual.tsx already use
@@ -192,7 +198,7 @@ function MobileZoomableImage({ src, alt, isActive }: { src: string; alt: string;
   }, [])
 
   return (
-    <div ref={containerRef} className="w-full h-full shrink-0 snap-center overflow-hidden touch-pan-x">
+    <div ref={containerRef} className="w-full h-full shrink-0 snap-center overflow-hidden [touch-action:pan-x_pan-y]">
       <img ref={imgRef} src={src} alt={alt} className="w-full h-full object-cover" draggable={false} />
     </div>
   )
@@ -267,9 +273,16 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
 
       {/* Desktop: one photo at a time with prev/next arrows, not a static
           grid of every angle at once — a 2-column grid of 4 photos read as
-          four small squares instead of one photo worth looking closely at. */}
-      <div className="hidden md:block relative">
-        <ZoomableImage src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)} alt={name} />
+          four small squares instead of one photo worth looking closely at.
+          Capped at max-w-md rather than filling the whole half-width column
+          — at a normal desktop window that column is wide enough to blow
+          the photo up to an uncomfortable, hard-to-take-in size. */}
+      <div className="hidden md:block relative max-w-md">
+        <ZoomableImage
+          src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)}
+          alt={name}
+          onClick={() => goTo(1)}
+        />
         {images.length > 1 && (
           <>
             <button
