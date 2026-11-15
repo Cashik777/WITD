@@ -96,42 +96,55 @@ export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps
   )
 }
 
-// The idea/fit/material/shipping/details accordion, split out from
-// ProductInfo so ProductDetail.tsx can render it full-width below the
-// gallery+purchase-info grid instead of squeezed into just the right
-// column.
+// Split out from ProductInfo so ProductDetail.tsx can render it full-width
+// below the gallery+purchase-info grid instead of squeezed into just the
+// right column. A plain accordion stack stretched across the full width
+// just left a long empty stretch beside it (reported directly, with a
+// screenshot) — text accordions don't get more useful by getting wider.
+// Instead: The Idea is the one editorial/brand-voice item here (the other
+// four are pure logistics), already defaultOpen, and on the homepage its
+// equivalent ("The WITD Idea" in Home.tsx) already gets this same large
+// font-display treatment — so it earns the left half as a standalone
+// statement instead of another accordion row, with the practical stuff
+// (Fit & Size, Material & Care, Shipping & Returns, Details) stacked in
+// the right half. Two columns that both do something, rather than one
+// column and a void.
 export function ProductDetailsAccordion({ product, onOpenGuide }: { product: Product; onOpenGuide: () => void }) {
   const { currency } = useCurrency()
   const policy = shippingPolicy(currency)
 
   return (
-    <div className="max-w-2xl">
-      {product.idea && (
-        <Accordion title="The Idea" defaultOpen>
-          <p>{product.idea}</p>
-        </Accordion>
-      )}
-      <Accordion title="Fit & Size">
-        <p>{product.fit}</p>
-        <button onClick={onOpenGuide} className="mt-2 text-paper underline underline-offset-4 hover:text-paper/70">
-          View size guide
-        </button>
-      </Accordion>
-      <Accordion title="Material & Care">
-        <p>{product.materials}</p>
-        <p className="mt-2">{product.careInstructions}</p>
-      </Accordion>
-      <Accordion title="Shipping & Returns">
-        <p>
-          Orders ship within {store.fulfillmentDaysMin}–{store.fulfillmentDaysMax} business days. Free shipping on
-          orders over {formatPrice(policy.freeShippingThreshold, currency)}. Returns accepted within{' '}
-          {store.returnWindowDays} days of delivery for unworn items in original condition. Ships to{' '}
-          {store.shipsTo}.
+    <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-start">
+      {product.idea ? (
+        <p className="font-display text-2xl md:text-3xl lg:text-4xl text-paper/90 leading-snug max-w-lg">
+          {product.idea}
         </p>
-      </Accordion>
-      <Accordion title="Details">
-        <p>SKU {product.sku}</p>
-      </Accordion>
+      ) : (
+        <div />
+      )}
+      <div>
+        <Accordion title="Fit & Size" defaultOpen>
+          <p>{product.fit}</p>
+          <button onClick={onOpenGuide} className="mt-2 text-paper underline underline-offset-4 hover:text-paper/70">
+            View size guide
+          </button>
+        </Accordion>
+        <Accordion title="Material & Care">
+          <p>{product.materials}</p>
+          <p className="mt-2">{product.careInstructions}</p>
+        </Accordion>
+        <Accordion title="Shipping & Returns">
+          <p>
+            Orders ship within {store.fulfillmentDaysMin}–{store.fulfillmentDaysMax} business days. Free shipping on
+            orders over {formatPrice(policy.freeShippingThreshold, currency)}. Returns accepted within{' '}
+            {store.returnWindowDays} days of delivery for unworn items in original condition. Ships to{' '}
+            {store.shipsTo}.
+          </p>
+        </Accordion>
+        <Accordion title="Details">
+          <p>SKU {product.sku}</p>
+        </Accordion>
+      </div>
     </div>
   )
 }
