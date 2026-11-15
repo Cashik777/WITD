@@ -6,12 +6,6 @@ import { productImage } from '@/lib/productImage'
 // so it needs real headroom above its on-screen display size to stay sharp.
 const GALLERY_WIDTH = 1400
 const GALLERY_HEIGHT = 1750
-// Must be one of the fixed sizes scripts/migrate_product_images.cjs and
-// server/src/lib/r2.ts actually generate (both JPEGs, not resized on the
-// fly) — 180x225 was never one of them, so those thumbnails 404'd outright.
-// 112x140 is the closest existing 4:5 size to how small these render.
-const THUMB_WIDTH = 112
-const THUMB_HEIGHT = 140
 
 // Source photos are 2000x2000px (Lanczos-upscaled + unsharp-masked from the
 // original 1000x1000 Printful mockups — see scripts/upscale_products.py —
@@ -388,8 +382,18 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           Capped at max-w-md and centered rather than filling (and hugging
           the left edge of) the whole half-width column — at a normal
           desktop window that column is wide enough to blow the photo up to
-          an uncomfortable, hard-to-take-in size. */}
-      <div className="hidden md:block max-w-md mx-auto">
+          an uncomfortable, hard-to-take-in size.
+          A thumbnail row here was the first fix for the empty space that
+          leaves next to the info column's longer idea/size/material/
+          shipping text, but low-res thumbnails that "show nothing useful"
+          were worse than the gap they covered (reported directly). Sticky
+          positioning instead: the photo stays in view while the (often
+          taller) info column scrolls past it, so there's never a visible
+          gap to begin with — it only unsticks once this whole grid row
+          itself has scrolled by, right as the full-width details section
+          below takes over. 116px = the sticky announcement bar (36px) +
+          header (80px) stacked on top of it (Header.tsx). */}
+      <div className="hidden md:block md:sticky md:top-[116px] max-w-md mx-auto">
         <div className="relative">
           <ZoomableImage
             src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)}
@@ -417,28 +421,6 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
             </>
           )}
         </div>
-        {/* Thumbnails: the main photo shrinking to max-w-md (above) left the
-            rest of this column's height empty next to the info column's
-            longer idea/size/material/shipping text — a row of clickable
-            thumbnails gives that space an actual job (jump straight to any
-            photo) instead of just sitting blank. */}
-        {images.length > 1 && (
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {images.map((img, i) => (
-              <button
-                key={img + i}
-                type="button"
-                onClick={() => setActive(i)}
-                aria-label={`Photo ${i + 1}`}
-                className={`aspect-[4/5] bg-[#151412] overflow-hidden border transition-colors ${
-                  active === i ? 'border-paper' : 'border-transparent hover:border-mist/50'
-                }`}
-              >
-                <img src={productImage(img, THUMB_WIDTH, THUMB_HEIGHT)} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

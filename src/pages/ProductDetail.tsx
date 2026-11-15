@@ -61,7 +61,7 @@ export default function ProductDetail() {
           gallery shrank to a centered max-w-md photo + thumbnail row, the
           old layout had this accordion sharing a row with a slab of empty
           space in the (now shorter) image column next to it. */}
-      <div className="mt-16 md:mt-20">
+      <div className="mt-10 md:mt-12">
         <ProductDetailsAccordion product={product} onOpenGuide={() => setGuideOpen(true)} />
       </div>
 
