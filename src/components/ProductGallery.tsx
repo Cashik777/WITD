@@ -6,6 +6,8 @@ import { productImage } from '@/lib/productImage'
 // so it needs real headroom above its on-screen display size to stay sharp.
 const GALLERY_WIDTH = 1400
 const GALLERY_HEIGHT = 1750
+const THUMB_WIDTH = 180
+const THUMB_HEIGHT = 225
 
 // Source photos are 2000x2000px (Lanczos-upscaled + unsharp-masked from the
 // original 1000x1000 Printful mockups — see scripts/upscale_products.py —
@@ -15,6 +17,15 @@ const GALLERY_HEIGHT = 1750
 // the original pre-mitigation values again.
 const MOBILE_MAX_ZOOM = 2.2
 const DOUBLE_TAP_ZOOM = 2
+
+// How far (as a fraction of the viewport width) a mobile swipe has to travel
+// before release counts as "go to the next/previous photo" rather than
+// snapping back to the one you started on.
+const SWIPE_COMMIT_RATIO = 0.18
+// How many pixels of movement decide whether a touch is a horizontal swipe
+// (page the gallery) or a vertical one (scroll the page) in the first
+// place — see the gesture-commit comment on the track's touch handlers.
+const AXIS_COMMIT_PX = 8
 
 // Desktop-only hover zoom: follows the cursor instead of just scaling from
 // the center, so whatever part of the garment you're pointing at is what
@@ -51,23 +62,22 @@ function ZoomableImage({ src, alt, onClick }: { src: string; alt: string; onClic
   )
 }
 
-// Mobile pinch-to-zoom + double-tap, confined to the photo itself.
-// Previously there was no touch handling at all here, so a pinch gesture
-// fell through to the browser's own default — which zooms the *entire
-// page* (header, nav, everything), not just the image. `touch-action:
-// pan-x pan-y` on the container excludes native pinch-zoom (so it's free
-// for this component's own JS handling below) while still letting the
-// browser handle both horizontal swipe-between-photos AND normal vertical
-// page scroll natively. This was `pan-x` only at first, which does stop
-// pinch-zoom but also blocks *all* vertical panning through this element —
-// on a phone, where the gallery fills most of the screen width, that left
-// only the narrow margins beside it to scroll the page at all.
-//
-// Gesture state lives in a ref and is applied straight to the img's own
-// style, the same direct-DOM pattern Hero.tsx/IdeaVisual.tsx already use
-// for scroll/pointer-driven transforms — going through React state on every
-// touchmove would mean a re-render per frame of a drag, which visibly lags.
-function MobileZoomableImage({ src, alt, isActive }: { src: string; alt: string; isActive: boolean }) {
+// Mobile pinch-to-zoom + double-tap, confined to the photo itself. Swiping
+// between photos and scrolling the page are both handled one level up, by
+// the track in ProductGallery — this component only ever calls
+// preventDefault for a gesture that's actually zooming or panning a zoomed
+// photo, so it never competes with that.
+function MobileZoomableImage({
+  src,
+  alt,
+  isActive,
+  onZoomChange,
+}: {
+  src: string
+  alt: string
+  isActive: boolean
+  onZoomChange: (zoomed: boolean) => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const state = useRef({ scale: 1, x: 0, y: 0 })
@@ -89,6 +99,7 @@ function MobileZoomableImage({ src, alt, isActive }: { src: string; alt: string;
     if (!img) return
     img.style.transition = animated ? 'transform 200ms ease-out' : 'none'
     img.style.transform = `translate(${state.current.x}px, ${state.current.y}px) scale(${state.current.scale})`
+    onZoomChange(state.current.scale > 1.01)
   }
 
   const reset = (animated: boolean) => {
@@ -100,6 +111,7 @@ function MobileZoomableImage({ src, alt, isActive }: { src: string; alt: string;
   // view at 1x, not however the last person left it zoomed.
   useEffect(() => {
     if (!isActive) reset(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive])
 
   useEffect(() => {
@@ -198,7 +210,7 @@ function MobileZoomableImage({ src, alt, isActive }: { src: string; alt: string;
   }, [])
 
   return (
-    <div ref={containerRef} className="w-full h-full shrink-0 snap-center overflow-hidden [touch-action:pan-x_pan-y]">
+    <div ref={containerRef} className="w-full h-full shrink-0 overflow-hidden">
       <img ref={imgRef} src={src} alt={alt} className="w-full h-full object-cover" draggable={false} />
     </div>
   )
@@ -221,23 +233,117 @@ function Arrow({ direction }: { direction: 'left' | 'right' }) {
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0)
+  const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+  const zoomedRef = useRef(false)
+  const activeRef = useRef(0)
+  activeRef.current = active
 
-  // Reset to the first image whenever the color (and therefore the image
-  // set) changes, and keep the mobile swipe track in sync.
-  useEffect(() => {
-    setActive(0)
-    trackRef.current?.scrollTo({ left: 0 })
-  }, [images])
-
-  const onTrackScroll = () => {
-    const el = trackRef.current
-    if (!el || el.clientWidth === 0) return
-    setActive(Math.round(el.scrollLeft / el.clientWidth))
+  const setTrackTransform = (index: number, dragPx: number, animated: boolean) => {
+    const track = trackRef.current
+    const viewport = viewportRef.current
+    if (!track || !viewport) return
+    const widthPx = viewport.clientWidth || 1
+    let dragPercent = (dragPx / widthPx) * 100
+    // Resistance past the first/last photo — a drag that goes nowhere still
+    // gives a little visual "give" instead of feeling like a dead stop.
+    if ((index === 0 && dragPx > 0) || (index === images.length - 1 && dragPx < 0)) {
+      dragPercent *= 0.3
+    }
+    track.style.transition = animated ? 'transform 250ms ease-out' : 'none'
+    track.style.transform = `translateX(calc(${-index * 100}% + ${dragPercent}%))`
   }
 
-  // Wraps at both ends — with only an arrow (no page-number readout), a
-  // dead stop at the last photo reads as "broken button," not "end of list."
+  // Reset to the first image whenever the color (and therefore the image
+  // set) changes, and keep the mobile track in sync.
+  useEffect(() => {
+    setActive(0)
+    setTrackTransform(0, 0, false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images])
+
+  useEffect(() => {
+    setTrackTransform(active, 0, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active])
+
+  // The mobile track used to rely on native overflow-x-auto scroll-snap,
+  // with touch-action telling the browser which axis to hand it versus the
+  // page's own vertical scroll. In practice that axis guess was exactly
+  // that — a guess — and felt inconsistent (reported directly: "sometimes
+  // it works, sometimes I just drag the photo"). This instead commits to an
+  // axis explicitly, in JS, the first moment a touch has moved more than
+  // AXIS_COMMIT_PX: mostly-horizontal movement takes over the gesture to
+  // page between photos (and calls preventDefault from then on so the page
+  // doesn't also try to scroll); mostly-vertical movement does nothing at
+  // all here, leaving the browser's native page scroll completely
+  // unobstructed for the rest of that gesture. Once a zoomed photo is
+  // panning (zoomedRef, set by MobileZoomableImage), this track ignores
+  // touches entirely and lets that component handle them on its own.
+  useEffect(() => {
+    const el = viewportRef.current
+    if (!el) return
+
+    const gesture = { mode: 'none' as 'none' | 'horizontal' | 'vertical', startX: 0, startY: 0, lastDx: 0 }
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (zoomedRef.current || e.touches.length !== 1) {
+        gesture.mode = 'none'
+        return
+      }
+      gesture.mode = 'none'
+      gesture.startX = e.touches[0].clientX
+      gesture.startY = e.touches[0].clientY
+      gesture.lastDx = 0
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (zoomedRef.current || e.touches.length !== 1) return
+      const dx = e.touches[0].clientX - gesture.startX
+      const dy = e.touches[0].clientY - gesture.startY
+
+      if (gesture.mode === 'none' && (Math.abs(dx) > AXIS_COMMIT_PX || Math.abs(dy) > AXIS_COMMIT_PX)) {
+        gesture.mode = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical'
+      }
+      if (gesture.mode === 'horizontal') {
+        e.preventDefault()
+        gesture.lastDx = dx
+        setTrackTransform(activeRef.current, dx, false)
+      }
+      // mode === 'vertical': untouched on purpose — the browser scrolls the page.
+    }
+
+    const onTouchEnd = () => {
+      if (gesture.mode !== 'horizontal') return
+      const el2 = viewportRef.current
+      const widthPx = el2?.clientWidth || 1
+      const ratio = gesture.lastDx / widthPx
+      const current = activeRef.current
+      let next = current
+      if (ratio < -SWIPE_COMMIT_RATIO && current < images.length - 1) next = current + 1
+      else if (ratio > SWIPE_COMMIT_RATIO && current > 0) next = current - 1
+      gesture.mode = 'none'
+      if (next !== current) setActive(next)
+      else setTrackTransform(current, 0, true)
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('touchcancel', onTouchEnd)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.length])
+
+  // Wraps at both ends on desktop (arrows have no page-number readout, so a
+  // dead stop at the last photo reads as "broken button," not "end of
+  // list") — mobile's drag release above clamps instead, which suits a
+  // physical swipe gesture better than a sudden wraparound jump would.
   const goTo = (delta: number) => setActive((a) => (a + delta + images.length) % images.length)
 
   return (
@@ -246,19 +352,20 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           own ratio (GALLERY_WIDTH/HEIGHT below) — this used to be
           aspect-square, which made object-cover crop a meaningful strip off
           the top and bottom of every photo on a phone. */}
-      <div
-        ref={trackRef}
-        onScroll={onTrackScroll}
-        className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory aspect-[4/5] bg-[#151412] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {images.map((img, i) => (
-          <MobileZoomableImage
-            key={img + i}
-            src={productImage(img, GALLERY_WIDTH, GALLERY_HEIGHT)}
-            alt={name}
-            isActive={active === i}
-          />
-        ))}
+      <div ref={viewportRef} className="md:hidden w-full overflow-hidden aspect-[4/5] bg-[#151412]">
+        <div ref={trackRef} className="flex w-full h-full">
+          {images.map((img, i) => (
+            <MobileZoomableImage
+              key={img + i}
+              src={productImage(img, GALLERY_WIDTH, GALLERY_HEIGHT)}
+              alt={name}
+              isActive={active === i}
+              onZoomChange={(z) => {
+                zoomedRef.current = z
+              }}
+            />
+          ))}
+        </div>
       </div>
       {images.length > 1 && (
         <div className="mt-3 flex md:hidden justify-center gap-1.5">
@@ -274,42 +381,59 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
       {/* Desktop: one photo at a time with prev/next arrows, not a static
           grid of every angle at once — a 2-column grid of 4 photos read as
           four small squares instead of one photo worth looking closely at.
-          Capped at max-w-md rather than filling the whole half-width column
-          — at a normal desktop window that column is wide enough to blow
-          the photo up to an uncomfortable, hard-to-take-in size. */}
-      <div className="hidden md:block relative max-w-md mx-auto">
-        <ZoomableImage
-          src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)}
-          alt={name}
-          onClick={() => goTo(1)}
-        />
+          Capped at max-w-md and centered rather than filling (and hugging
+          the left edge of) the whole half-width column — at a normal
+          desktop window that column is wide enough to blow the photo up to
+          an uncomfortable, hard-to-take-in size. */}
+      <div className="hidden md:block max-w-md mx-auto">
+        <div className="relative">
+          <ZoomableImage
+            src={productImage(images[active], GALLERY_WIDTH, GALLERY_HEIGHT)}
+            alt={name}
+            onClick={() => goTo(1)}
+          />
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => goTo(-1)}
+                aria-label="Previous photo"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
+              >
+                <Arrow direction="left" />
+              </button>
+              <button
+                type="button"
+                onClick={() => goTo(1)}
+                aria-label="Next photo"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
+              >
+                <Arrow direction="right" />
+              </button>
+            </>
+          )}
+        </div>
+        {/* Thumbnails: the main photo shrinking to max-w-md (above) left the
+            rest of this column's height empty next to the info column's
+            longer idea/size/material/shipping text — a row of clickable
+            thumbnails gives that space an actual job (jump straight to any
+            photo) instead of just sitting blank. */}
         {images.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() => goTo(-1)}
-              aria-label="Previous photo"
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
-            >
-              <Arrow direction="left" />
-            </button>
-            <button
-              type="button"
-              onClick={() => goTo(1)}
-              aria-label="Next photo"
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
-            >
-              <Arrow direction="right" />
-            </button>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {images.map((img, i) => (
-                <span
-                  key={img + i}
-                  className={`w-1.5 h-1.5 rounded-full transition-colors ${active === i ? 'bg-paper' : 'bg-paper/40'}`}
-                />
-              ))}
-            </div>
-          </>
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {images.map((img, i) => (
+              <button
+                key={img + i}
+                type="button"
+                onClick={() => setActive(i)}
+                aria-label={`Photo ${i + 1}`}
+                className={`aspect-[4/5] bg-[#151412] overflow-hidden border transition-colors ${
+                  active === i ? 'border-paper' : 'border-transparent hover:border-mist/50'
+                }`}
+              >
+                <img src={productImage(img, THUMB_WIDTH, THUMB_HEIGHT)} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>

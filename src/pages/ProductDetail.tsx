@@ -9,17 +9,30 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { useProductPurchase } from '@/hooks/useProductPurchase'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
+// ProductGrid is a 4-column grid at desktop width (2 on mobile, 3 on
+// tablet) — a count like 5 or 9 renders one full row plus a single
+// lonely item dangling under it, which reads as broken rather than just
+// "a shorter list." Recently Viewed in particular can be any length up to
+// 7 depending on browsing history, so it's the one actually at risk of
+// landing on an awkward remainder; trimming down to the last full row of 4
+// only kicks in once there's more than one row to begin with — a single
+// partial row (1-4 items) is completely normal and isn't touched.
+const ROW_SIZE = 4
+function trimToFullRows<T>(items: T[]): T[] {
+  return items.length > ROW_SIZE ? items.slice(0, Math.floor(items.length / ROW_SIZE) * ROW_SIZE) : items
+}
+
 export default function ProductDetail() {
   const { getProductBySlug, getRelatedProducts, loading } = useProducts()
   const { slug } = useParams<{ slug: string }>()
   const product = slug ? getProductBySlug(slug) : undefined
-  const recentlyViewed = useRecentlyViewed(product?.id)
+  const recentlyViewed = trimToFullRows(useRecentlyViewed(product?.id))
   const purchase = useProductPurchase(product)
   useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
 
   if (!product) return loading ? null : <Navigate to="/404" replace />
 
-  const related = getRelatedProducts(product)
+  const related = trimToFullRows(getRelatedProducts(product))
   const galleryImages = (purchase.color && product.imagesByColor[purchase.color]) || product.images
 
   return (
