@@ -1,10 +1,12 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
+import { useState } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import { ProductGallery } from '@/components/ProductGallery'
-import { ProductInfo } from '@/components/ProductInfo'
+import { ProductInfo, ProductDetailsAccordion } from '@/components/ProductInfo'
 import { ProductGrid } from '@/components/ProductGrid'
 import { Reviews } from '@/components/Reviews'
 import { StickyMobileBuyBar } from '@/components/StickyMobileBuyBar'
+import { SizeGuideModal } from '@/components/SizeGuideModal'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { useProductPurchase } from '@/hooks/useProductPurchase'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
@@ -28,6 +30,7 @@ export default function ProductDetail() {
   const product = slug ? getProductBySlug(slug) : undefined
   const recentlyViewed = trimToFullRows(useRecentlyViewed(product?.id))
   const purchase = useProductPurchase(product)
+  const [guideOpen, setGuideOpen] = useState(false)
   useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
 
   if (!product) return loading ? null : <Navigate to="/404" replace />
@@ -51,8 +54,18 @@ export default function ProductDetail() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
         <ProductGallery images={galleryImages} name={product.name} />
-        <ProductInfo product={product} purchase={purchase} />
+        <ProductInfo product={product} purchase={purchase} onOpenGuide={() => setGuideOpen(true)} />
       </div>
+
+      {/* Full-width, not confined to the right-hand column: once the
+          gallery shrank to a centered max-w-md photo + thumbnail row, the
+          old layout had this accordion sharing a row with a slab of empty
+          space in the (now shorter) image column next to it. */}
+      <div className="mt-16 md:mt-20">
+        <ProductDetailsAccordion product={product} onOpenGuide={() => setGuideOpen(true)} />
+      </div>
+
+      <SizeGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
 
       <StickyMobileBuyBar product={product} purchase={purchase} />
 

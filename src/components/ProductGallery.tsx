@@ -6,8 +6,12 @@ import { productImage } from '@/lib/productImage'
 // so it needs real headroom above its on-screen display size to stay sharp.
 const GALLERY_WIDTH = 1400
 const GALLERY_HEIGHT = 1750
-const THUMB_WIDTH = 180
-const THUMB_HEIGHT = 225
+// Must be one of the fixed sizes scripts/migrate_product_images.cjs and
+// server/src/lib/r2.ts actually generate (both JPEGs, not resized on the
+// fly) — 180x225 was never one of them, so those thumbnails 404'd outright.
+// 112x140 is the closest existing 4:5 size to how small these render.
+const THUMB_WIDTH = 112
+const THUMB_HEIGHT = 140
 
 // Source photos are 2000x2000px (Lanczos-upscaled + unsharp-masked from the
 // original 1000x1000 Printful mockups — see scripts/upscale_products.py —
