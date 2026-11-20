@@ -1,7 +1,18 @@
 // One-time migration for the 11 new Printful tee designs (added 2026-11),
-// mirrors migrate_product_images.cjs exactly (same .trim()+flatten+resize
-// pipeline, same output layout) since these are the same kind of raw
-// Printful mockup exports the original migration consumed.
+// mirrors migrate_product_images.cjs (same .trim()+flatten+resize pipeline,
+// same output layout).
+//
+// IMPORTANT: unlike the original 13 products (whose archives held exactly
+// one pre-picked photo per color+view), these new archives hold 5 raw
+// mockup variants per color+view — Printful's dashboard exports every
+// framing/angle it generated, not just one. Checked directly (by eye)
+// across 4 different products/colors: variants 1-3 (alphabetical by hash)
+// are flat, straight-on, "graphic tee" style shots; variant 4 is the
+// angled, dimensional "ghost mannequin" style shot used for every one of
+// the original 13 products; variant 5 is the same angled style from the
+// opposite camera yaw. We want the look consistent with the old 13, so:
+// front -> take the 4th file (index 3), back -> take the 3rd file (index
+// 2) — back's angled shot happens to land one slot earlier than front's.
 const fs = require('fs')
 const path = require('path')
 const sharp = require('sharp')
@@ -27,43 +38,49 @@ const slugify = (s) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-// product slug -> { archives: [n, ...], colors: [official Printful color names] }
+// product slug -> { archive: single source archive number (each one
+// independently has the full color set with the 5-variant structure —
+// no need to merge across archives), colors: official Printful color list }
 const PRODUCTS = {
-  unbound: { archives: [49], colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'Vintage White', 'White'] },
-  'only-now': { archives: [48], colors: ['Black', 'Vintage Black', 'Dark Grey', 'Silver', 'Vintage White', 'White'] },
-  'the-one': { archives: [46], colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'White'] },
-  'the-guide': { archives: [45], colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'Vintage White', 'White'] },
-  everhome: { archives: [44], colors: ['Black', 'Vintage Black', 'Dark Grey', 'Silver', 'Ash', 'Vintage White', 'White'] },
-  'look-again': { archives: [43], colors: ['Black', 'Vintage Black', 'Dark Grey', 'Ash', 'Vintage White', 'White'] },
-  'beyond-instinct': { archives: [42], colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'White'] },
-  'the-golden-rule': { archives: [41, 47], colors: ['Black', 'Vintage Black', 'Dark Grey', 'Silver', 'Ash', 'White'] },
-  oneness: { archives: [40], colors: ['Black', 'Vintage Black', 'Dark Grey', 'Ash', 'Vintage White', 'White'] },
-  'no-limits': { archives: [39], colors: ['Black', 'Vintage Black', 'Oxblood Black', 'Vintage White', 'Solid White Blend', 'White'] },
-  'the-unbearable': { archives: [33, 34, 38], colors: ['Black', 'Vintage Black', 'Navy', 'Ash', 'Vintage White', 'White'] },
+  unbound: { archive: 49, colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'Vintage White', 'White'] },
+  'only-now': { archive: 48, colors: ['Black', 'Vintage Black', 'Dark Grey', 'Silver', 'Vintage White', 'White'] },
+  'the-one': { archive: 46, colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'White'] },
+  'the-guide': { archive: 45, colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'Vintage White', 'White'] },
+  everhome: { archive: 44, colors: ['Black', 'Vintage Black', 'Dark Grey', 'Silver', 'Ash', 'Vintage White', 'White'] },
+  'look-again': { archive: 43, colors: ['Black', 'Vintage Black', 'Dark Grey', 'Ash', 'Vintage White', 'White'] },
+  'beyond-instinct': { archive: 42, colors: ['Black', 'Vintage Black', 'Asphalt', 'Silver', 'Ash', 'White'] },
+  'the-golden-rule': { archive: 41, colors: ['Black', 'Vintage Black', 'Dark Grey', 'Silver', 'Ash', 'White'] },
+  oneness: { archive: 40, colors: ['Black', 'Vintage Black', 'Dark Grey', 'Ash', 'Vintage White', 'White'] },
+  'no-limits': { archive: 39, colors: ['Black', 'Vintage Black', 'Oxblood Black', 'Vintage White', 'Solid White Blend', 'White'] },
+  'the-unbearable': { archive: 33, colors: ['Black', 'Vintage Black', 'Navy', 'Ash', 'Vintage White', 'White'] },
 }
+
+const FRONT_INDEX = 3 // 4th of 5
+const BACK_INDEX = 2 // 3rd of 5
 
 async function run() {
   const report = []
 
-  for (const [slug, { archives, colors }] of Object.entries(PRODUCTS)) {
-    // colorSlug -> { front?: path, back?: path } — merged across all archives
-    // for this product (some products' mockups were split across 2-3
-    // archives by Printful's batch size limit).
+  for (const [slug, { archive, colors }] of Object.entries(PRODUCTS)) {
+    const dir = path.join(DOWNLOADS, `archive (${archive})`)
+    const files = fs.readdirSync(dir)
+    // plain front/back only — excludes front-and-back composites, left/right
+    // sleeve close-ups, which share the "unisex-staple-t-shirt-{color}-"
+    // prefix but aren't what we want here.
+    const re = /^unisex-staple-t-shirt-(.+)-(front|back)-[a-f0-9]+\.png$/i
+
+    // colorSlug -> { front: [paths sorted by hash], back: [paths sorted by hash] }
     const byColor = {}
-    for (const n of archives) {
-      const dir = path.join(DOWNLOADS, `archive (${n})`)
-      const files = fs.readdirSync(dir)
-      const re = /^unisex-staple-t-shirt-(.+)-(front|back)-[a-f0-9]+\.png$/i
-      for (const f of files) {
-        const m = f.match(re)
-        if (!m) continue
-        const [, colorSlug, view] = m
-        byColor[colorSlug] = byColor[colorSlug] || {}
-        // first match wins — if a color+view appears in more than one
-        // archive for this product, they're duplicates/retries, not
-        // different content.
-        if (!byColor[colorSlug][view]) byColor[colorSlug][view] = path.join(dir, f)
-      }
+    for (const f of files) {
+      const m = f.match(re)
+      if (!m) continue
+      const [, colorSlug, view] = m
+      byColor[colorSlug] = byColor[colorSlug] || { front: [], back: [] }
+      byColor[colorSlug][view].push(path.join(dir, f))
+    }
+    for (const cs of Object.keys(byColor)) {
+      byColor[cs].front.sort()
+      byColor[cs].back.sort()
     }
 
     const outProductDir = path.join(OUT_DIR, slug)
@@ -71,13 +88,17 @@ async function run() {
 
     for (const color of colors) {
       const cs = slugify(color)
-      const files = byColor[cs]
-      if (!files) {
+      const variants = byColor[cs]
+      if (!variants) {
         report.push(`NO PHOTOS: ${slug} / "${color}" (slug "${cs}") — found colors: ${Object.keys(byColor).join(', ')}`)
         continue
       }
+      const picks = {
+        front: variants.front[FRONT_INDEX] ?? variants.front[variants.front.length - 1],
+        back: variants.back[BACK_INDEX] ?? variants.back[variants.back.length - 1],
+      }
       for (const view of ['front', 'back']) {
-        const src = files[view]
+        const src = picks[view]
         if (!src) continue
         for (const [w, h] of SIZES) {
           const outPath = path.join(outProductDir, `${cs}-${view}-${w}x${h}.jpg`)
@@ -89,7 +110,9 @@ async function run() {
             .toFile(outPath)
         }
       }
-      report.push(`OK: ${slug} / ${color} (front=${!!files.front} back=${!!files.back})`)
+      report.push(
+        `OK: ${slug} / ${color} (front=${picks.front ? path.basename(picks.front) : 'MISSING'}, back=${picks.back ? path.basename(picks.back) : 'MISSING'}, front variants=${variants.front.length}, back variants=${variants.back.length})`
+      )
     }
   }
 
