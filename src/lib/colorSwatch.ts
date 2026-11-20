@@ -17,6 +17,8 @@ export const colorSwatch: Record<string, string> = {
   'Dark Grey': '#3B3B3B',
   'Soft Cream': '#F3E9D7',
   Natural: '#E8DCC8',
+  'Oxblood Black': '#381F22',
+  'Solid White Blend': '#F3F3F3',
   // Everyday Sweatpants
   'Navy Blazer': '#1F2A44',
   Maroon: '#5B1F2B',
