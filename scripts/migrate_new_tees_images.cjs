@@ -6,13 +6,16 @@
 // one pre-picked photo per color+view), these new archives hold 5 raw
 // mockup variants per color+view — Printful's dashboard exports every
 // framing/angle it generated, not just one. Checked directly (by eye)
-// across 4 different products/colors: variants 1-3 (alphabetical by hash)
-// are flat, straight-on, "graphic tee" style shots; variant 4 is the
-// angled, dimensional "ghost mannequin" style shot used for every one of
-// the original 13 products; variant 5 is the same angled style from the
-// opposite camera yaw. We want the look consistent with the old 13, so:
-// front -> take the 4th file (index 3), back -> take the 3rd file (index
-// 2) — back's angled shot happens to land one slot earlier than front's.
+// across several products/colors: variants 1-3 (alphabetical by hash) are
+// flat, straight-on, "graphic tee" style shots; variant 4 is angled but on
+// a noticeably more athletic/V-taper build than the old 13 ever used
+// (flagged directly — wrong body shape, not what "unisex, true to size"
+// photos have looked like); variant 5 is the same angled, dimensional
+// "ghost mannequin" shot but on the regular boxy unisex build the old 13
+// all use. So: front -> take the 5th file (index 4), back -> take the 3rd
+// file (index 2) — back's angled/correct-build shot lands two slots
+// earlier than front's for reasons unknown, but confirmed by eye on 3
+// different products.
 const fs = require('fs')
 const path = require('path')
 const sharp = require('sharp')
@@ -55,7 +58,7 @@ const PRODUCTS = {
   'the-unbearable': { archive: 33, colors: ['Black', 'Vintage Black', 'Navy', 'Ash', 'Vintage White', 'White'] },
 }
 
-const FRONT_INDEX = 3 // 4th of 5
+const FRONT_INDEX = 4 // 5th of 5
 const BACK_INDEX = 2 // 3rd of 5
 
 async function run() {
