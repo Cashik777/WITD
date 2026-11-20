@@ -5,17 +5,19 @@
 // IMPORTANT: unlike the original 13 products (whose archives held exactly
 // one pre-picked photo per color+view), these new archives hold 5 raw
 // mockup variants per color+view — Printful's dashboard exports every
-// framing/angle it generated, not just one. Checked directly (by eye)
-// across several products/colors: variants 1-3 (alphabetical by hash) are
-// flat, straight-on, "graphic tee" style shots; variant 4 is angled but on
-// a noticeably more athletic/V-taper build than the old 13 ever used
-// (flagged directly — wrong body shape, not what "unisex, true to size"
-// photos have looked like); variant 5 is the same angled, dimensional
-// "ghost mannequin" shot but on the regular boxy unisex build the old 13
-// all use. So: front -> take the 5th file (index 4), back -> take the 3rd
-// file (index 2) — back's angled/correct-build shot lands two slots
-// earlier than front's for reasons unknown, but confirmed by eye on 3
-// different products.
+// framing/angle it generated, not just one, and they are NOT just cosmetic
+// crops of each other — their trimmed-garment bounding boxes have
+// genuinely different aspect ratios (checked with sharp .trim()), which is
+// why picking the wrong one made front and back look like two different
+// sized photos once placed in the same fixed-size frame (flagged
+// directly). The old 13 products' front and back photos share essentially
+// the same trimmed aspect ratio (~0.73-0.74). Checked by eye + by trimmed
+// ratio across multiple products/colors: of the 5 front variants, variant
+// 3 (index 2) is both the one with that matching ~0.74 ratio AND the
+// regular boxy unisex build (not the noticeably more athletic build some
+// of the other variants show); variant 3 (index 2) of the 5 back variants
+// matches it almost exactly already. So: front -> 3rd file (index 2),
+// back -> 3rd file (index 2) — the same position in both lists.
 const fs = require('fs')
 const path = require('path')
 const sharp = require('sharp')
@@ -58,7 +60,7 @@ const PRODUCTS = {
   'the-unbearable': { archive: 33, colors: ['Black', 'Vintage Black', 'Navy', 'Ash', 'Vintage White', 'White'] },
 }
 
-const FRONT_INDEX = 4 // 5th of 5
+const FRONT_INDEX = 2 // 3rd of 5
 const BACK_INDEX = 2 // 3rd of 5
 
 async function run() {
