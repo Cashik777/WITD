@@ -1,4 +1,4 @@
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useProducts } from '@/hooks/useProducts'
 import { ProductGallery } from '@/components/ProductGallery'
@@ -31,7 +31,22 @@ export default function ProductDetail() {
   const recentlyViewedRaw = useRecentlyViewed(product?.id)
   const purchase = useProductPurchase(product)
   const [guideOpen, setGuideOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
   useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
+
+  // location.key is 'default' only for the very first history entry this
+  // tab has — i.e. there's nothing in OUR history to go back to (a direct
+  // link, a new tab, a page refresh). Anywhere else, the person navigated
+  // here from somewhere in the app, so take them back to exactly that
+  // rather than always landing on the shop/category page.
+  const goBack = () => {
+    if (location.key === 'default') {
+      navigate('/shop')
+    } else {
+      navigate(-1)
+    }
+  }
 
   if (!product) return loading ? null : <Navigate to="/404" replace />
 
@@ -46,7 +61,16 @@ export default function ProductDetail() {
 
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-8 md:py-12">
-      <nav className="text-xs text-mist mb-8">
+      <nav className="text-xs text-mist mb-8 flex items-center">
+        <button
+          onClick={goBack}
+          aria-label="Go back"
+          className="mr-3 p-1 -ml-1 hover:text-paper transition-colors"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
         <Link to="/shop" className="hover:text-paper">
           Shop
         </Link>
