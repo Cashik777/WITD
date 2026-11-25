@@ -4,6 +4,9 @@
 // names fall back to a neutral grey rather than breaking. A handful of
 // colourways (camo prints) aren't one colour at all — those map to an
 // array of hexes instead of a single string; see swatchStyle() below.
+// House rule (explicit): always exactly 2 colors for these, never more —
+// on a small swatch dot, more than 2 wedges reads as a pie chart rather
+// than a pattern, so pick the two most representative tones.
 export const colorSwatch: Record<string, string | string[]> = {
   Black: '#141412',
   White: '#F4F2EC',
@@ -68,7 +71,7 @@ export const colorSwatch: Record<string, string | string[]> = {
   // Illusion of Knowing (Independent SS4500)
   Purple: '#482E81',
   'Alpine Green': '#304A3C',
-  'Duck Camo': ['#2A2A2A', '#6B4A35', '#4A4A32', '#8C6450'],
+  'Duck Camo': ['#2A2A2A', '#8C6450'],
   'Dusty Sage': '#C6C6AC',
   Bone: '#F2E5D4',
   // ANCIENT DREAM (Stanley/Stella Sculpter Heavyweight Hoodie)
