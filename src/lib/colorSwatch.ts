@@ -1,8 +1,10 @@
 // Approximate hex per Printful colourway name, used to render small colour
 // dots/swatches across the site. Names are Printful's own colour labels, not
 // ours, so new products can introduce names not covered here — unmapped
-// names fall back to a neutral grey rather than breaking.
-export const colorSwatch: Record<string, string> = {
+// names fall back to a neutral grey rather than breaking. A handful of
+// colourways (camo prints) aren't one colour at all — those map to an
+// array of hexes instead of a single string; see swatchStyle() below.
+export const colorSwatch: Record<string, string | string[]> = {
   Black: '#141412',
   White: '#F4F2EC',
   'Off-White': '#E8E3D6',
@@ -66,7 +68,7 @@ export const colorSwatch: Record<string, string> = {
   // Illusion of Knowing (Independent SS4500)
   Purple: '#482E81',
   'Alpine Green': '#304A3C',
-  'Duck Camo': '#4E4737',
+  'Duck Camo': ['#2A2A2A', '#6B4A35', '#4A4A32', '#8C6450'],
   'Dusty Sage': '#C6C6AC',
   Bone: '#F2E5D4',
   // ANCIENT DREAM (Stanley/Stella Sculpter Heavyweight Hoodie)
@@ -76,4 +78,17 @@ export const colorSwatch: Record<string, string> = {
   'G. Dyed Blue Grey': '#676D83',
   'G. Dyed Misty Grey': '#878D89',
   'G. Dyed Blush': '#CCA39F',
+}
+
+// A patterned colourway (camo, etc.) can't be shown honestly as one flat
+// dot — this renders it as a conic-gradient split into even wedges of its
+// real colors instead. Spread the result straight into a style prop.
+export function swatchStyle(color: string): { backgroundColor?: string; backgroundImage?: string } {
+  const value = colorSwatch[color]
+  if (Array.isArray(value)) {
+    const step = 100 / value.length
+    const stops = value.map((hex, i) => `${hex} ${i * step}% ${(i + 1) * step}%`).join(', ')
+    return { backgroundImage: `conic-gradient(${stops})` }
+  }
+  return { backgroundColor: value ?? '#8F8B82' }
 }

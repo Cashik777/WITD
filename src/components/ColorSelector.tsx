@@ -1,4 +1,4 @@
-import { colorSwatch } from '@/lib/colorSwatch'
+import { swatchStyle } from '@/lib/colorSwatch'
 
 interface ColorSelectorProps {
   colors: string[]
@@ -24,7 +24,7 @@ export function ColorSelector({ colors, selected, onSelect }: ColorSelectorProps
           >
             <span
               className="block w-full h-full rounded-full border border-paper/15"
-              style={{ backgroundColor: colorSwatch[color] ?? '#8F8B82' }}
+              style={swatchStyle(color)}
             />
           </button>
         ))}

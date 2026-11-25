@@ -5,7 +5,7 @@ import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
-import { colorSwatch } from '@/lib/colorSwatch'
+import { swatchStyle } from '@/lib/colorSwatch'
 import { productImage } from '@/lib/productImage'
 
 export function ProductCard({ product }: { product: Product }) {
@@ -122,7 +122,7 @@ export function ProductCard({ product }: { product: Product }) {
               <span
                 key={c}
                 className="w-3 h-3 rounded-full border border-paper/20"
-                style={{ backgroundColor: colorSwatch[c] ?? '#8F8B82' }}
+                style={swatchStyle(c)}
                 title={c}
               />
             ))}
