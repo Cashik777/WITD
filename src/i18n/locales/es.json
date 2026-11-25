@@ -222,7 +222,8 @@
     "sizeGuideFootnote": "Todas las camisetas WITD tienen un corte amplio y cuadrado. Las medidas son medidas corporales — para un ajuste más entallado, elige una talla menos. Los cortes se indican por modelo debajo de la tabla de tallas a medida que se añaden al catálogo.",
     "notifyMeSuccess": "Estás en la lista — te enviaremos un correo si {{name}} vuelve a estar disponible.",
     "emailPlaceholder": "tu@ejemplo.com",
-    "emailForRestock": "Correo para notificación de reposición"
+    "emailForRestock": "Correo para notificación de reposición",
+    "sizeOneSize": "Talla única"
   },
   "home": {
     "newDrop": "Nueva Colección",

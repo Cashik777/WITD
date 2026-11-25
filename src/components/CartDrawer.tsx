@@ -7,6 +7,7 @@ import { useLocale } from '@/hooks/useLocale'
 import { useFilterLabels } from '@/hooks/useFilterLabels'
 import { useProducts } from '@/hooks/useProducts'
 import { localizedProductText } from '@/lib/productText'
+import { sizeLabel } from '@/lib/sizeLabel'
 import { CartItem } from './CartItem'
 import { PairsWellWith } from './PairsWellWith'
 import { CloseIcon, BagIcon } from './icons'
@@ -75,7 +76,7 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               {lastAdded && (
                 <p className="px-6 py-3 bg-paper/10 border-b border-line text-xs text-paper">
-                  {t('cart.added', { name: lastAddedName, color: colorLabel(lastAdded.color), size: lastAdded.size })}
+                  {t('cart.added', { name: lastAddedName, color: colorLabel(lastAdded.color), size: sizeLabel(lastAdded.size, t) })}
                 </p>
               )}
 

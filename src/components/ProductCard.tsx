@@ -10,6 +10,7 @@ import { SwatchDot } from './SwatchDot'
 import { productImage } from '@/lib/productImage'
 import { localizedProductText } from '@/lib/productText'
 import { useFilterLabels } from '@/hooks/useFilterLabels'
+import { sizeLabel } from '@/lib/sizeLabel'
 
 export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
@@ -109,7 +110,7 @@ export function ProductCard({ product }: { product: Product }) {
                   onClick={(e) => pickSize(e, s)}
                   className="px-2.5 py-1.5 text-[11px] bg-black text-paper hover:bg-black/80 transition-colors"
                 >
-                  {s}
+                  {sizeLabel(s, t)}
                 </button>
               ))}
             </div>

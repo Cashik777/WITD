@@ -3,6 +3,7 @@ import { formatPrice } from '@/lib/format'
 import { useCart } from '@/hooks/useCart'
 import { useLocale } from '@/hooks/useLocale'
 import { useFilterLabels } from '@/hooks/useFilterLabels'
+import { sizeLabel } from '@/lib/sizeLabel'
 import { useProducts } from '@/hooks/useProducts'
 import { localizedProductText } from '@/lib/productText'
 import { MinusIcon, PlusIcon, CloseIcon } from './icons'
@@ -33,7 +34,7 @@ export function CartItem({ line }: { line: CartLine }) {
           <div>
             <h3 className="text-sm text-paper">{name}</h3>
             <p className="text-xs text-mist mt-1">
-              {colorLabel(line.color)} / {line.size}
+              {colorLabel(line.color)} / {sizeLabel(line.size, t)}
             </p>
           </div>
           <button

@@ -9,6 +9,7 @@ import { useLocale } from '@/hooks/useLocale'
 import { useFilterLabels } from '@/hooks/useFilterLabels'
 import { useProducts } from '@/hooks/useProducts'
 import { localizedProductText } from '@/lib/productText'
+import { sizeLabel } from '@/lib/sizeLabel'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { ChevronDown } from '@/components/icons'
 
@@ -173,7 +174,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
                 <span className="text-paper/80">
-                  {lineName(l.productId, l.name)} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
+                  {lineName(l.productId, l.name)} ({colorLabel(l.color)}/{sizeLabel(l.size, t)}) &times; {l.quantity}
                 </span>
                 <span className="text-paper">{formatPrice(l.price * l.quantity, l.currency)}</span>
               </div>
@@ -238,7 +239,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
                 <span className="text-paper/80">
-                  {lineName(l.productId, l.name)} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
+                  {lineName(l.productId, l.name)} ({colorLabel(l.color)}/{sizeLabel(l.size, t)}) &times; {l.quantity}
                 </span>
                 <span className="text-paper">{formatPrice(l.price * l.quantity, l.currency)}</span>
               </div>

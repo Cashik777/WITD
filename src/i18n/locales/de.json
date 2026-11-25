@@ -222,7 +222,8 @@
     "sizeGuideFootnote": "Alle WITD-T-Shirts sind in einem kastigen, übergroßen Schnitt geschnitten. Die Maße sind Körpermaße — für eine engere Passform wählen Sie eine Größe kleiner. Passformen werden pro Modell unterhalb der Größentabelle angegeben, sobald sie dem Katalog hinzugefügt werden.",
     "notifyMeSuccess": "Sie stehen auf der Liste — wir benachrichtigen Sie per E-Mail, wenn {{name}} wieder vorrätig ist.",
     "emailPlaceholder": "sie@beispiel.de",
-    "emailForRestock": "E-Mail für Nachbestellungs-Benachrichtigung"
+    "emailForRestock": "E-Mail für Nachbestellungs-Benachrichtigung",
+    "sizeOneSize": "Eine Größe"
   },
   "home": {
     "newDrop": "Neue Kollektion",

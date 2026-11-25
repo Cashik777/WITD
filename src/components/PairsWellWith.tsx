@@ -9,6 +9,7 @@ import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
 import { productImage } from '@/lib/productImage'
 import { localizedProductText } from '@/lib/productText'
+import { sizeLabel } from '@/lib/sizeLabel'
 
 // A small, honest cross-sell: other in-stock First Drop pieces not already
 // in the cart. No real "frequently bought together" data exists yet, so
@@ -58,7 +59,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
                     onClick={(e) => pickSize(e, p.id, s)}
                     className="px-2 py-1 text-[10px] border border-line text-paper hover:border-paper"
                   >
-                    {s}
+                    {sizeLabel(s, t)}
                   </button>
                 ))}
               </div>

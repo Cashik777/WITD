@@ -1,4 +1,5 @@
 import { useLocale } from '@/hooks/useLocale'
+import { sizeLabel } from '@/lib/sizeLabel'
 
 interface SizeSelectorProps {
   sizes: string[]
@@ -15,7 +16,7 @@ export function SizeSelector({ sizes, availableSizes, selected, onSelect, onOpen
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs tracking-widest uppercase text-paper">
           {t('product.size')}
-          {selected ? ` — ${selected}` : ''}
+          {selected ? ` — ${sizeLabel(selected, t)}` : ''}
         </span>
         <button onClick={onOpenGuide} className="text-xs text-mist hover:text-paper underline underline-offset-4">
           {t('product.sizeGuide')}
@@ -37,7 +38,7 @@ export function SizeSelector({ sizes, availableSizes, selected, onSelect, onOpen
                   : 'border-line text-mist/40 line-through cursor-not-allowed'
               }`}
             >
-              {size}
+              {sizeLabel(size, t)}
             </button>
           )
         })}

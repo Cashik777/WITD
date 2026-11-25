@@ -222,7 +222,8 @@
     "sizeGuideFootnote": "All WITD tees are cut in a boxy, oversized fit. Measurements are body measurements — for a closer fit, size down. Fits are printed per style below the size chart as they're added to the catalog.",
     "notifyMeSuccess": "You're on the list — we'll email you if {{name}} comes back.",
     "emailPlaceholder": "you@example.com",
-    "emailForRestock": "Email for restock notification"
+    "emailForRestock": "Email for restock notification",
+    "sizeOneSize": "One size"
   },
   "home": {
     "newDrop": "New Drop",

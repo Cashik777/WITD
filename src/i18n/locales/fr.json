@@ -222,7 +222,8 @@
     "sizeGuideFootnote": "Tous les t-shirts WITD sont coupés dans une forme ample et carrée. Les mesures sont des mesures corporelles — pour une coupe plus ajustée, prenez une taille en dessous. Les coupes sont indiquées par modèle sous le tableau des tailles au fur et à mesure qu'elles sont ajoutées au catalogue.",
     "notifyMeSuccess": "Vous êtes sur la liste — nous vous enverrons un e-mail si {{name}} revient en stock.",
     "emailPlaceholder": "vous@exemple.com",
-    "emailForRestock": "E-mail pour la notification de réassort"
+    "emailForRestock": "E-mail pour la notification de réassort",
+    "sizeOneSize": "Taille unique"
   },
   "home": {
     "newDrop": "Nouvelle Collection",
