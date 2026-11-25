@@ -20,7 +20,7 @@ export interface Product {
   // Per-language rewrites of description/idea (fr/de/es) — the print on the
   // garment is always English; the storefront's own copy about it doesn't
   // have to be. Missing language/field falls back to the English above.
-  translations?: Partial<Record<'fr' | 'de' | 'es', { description?: string; idea?: string }>>
+  translations?: Partial<Record<'fr' | 'de' | 'es', { name?: string; description?: string; idea?: string }>>
   price: number // CAD — the base/display price
   priceUSD: number | null // shown/charged to customers detected as non-Canadian; null falls back to a straight read of `price`
   priceEUR: number | null // shown/charged to customers detected as EU-based; null falls back to a straight read of `price`

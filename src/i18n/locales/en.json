@@ -28,7 +28,11 @@
     "availabilityInStock": "In Stock",
     "availabilityLowStock": "Low Stock",
     "availabilitySoldOut": "Sold Out",
-    "availabilityComingSoon": "Coming Soon"
+    "availabilityComingSoon": "Coming Soon",
+    "categoryTShirts": "T-Shirts",
+    "categoryHoodies": "Hoodies",
+    "categorySweatpants": "Sweatpants",
+    "categoryAccessories": "Accessories"
   },
   "shop": {
     "title": "Shop",
@@ -227,6 +231,16 @@
     "ideaBody": "Reality can feel like a dream — vivid, moving fast, mostly on autopilot. WITD is for those who choose to become conscious inside it, and dress like they mean it.",
     "readPhilosophy": "Read the Philosophy",
     "featuredPieces": "Featured Pieces"
+  },
+  "ideaQuest": {
+    "connectAllDots": "Connect all the dots",
+    "youGot": "You got",
+    "offFirstOrder": "+{{percent}}% off your first order",
+    "unlocking": "Unlocking your code…",
+    "offUnlocked": "{{percent}}% off unlocked — tap to copy",
+    "copied": "Copied!",
+    "couldNotReachServer": "Couldn't reach the server",
+    "tapToTryAgain": "Tap to try again"
   },
   "legal": {
     "lastUpdated": "Last updated — October 2026",

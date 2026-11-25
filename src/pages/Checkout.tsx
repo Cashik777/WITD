@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
+import { useFilterLabels } from '@/hooks/useFilterLabels'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { ChevronDown } from '@/components/icons'
 
@@ -27,6 +28,7 @@ function CheckoutSteps({ current }: { current: number }) {
 export default function Checkout() {
   useDocumentMeta('Checkout — WITD')
   const { t } = useLocale()
+  const { colorLabel } = useFilterLabels()
   const PAYMENTS_NOT_OPEN_MESSAGE = t('checkout.paymentsNotOpen')
   const { lines, subtotal } = useCart()
   const { currency: activeCurrency } = useCurrency()
@@ -161,7 +163,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
                 <span className="text-paper/80">
-                  {l.name} ({l.color}/{l.size}) &times; {l.quantity}
+                  {l.name} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
                 </span>
                 <span className="text-paper">{formatPrice(l.price * l.quantity, l.currency)}</span>
               </div>
@@ -226,7 +228,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
                 <span className="text-paper/80">
-                  {l.name} ({l.color}/{l.size}) &times; {l.quantity}
+                  {l.name} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
                 </span>
                 <span className="text-paper">{formatPrice(l.price * l.quantity, l.currency)}</span>
               </div>

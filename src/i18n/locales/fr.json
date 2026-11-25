@@ -28,7 +28,11 @@
     "availabilityInStock": "En stock",
     "availabilityLowStock": "Stock limité",
     "availabilitySoldOut": "Épuisé",
-    "availabilityComingSoon": "Bientôt disponible"
+    "availabilityComingSoon": "Bientôt disponible",
+    "categoryTShirts": "T-Shirts",
+    "categoryHoodies": "Sweats à Capuche",
+    "categorySweatpants": "Pantalons de Jogging",
+    "categoryAccessories": "Accessoires"
   },
   "shop": {
     "title": "Boutique",
@@ -227,6 +231,16 @@
     "ideaBody": "La réalité peut ressembler à un rêve — vivace, rapide, presque toujours en pilote automatique. WITD est pour ceux qui choisissent de devenir conscients à l'intérieur, et de s'habiller comme s'ils le pensaient vraiment.",
     "readPhilosophy": "Lire la philosophie",
     "featuredPieces": "Pièces en vedette"
+  },
+  "ideaQuest": {
+    "connectAllDots": "Reliez tous les points",
+    "youGot": "Vous avez obtenu",
+    "offFirstOrder": "+{{percent}}% sur votre première commande",
+    "unlocking": "Déverrouillage de votre code…",
+    "offUnlocked": "{{percent}}% débloqués — touchez pour copier",
+    "copied": "Copié !",
+    "couldNotReachServer": "Impossible de contacter le serveur",
+    "tapToTryAgain": "Touchez pour réessayer"
   },
   "legal": {
     "lastUpdated": "Dernière mise à jour — octobre 2026",

@@ -9,6 +9,7 @@ import type { Locale } from './locale'
 export function localizedProductText(product: Product, locale: Locale) {
   const tr = locale !== 'en' ? product.translations?.[locale] : undefined
   return {
+    name: tr?.name || product.name,
     description: tr?.description || product.description,
     idea: tr?.idea || product.idea,
   }

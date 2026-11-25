@@ -5,6 +5,7 @@ import { getProductPrice } from '@/lib/price'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
 import type { useProductPurchase } from '@/hooks/useProductPurchase'
+import { localizedProductText } from '@/lib/productText'
 
 interface StickyMobileBuyBarProps {
   product: Product
@@ -20,7 +21,8 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
   const { size, addToCart, soldOut } = purchase
   const [visible, setVisible] = useState(false)
   const { currency } = useCurrency()
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { name } = localizedProductText(product, locale)
 
   useEffect(() => {
     if (soldOut) return
@@ -58,7 +60,7 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
   return (
     <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-black border-t border-line px-5 py-3 flex items-center gap-3">
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-paper truncate">{product.name}</p>
+        <p className="text-xs text-paper truncate">{name}</p>
         <p className="text-xs text-mist">{formatPrice(getProductPrice(product, currency), currency)}</p>
       </div>
       <button

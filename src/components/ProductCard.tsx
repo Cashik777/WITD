@@ -8,13 +8,17 @@ import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
 import { SwatchDot } from './SwatchDot'
 import { productImage } from '@/lib/productImage'
+import { localizedProductText } from '@/lib/productText'
+import { useFilterLabels } from '@/hooks/useFilterLabels'
 
 export function ProductCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
   const [pickingSize, setPickingSize] = useState(false)
   const { addItem, openCart } = useCart()
   const { currency } = useCurrency()
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { colorLabel } = useFilterLabels()
+  const { name } = localizedProductText(product, locale)
   const soldOut = product.availability === 'sold_out'
 
   const openSizePicker = (e: MouseEvent) => {
@@ -49,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
           src={productImage(product.images[0], 600, 750)}
           srcSet={`${productImage(product.images[0], 400, 500)} 400w, ${productImage(product.images[0], 600, 750)} 600w`}
           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-          alt={product.name}
+          alt={name}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-witd ${
             hovered && product.hoverImage ? 'opacity-0' : 'opacity-100'
           }`}
@@ -118,10 +122,10 @@ export function ProductCard({ product }: { product: Product }) {
           {product.bestseller && (
             <p className="text-[10px] tracking-widest uppercase text-paper/50 mb-1">{t('product.bestseller')}</p>
           )}
-          <h3 className="text-sm text-paper">{product.name}</h3>
+          <h3 className="text-sm text-paper">{name}</h3>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {product.colors.map((c) => (
-              <SwatchDot key={c} color={c} className="w-3 h-3 shrink-0 rounded-full border border-paper/20" title={c} />
+              <SwatchDot key={c} color={c} className="w-3 h-3 shrink-0 rounded-full border border-paper/20" title={colorLabel(c)} />
             ))}
           </div>
         </div>

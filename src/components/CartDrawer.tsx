@@ -4,6 +4,7 @@ import { formatPrice } from '@/lib/format'
 import { calculateShipping, amountToFreeShipping, shippingPolicy } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
+import { useFilterLabels } from '@/hooks/useFilterLabels'
 import { CartItem } from './CartItem'
 import { PairsWellWith } from './PairsWellWith'
 import { CloseIcon, BagIcon } from './icons'
@@ -12,6 +13,7 @@ export function CartDrawer() {
   const { lines, isOpen, closeCart, subtotal, lastAdded } = useCart()
   const { currency: activeCurrency } = useCurrency()
   const { t } = useLocale()
+  const { colorLabel } = useFilterLabels()
   const currency = lines[0]?.currency ?? activeCurrency
 
   const shipping = calculateShipping(subtotal, currency)
@@ -64,7 +66,7 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               {lastAdded && (
                 <p className="px-6 py-3 bg-paper/10 border-b border-line text-xs text-paper">
-                  {t('cart.added', { name: lastAdded.name, color: lastAdded.color, size: lastAdded.size })}
+                  {t('cart.added', { name: lastAdded.name, color: colorLabel(lastAdded.color), size: lastAdded.size })}
                 </p>
               )}
 

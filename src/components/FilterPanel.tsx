@@ -17,6 +17,7 @@ function CheckboxGroup({
   counts,
   onToggle,
   labels,
+  labelFor,
 }: {
   title: string
   options: readonly string[]
@@ -24,6 +25,7 @@ function CheckboxGroup({
   counts: Record<string, number>
   onToggle: (value: string) => void
   labels?: Record<string, string>
+  labelFor?: (value: string) => string
 }) {
   return (
     <div className="py-5 border-b border-line">
@@ -45,7 +47,7 @@ function CheckboxGroup({
                 className="w-4 h-4 accent-paper bg-transparent border border-mist"
               />
               <span className="text-sm text-paper/80 group-hover:text-paper transition-colors flex-1">
-                {labels?.[opt] ?? opt}
+                {labelFor ? labelFor(opt) : (labels?.[opt] ?? opt)}
               </span>
               <span className="text-xs text-mist">{count}</span>
             </label>
@@ -58,7 +60,7 @@ function CheckboxGroup({
 
 export function FilterPanel({ products, filters, toggleFilter, clearFilters }: FilterPanelProps) {
   const { t } = useLocale()
-  const { collectionLabels, availabilityLabels } = useFilterLabels()
+  const { collectionLabels, availabilityLabels, categoryLabels, colorLabel } = useFilterLabels()
   const hasActive =
     filters.category.length + filters.size.length + filters.color.length + filters.collection.length + filters.availability.length > 0
 
@@ -79,6 +81,7 @@ export function FilterPanel({ products, filters, toggleFilter, clearFilters }: F
         selected={filters.category}
         counts={countByOption(products, filters, 'category')}
         onToggle={(v) => toggleFilter('category', v)}
+        labels={categoryLabels}
       />
       <CheckboxGroup
         title={t('filters.size')}
@@ -93,6 +96,7 @@ export function FilterPanel({ products, filters, toggleFilter, clearFilters }: F
         selected={filters.color}
         counts={countByOption(products, filters, 'color')}
         onToggle={(v) => toggleFilter('color', v)}
+        labelFor={colorLabel}
       />
       <CheckboxGroup
         title={t('filters.collection')}

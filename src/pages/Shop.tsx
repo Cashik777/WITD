@@ -11,6 +11,7 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import type { SortOption } from '@/types/product'
 import { useLocale } from '@/hooks/useLocale'
 import { useSortLabels } from '@/hooks/useSortLabels'
+import { useCategoryLabel, useFilterLabels } from '@/hooks/useFilterLabels'
 
 // Every nav entry point into this page (header "Shop"/"New Drop", footer
 // "Bestsellers", category tabs, etc.) renders the same /shop route without
@@ -28,6 +29,8 @@ function ShopView() {
   useDocumentMeta('Shop — WITD', 'Browse the First Drop — streetwear for those awake inside the dream.')
   const { t } = useLocale()
   const sortLabels = useSortLabels()
+  const categoryLabel = useCategoryLabel()
+  const { collectionLabels, availabilityLabels, colorLabel } = useFilterLabels()
   const { products, categoryNames } = useProducts()
   const [searchParams] = useSearchParams()
   const { category: categoryParam } = useParams<{ category?: string }>()
@@ -65,6 +68,22 @@ function ShopView() {
     toggleFilter(group, value)
   }
 
+  const chipLabel = (key: string, value: string) => {
+    const [group] = key.split(':') as [keyof typeof filters]
+    switch (group) {
+      case 'category':
+        return categoryLabel(value)
+      case 'color':
+        return colorLabel(value)
+      case 'collection':
+        return collectionLabels[value] ?? value
+      case 'availability':
+        return availabilityLabels[value] ?? value
+      default:
+        return value
+    }
+  }
+
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-12 md:py-16">
       <div className="max-w-2xl">
@@ -90,7 +109,7 @@ function ShopView() {
                 active ? 'bg-paper text-black border-paper' : 'border-line text-paper/70 hover:border-mist'
               }`}
             >
-              {cat === 'All' ? t('shop.all') : cat}
+              {cat === 'All' ? t('shop.all') : categoryLabel(cat)}
             </button>
           )
         })}
@@ -144,7 +163,7 @@ function ShopView() {
               onClick={() => removeChip(chip.key)}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-line text-xs text-paper/80 hover:border-mist"
             >
-              {chip.label}
+              {chipLabel(chip.key, chip.label)}
               <CloseIcon className="w-3 h-3" />
             </button>
           ))}

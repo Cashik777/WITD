@@ -2,12 +2,14 @@ import type { CartLine } from '@/types/cart'
 import { formatPrice } from '@/lib/format'
 import { useCart } from '@/hooks/useCart'
 import { useLocale } from '@/hooks/useLocale'
+import { useFilterLabels } from '@/hooks/useFilterLabels'
 import { MinusIcon, PlusIcon, CloseIcon } from './icons'
 import { productImage } from '@/lib/productImage'
 
 export function CartItem({ line }: { line: CartLine }) {
   const { updateQuantity, removeItem } = useCart()
   const { t } = useLocale()
+  const { colorLabel } = useFilterLabels()
 
   return (
     <div className="flex gap-4 py-5 border-b border-line">
@@ -20,7 +22,7 @@ export function CartItem({ line }: { line: CartLine }) {
           <div>
             <h3 className="text-sm text-paper">{line.name}</h3>
             <p className="text-xs text-mist mt-1">
-              {line.color} / {line.size}
+              {colorLabel(line.color)} / {line.size}
             </p>
           </div>
           <button

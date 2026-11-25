@@ -12,6 +12,8 @@ import { SizeGuideModal } from '@/components/SizeGuideModal'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { useProductPurchase } from '@/hooks/useProductPurchase'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
+import { localizedProductText } from '@/lib/productText'
+import { useCategoryLabel } from '@/hooks/useFilterLabels'
 
 // ProductGrid is a 4-column grid at desktop width (2 on mobile, 3 on
 // tablet) — a count like 5 or 9 renders one full row plus a single
@@ -35,8 +37,10 @@ export default function ProductDetail() {
   const [guideOpen, setGuideOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const { t, path } = useLocale()
-  useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
+  const { t, path, locale } = useLocale()
+  const categoryLabel = useCategoryLabel()
+  const localized = product ? localizedProductText(product, locale) : undefined
+  useDocumentMeta(localized ? `${localized.name} — WITD` : 'WITD', localized?.description)
 
   // location.key is 'default' only for the very first history entry this
   // tab has — i.e. there's nothing in OUR history to go back to (a direct
@@ -53,6 +57,7 @@ export default function ProductDetail() {
 
   if (!product) return loading ? null : <Navigate to="/404" replace />
 
+  const { name: productName } = localizedProductText(product, locale)
   const related = trimToFullRows(getRelatedProducts(product))
   // Recently Viewed shouldn't repeat whatever You May Also Like is already
   // showing right above it on the same page — seeing the same tee twice in
@@ -79,14 +84,14 @@ export default function ProductDetail() {
         </LL>
         <span className="mx-2">/</span>
         <LL to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-paper">
-          {product.category}
+          {categoryLabel(product.category)}
         </LL>
         <span className="mx-2">/</span>
-        <span className="text-paper/70">{product.name}</span>
+        <span className="text-paper/70">{productName}</span>
       </nav>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-        <ProductGallery images={galleryImages} name={product.name} />
+        <ProductGallery images={galleryImages} name={productName} />
         <ProductInfo product={product} purchase={purchase} onOpenGuide={() => setGuideOpen(true)} />
       </div>
 

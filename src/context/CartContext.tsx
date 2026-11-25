@@ -3,6 +3,8 @@ import type { CartLine } from '@/types/cart'
 import type { Product } from '@/types/product'
 import { useCurrency } from '@/context/CurrencyContext'
 import { getProductPrice } from '@/lib/price'
+import { useLocale } from '@/hooks/useLocale'
+import { localizedProductText } from '@/lib/productText'
 
 const STORAGE_KEY = 'witd:cart'
 
@@ -36,6 +38,7 @@ function loadInitial(): CartLine[] {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { currency, setLocked } = useCurrency()
+  const { locale } = useLocale()
   const [lines, setLines] = useState<CartLine[]>(loadInitial)
   const [isOpen, setIsOpen] = useState(false)
   const [lastAdded, setLastAdded] = useState<CartLine | null>(null)
@@ -62,7 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const addedLine: CartLine = {
       productId: product.id,
       slug: product.slug,
-      name: product.name,
+      name: localizedProductText(product, locale).name,
       image: product.imagesByColor[color]?.[0] ?? product.images[0],
       price: getProductPrice(product, currency),
       currency,
@@ -84,7 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
     setLastAdded(addedLine)
     setIsOpen(true)
-  }, [currency])
+  }, [currency, locale])
 
   const removeItem = useCallback((productId: string, size: string, color: string) => {
     setLines((prev) => prev.filter((l) => !(l.productId === productId && l.size === size && l.color === color)))

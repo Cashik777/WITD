@@ -5,6 +5,7 @@ import { store, shippingPolicy } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
 import { localizedProductText } from '@/lib/productText'
+import { translateFit, translateMaterials, translateCare } from '@/lib/productSpecLabels'
 import type { useProductPurchase } from '@/hooks/useProductPurchase'
 import { SizeSelector } from './SizeSelector'
 import { ColorSelector } from './ColorSelector'
@@ -31,11 +32,11 @@ export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps
   const { t, locale } = useLocale()
   const price = getProductPrice(product, currency)
   const policy = shippingPolicy(currency)
-  const { description } = localizedProductText(product, locale)
+  const { name, description } = localizedProductText(product, locale)
 
   return (
     <div>
-      <h1 className="font-display text-3xl md:text-4xl text-paper">{product.name}</h1>
+      <h1 className="font-display text-3xl md:text-4xl text-paper">{name}</h1>
       <p className="mt-2 text-lg text-paper/80">{formatPrice(price, currency)}</p>
       <p className="mt-5 text-sm text-paper/70 leading-relaxed max-w-md">{description}</p>
 
@@ -63,8 +64,8 @@ export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps
       {soldOut ? (
         <div className="mt-8">
           <p className="text-xs tracking-widest uppercase text-paper mb-2">{t('product.notifyMe')}</p>
-          <p className="text-sm text-mist">{t('product.notifyMeBody', { name: product.name })}</p>
-          <NotifyMeForm productName={product.name} />
+          <p className="text-sm text-mist">{t('product.notifyMeBody', { name })}</p>
+          <NotifyMeForm productName={name} />
         </div>
       ) : (
         <>
@@ -134,14 +135,14 @@ export function ProductDetailsAccordion({ product, onOpenGuide }: { product: Pro
       )}
       <div>
         <Accordion title={t('product.fitAndSize')} defaultOpen>
-          <p>{product.fit}</p>
+          <p>{translateFit(product.fit, locale)}</p>
           <button onClick={onOpenGuide} className="mt-2 text-paper underline underline-offset-4 hover:text-paper/70">
             {t('product.viewSizeGuide')}
           </button>
         </Accordion>
         <Accordion title={t('product.materialAndCare')}>
-          <p>{product.materials}</p>
-          <p className="mt-2">{product.careInstructions}</p>
+          <p>{translateMaterials(product.materials, locale)}</p>
+          <p className="mt-2">{translateCare(product.careInstructions, locale)}</p>
         </Accordion>
         <Accordion title={t('product.shippingAndReturns')}>
           <p>

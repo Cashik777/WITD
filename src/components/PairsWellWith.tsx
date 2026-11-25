@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
 import { productImage } from '@/lib/productImage'
+import { localizedProductText } from '@/lib/productText'
 
 // A small, honest cross-sell: other in-stock First Drop pieces not already
 // in the cart. No real "frequently bought together" data exists yet, so
@@ -16,7 +17,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
   const { products } = useProducts()
   const { addItem } = useCart()
   const { currency } = useCurrency()
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const inCartIds = new Set(lines.map((l) => l.productId))
 
@@ -38,13 +39,15 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
     <div className="border-t border-line px-6 py-5">
       <h3 className="text-xs tracking-widest uppercase text-paper mb-3">{t('cart.pairsWellWith')}</h3>
       <div className="space-y-3">
-        {suggestions.map((p) => (
+        {suggestions.map((p) => {
+          const { name } = localizedProductText(p, locale)
+          return (
           <div key={p.id} className="flex items-center gap-3">
             <div className="w-12 h-14 bg-[#151412] shrink-0 overflow-hidden">
-              <img src={productImage(p.images[0], 180, 210)} alt={p.name} className="w-full h-full object-cover" />
+              <img src={productImage(p.images[0], 180, 210)} alt={name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-paper truncate">{p.name}</p>
+              <p className="text-xs text-paper truncate">{name}</p>
               <p className="text-xs text-mist">{formatPrice(getProductPrice(p, currency), currency)}</p>
             </div>
             {pickingId === p.id ? (
@@ -68,7 +71,8 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
               </button>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CursorTrail } from './CursorTrail'
+import { useLocale } from '@/hooks/useLocale'
 
 // A small "trace the shape" toy standing in for real photography on the
 // homepage "WITD Idea" panel — echoes the copy (noticing something instead
@@ -230,6 +231,7 @@ const SHAPES: { points: Point[]; closed: boolean }[] = RAW_SHAPES.map((s) => ({
 }))
 
 export function IdeaVisual() {
+  const { t } = useLocale()
   const svgRef = useRef<SVGSVGElement>(null)
   const groupRef = useRef<SVGGElement>(null)
   const ghostRef = useRef<SVGPolylineElement>(null)
@@ -509,11 +511,11 @@ export function IdeaVisual() {
             className="w-full"
           >
             <p className="text-[10px] tracking-widest uppercase text-mist">
-              20% off unlocked — tap to copy
+              {t('ideaQuest.offUnlocked', { percent: QUEST_TOTAL })}
               {couponExpiresAt != null && ` · ${formatCountdown(couponExpiresAt - now)}`}
             </p>
             <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper animate-[wq-pop_420ms_ease]">
-              {copied ? 'Copied!' : couponCode}
+              {copied ? t('ideaQuest.copied') : couponCode}
             </p>
           </button>
         ) : remaining === 0 && claimFailed ? (
@@ -524,21 +526,21 @@ export function IdeaVisual() {
             }}
             className="w-full"
           >
-            <p className="text-[10px] tracking-widest uppercase text-mist">Couldn't reach the server</p>
-            <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper">Tap to try again</p>
+            <p className="text-[10px] tracking-widest uppercase text-mist">{t('ideaQuest.couldNotReachServer')}</p>
+            <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper">{t('ideaQuest.tapToTryAgain')}</p>
           </button>
         ) : remaining === 0 ? (
-          <p className="text-lg font-display italic tracking-wide text-paper animate-pulse">Unlocking your code…</p>
+          <p className="text-lg font-display italic tracking-wide text-paper animate-pulse">{t('ideaQuest.unlocking')}</p>
         ) : remaining < QUEST_TOTAL ? (
           <div key={remaining} className="animate-[wq-pop_420ms_ease]">
-            <p className="text-[10px] tracking-widest uppercase text-mist">You got</p>
+            <p className="text-[10px] tracking-widest uppercase text-mist">{t('ideaQuest.youGot')}</p>
             <p className="mt-0.5 text-lg font-display italic tracking-wide text-paper">
-              +{QUEST_TOTAL - remaining}% off your first order
+              {t('ideaQuest.offFirstOrder', { percent: QUEST_TOTAL - remaining })}
             </p>
           </div>
         ) : (
           <p className="text-lg font-display italic tracking-wide text-paper animate-pulse">
-            Connect all the dots
+            {t('ideaQuest.connectAllDots')}
           </p>
         )}
       </div>

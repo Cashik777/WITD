@@ -12,6 +12,7 @@ import { useProducts } from '@/hooks/useProducts'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import type { Product } from '@/types/product'
 import { productImage } from '@/lib/productImage'
+import { localizedProductText } from '@/lib/productText'
 
 // Plain group-hover only responds to a real mouse — on touch, nothing ever
 // triggers it, so the back-view photo never showed on a phone. Local hover
@@ -19,6 +20,8 @@ import { productImage } from '@/lib/productImage'
 // pattern ProductCard.tsx already uses for the shop grid).
 function FeaturedCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false)
+  const { locale } = useLocale()
+  const { name } = localizedProductText(product, locale)
   return (
     <LL
       to={`/product/${product.slug}`}
@@ -32,7 +35,7 @@ function FeaturedCard({ product }: { product: Product }) {
       <div className="relative aspect-[3/4] bg-[#151412] overflow-hidden">
         <img
           src={productImage(product.images[0], 900, 1200)}
-          alt={product.name}
+          alt={name}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-witd ${
             hovered ? 'scale-105' : ''
           } ${hovered && product.hoverImage ? 'opacity-0' : ''}`}
@@ -48,7 +51,7 @@ function FeaturedCard({ product }: { product: Product }) {
           />
         )}
       </div>
-      <p className="mt-4 font-display text-lg text-paper">{product.name}</p>
+      <p className="mt-4 font-display text-lg text-paper">{name}</p>
     </LL>
   )
 }
