@@ -35,8 +35,8 @@ function Hero({ title }: { title: string }) {
 }
 
 export function Privacy() {
-  useDocumentMeta('Privacy Policy — WITD', 'What WITD collects when you use wakeinthedream.com, why, and who it is shared with.')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.privacyTitle'), t('meta.privacyDescription'))
   return (
     <div>
       <Hero title={t('legal.privacy.title')} />
@@ -107,8 +107,8 @@ export function Privacy() {
 }
 
 export function Terms() {
-  useDocumentMeta('Terms of Service — WITD', 'The terms that apply when you place an order or use wakeinthedream.com.')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.termsTitle'), t('meta.termsDescription'))
   return (
     <div>
       <Hero title={t('legal.terms.title')} />

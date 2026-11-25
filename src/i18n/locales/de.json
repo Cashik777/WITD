@@ -354,6 +354,28 @@
     "errorGeneric": "Etwas ist schiefgelaufen.",
     "errorGenericRetry": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
   },
+  "meta": {
+    "homeTitle": "WITD — Erwache im Traum",
+    "homeDescription": "Ein Streetwear-Label für alle, die sich entscheiden, im Traum bewusst zu bleiben.",
+    "aboutTitle": "Über uns — WITD",
+    "aboutDescription": "Die Idee hinter WITD, Versand, Rückgabe, und wie man uns erreicht.",
+    "accountTitle": "Konto — WITD",
+    "cartTitle": "Warenkorb — WITD",
+    "checkoutTitle": "Kasse — WITD",
+    "communityTitle": "Community — WITD",
+    "communityDescription": "Der WITD-Community-Bereich öffnet bald.",
+    "privacyTitle": "Datenschutzerklärung — WITD",
+    "privacyDescription": "Was WITD erfasst, wenn Sie wakeinthedream.com nutzen, warum, und mit wem es geteilt wird.",
+    "termsTitle": "Nutzungsbedingungen — WITD",
+    "termsDescription": "Die Bedingungen, die gelten, wenn Sie eine Bestellung aufgeben oder wakeinthedream.com nutzen.",
+    "notFoundTitle": "Seite nicht gefunden — WITD",
+    "orderConfirmedTitle": "Bestellung bestätigt — WITD",
+    "searchTitleWithQuery": "„{{query}}“ — Suche — WITD",
+    "searchTitle": "Suche — WITD",
+    "shopTitle": "Shop — WITD",
+    "shopDescription": "Entdecke den ersten Drop — Streetwear für alle, die im Traum wach sind.",
+    "verifyPurchaseTitle": "Verifiziere deinen Kauf — WITD"
+  },
   "footer": {
     "tagline": "Erwache im Traum. Kleidung für diejenigen, die sich entscheiden, darin bewusst zu bleiben.",
     "shop": "Shop",

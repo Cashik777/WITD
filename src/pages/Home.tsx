@@ -57,11 +57,8 @@ function FeaturedCard({ product }: { product: Product }) {
 }
 
 export default function Home() {
-  useDocumentMeta(
-    'WITD — Wake In The Dream',
-    'A streetwear label for those who choose to stay conscious inside the dream.'
-  )
   const { t } = useLocale()
+  useDocumentMeta(t('meta.homeTitle'), t('meta.homeDescription'))
   const { products } = useProducts()
   const newDrop = products.filter((p) => p.new).slice(0, 4)
   const featured = products.filter((p) => p.featured).slice(0, 3)

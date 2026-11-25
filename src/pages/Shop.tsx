@@ -26,8 +26,8 @@ export default function Shop() {
 }
 
 function ShopView() {
-  useDocumentMeta('Shop — WITD', 'Browse the First Drop — streetwear for those awake inside the dream.')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.shopTitle'), t('meta.shopDescription'))
   const sortLabels = useSortLabels()
   const categoryLabel = useCategoryLabel()
   const { collectionLabels, availabilityLabels, colorLabel } = useFilterLabels()

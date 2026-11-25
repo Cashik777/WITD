@@ -12,7 +12,7 @@ export default function SearchPage() {
   const query = searchParams.get('q') ?? ''
   const results = searchProducts(products, query)
   const { t } = useLocale()
-  useDocumentMeta(query ? `"${query}" — Search — WITD` : 'Search — WITD')
+  useDocumentMeta(query ? t('meta.searchTitleWithQuery', { query }) : t('meta.searchTitle'))
 
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-12 md:py-16">

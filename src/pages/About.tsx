@@ -42,8 +42,8 @@ function FocusSection({ children, className = '' }: { children: ReactNode; class
 }
 
 export default function About() {
-  useDocumentMeta('About — WITD', 'The idea behind WITD, shipping, returns, and how to reach us.')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.aboutTitle'), t('meta.aboutDescription'))
   return (
     <div>
       <section className="max-w-content mx-auto px-5 md:px-8 pt-16 pb-20 md:pt-24 md:pb-28">

@@ -9,12 +9,12 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 // Stripe redirects here after a successful payment
 // (success_url includes ?session_id={CHECKOUT_SESSION_ID}, set server-side).
 export default function OrderConfirmation() {
-  useDocumentMeta('Order Confirmed — WITD')
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const { clearCart } = useCart()
   const { email: accountEmail } = useCustomerAuth()
   const { t } = useLocale()
+  useDocumentMeta(t('meta.orderConfirmedTitle'))
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
 
   useEffect(() => {

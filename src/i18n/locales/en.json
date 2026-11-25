@@ -354,6 +354,28 @@
     "errorGeneric": "Something went wrong.",
     "errorGenericRetry": "Something went wrong. Please try again."
   },
+  "meta": {
+    "homeTitle": "WITD — Wake In The Dream",
+    "homeDescription": "A streetwear label for those who choose to stay conscious inside the dream.",
+    "aboutTitle": "About — WITD",
+    "aboutDescription": "The idea behind WITD, shipping, returns, and how to reach us.",
+    "accountTitle": "Account — WITD",
+    "cartTitle": "Cart — WITD",
+    "checkoutTitle": "Checkout — WITD",
+    "communityTitle": "Community — WITD",
+    "communityDescription": "The WITD community space is opening soon.",
+    "privacyTitle": "Privacy Policy — WITD",
+    "privacyDescription": "What WITD collects when you use wakeinthedream.com, why, and who it is shared with.",
+    "termsTitle": "Terms of Service — WITD",
+    "termsDescription": "The terms that apply when you place an order or use wakeinthedream.com.",
+    "notFoundTitle": "Page Not Found — WITD",
+    "orderConfirmedTitle": "Order Confirmed — WITD",
+    "searchTitleWithQuery": "\"{{query}}\" — Search — WITD",
+    "searchTitle": "Search — WITD",
+    "shopTitle": "Shop — WITD",
+    "shopDescription": "Browse the First Drop — streetwear for those awake inside the dream.",
+    "verifyPurchaseTitle": "Verify Your Purchase — WITD"
+  },
   "footer": {
     "tagline": "Wake in the dream. Clothing for those who choose to stay conscious inside it.",
     "shop": "Shop",

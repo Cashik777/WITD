@@ -4,8 +4,8 @@ import { useLocale } from '@/hooks/useLocale'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 export default function NotFound() {
-  useDocumentMeta('Page Not Found — WITD')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.notFoundTitle'))
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-32 flex flex-col items-center text-center">
       <WitdSymbol className="w-12 h-12 text-paper/60 mb-8" />

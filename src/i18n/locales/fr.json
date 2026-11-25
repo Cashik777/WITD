@@ -354,6 +354,28 @@
     "errorGeneric": "Une erreur est survenue.",
     "errorGenericRetry": "Une erreur est survenue. Veuillez réessayer."
   },
+  "meta": {
+    "homeTitle": "WITD — Éveille-toi dans le rêve",
+    "homeDescription": "Une marque de streetwear pour ceux qui choisissent de rester conscients à l'intérieur du rêve.",
+    "aboutTitle": "À propos — WITD",
+    "aboutDescription": "L'idée derrière WITD, la livraison, les retours, et comment nous contacter.",
+    "accountTitle": "Compte — WITD",
+    "cartTitle": "Panier — WITD",
+    "checkoutTitle": "Commande — WITD",
+    "communityTitle": "Communauté — WITD",
+    "communityDescription": "L'espace communautaire WITD ouvre bientôt.",
+    "privacyTitle": "Politique de confidentialité — WITD",
+    "privacyDescription": "Ce que WITD collecte lorsque vous utilisez wakeinthedream.com, pourquoi, et avec qui c'est partagé.",
+    "termsTitle": "Conditions d'utilisation — WITD",
+    "termsDescription": "Les conditions qui s'appliquent lorsque vous passez une commande ou utilisez wakeinthedream.com.",
+    "notFoundTitle": "Page introuvable — WITD",
+    "orderConfirmedTitle": "Commande confirmée — WITD",
+    "searchTitleWithQuery": "« {{query}} » — Recherche — WITD",
+    "searchTitle": "Recherche — WITD",
+    "shopTitle": "Boutique — WITD",
+    "shopDescription": "Découvrez la première collection — streetwear pour ceux qui sont éveillés dans le rêve.",
+    "verifyPurchaseTitle": "Vérifiez votre achat — WITD"
+  },
   "footer": {
     "tagline": "Éveillez-vous dans le rêve. Des vêtements pour ceux qui choisissent de rester conscients à l'intérieur.",
     "shop": "Boutique",

@@ -315,8 +315,8 @@ function AuthForms() {
 }
 
 export default function Account() {
-  useDocumentMeta('Account — WITD')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.accountTitle'))
   const { email, loading, logout } = useCustomerAuth()
 
   if (loading) return null

@@ -8,10 +8,10 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { CartItem } from '@/components/CartItem'
 
 export default function CartPage() {
-  useDocumentMeta('Cart — WITD')
   const { lines, subtotal } = useCart()
   const { currency: activeCurrency } = useCurrency()
   const { t } = useLocale()
+  useDocumentMeta(t('meta.cartTitle'))
   const currency = lines[0]?.currency ?? activeCurrency
   const shipping = calculateShipping(subtotal, currency)
   const total = subtotal + shipping

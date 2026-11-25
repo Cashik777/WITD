@@ -354,6 +354,28 @@
     "errorGeneric": "Algo salió mal.",
     "errorGenericRetry": "Algo salió mal. Por favor, inténtalo de nuevo."
   },
+  "meta": {
+    "homeTitle": "WITD — Despierta en el sueño",
+    "homeDescription": "Una marca de streetwear para quienes eligen permanecer conscientes dentro del sueño.",
+    "aboutTitle": "Nosotros — WITD",
+    "aboutDescription": "La idea detrás de WITD, envíos, devoluciones, y cómo contactarnos.",
+    "accountTitle": "Cuenta — WITD",
+    "cartTitle": "Carrito — WITD",
+    "checkoutTitle": "Pago — WITD",
+    "communityTitle": "Comunidad — WITD",
+    "communityDescription": "El espacio de la comunidad WITD abrirá pronto.",
+    "privacyTitle": "Política de Privacidad — WITD",
+    "privacyDescription": "Lo que WITD recopila cuando usas wakeinthedream.com, por qué, y con quién se comparte.",
+    "termsTitle": "Términos de Servicio — WITD",
+    "termsDescription": "Los términos que aplican cuando realizas un pedido o usas wakeinthedream.com.",
+    "notFoundTitle": "Página No Encontrada — WITD",
+    "orderConfirmedTitle": "Pedido Confirmado — WITD",
+    "searchTitleWithQuery": "«{{query}}» — Búsqueda — WITD",
+    "searchTitle": "Búsqueda — WITD",
+    "shopTitle": "Tienda — WITD",
+    "shopDescription": "Explora la Primera Colección — streetwear para quienes están despiertos dentro del sueño.",
+    "verifyPurchaseTitle": "Verifica tu compra — WITD"
+  },
   "footer": {
     "tagline": "Despierta en el sueño. Ropa para quienes eligen permanecer conscientes dentro de él.",
     "shop": "Tienda",

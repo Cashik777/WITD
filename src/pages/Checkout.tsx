@@ -26,8 +26,8 @@ function CheckoutSteps({ current }: { current: number }) {
 }
 
 export default function Checkout() {
-  useDocumentMeta('Checkout — WITD')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.checkoutTitle'))
   const { colorLabel } = useFilterLabels()
   const PAYMENTS_NOT_OPEN_MESSAGE = t('checkout.paymentsNotOpen')
   const { lines, subtotal } = useCart()

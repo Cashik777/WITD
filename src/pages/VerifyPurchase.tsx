@@ -4,8 +4,8 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { useLocale } from '@/hooks/useLocale'
 
 export default function VerifyPurchase() {
-  useDocumentMeta('Verify Your Purchase — WITD')
   const { t } = useLocale()
+  useDocumentMeta(t('meta.verifyPurchaseTitle'))
   const [searchParams] = useSearchParams()
   const callbackSuccess = searchParams.get('success') === '1'
   const callbackError = searchParams.get('error')
