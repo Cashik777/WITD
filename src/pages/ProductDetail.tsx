@@ -55,7 +55,7 @@ export default function ProductDetail() {
     }
   }
 
-  if (!product) return loading ? null : <Navigate to="/404" replace />
+  if (!product) return loading ? null : <Navigate to={path('/404')} replace />
 
   const { name: productName } = localizedProductText(product, locale)
   const related = trimToFullRows(getRelatedProducts(product))

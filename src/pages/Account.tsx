@@ -168,7 +168,7 @@ function ProfileForm() {
 }
 
 function VerifyEmailForm() {
-  const { t } = useLocale()
+  const { t, path } = useLocale()
   const { pendingVerificationEmail, verifyEmail, resendCode, cancelVerification } = useCustomerAuth()
   const navigate = useNavigate()
   const [code, setCode] = useState('')
@@ -187,7 +187,7 @@ function VerifyEmailForm() {
     if (err) setError(err)
     // Freshly activated — send them to the shop rather than parking them on
     // an empty order-history page.
-    else navigate('/shop')
+    else navigate(path('/shop'))
   }
 
   const handleResend = async () => {
@@ -241,7 +241,7 @@ function VerifyEmailForm() {
 }
 
 function AuthForms() {
-  const { t } = useLocale()
+  const { t, path } = useLocale()
   const { register, login, pendingVerificationEmail } = useCustomerAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -259,7 +259,7 @@ function AuthForms() {
     if (mode === 'login') {
       const result = await login(email, password)
       setLoading(false)
-      if (result === 'ok') navigate('/shop')
+      if (result === 'ok') navigate(path('/shop'))
       else if (result !== 'pending') setError(result)
     } else {
       const err = await register(email, password)

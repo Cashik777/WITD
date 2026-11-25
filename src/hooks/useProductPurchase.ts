@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Product } from '@/types/product'
 import { useCart } from './useCart'
+import { useLocale } from './useLocale'
 
 // Shared selection + add-to-cart/buy-now logic so the main product form and
 // the sticky mobile buy bar (which mirrors it once you've scrolled past the
@@ -12,6 +13,7 @@ export function useProductPurchase(product: Product | undefined) {
   const [needsSize, setNeedsSize] = useState(false)
   const { addItem, openCart } = useCart()
   const navigate = useNavigate()
+  const { path } = useLocale()
 
   // useState's initializer only runs on mount — on a direct/fresh page load
   // (as opposed to client-side navigation from an already-loaded page),
@@ -51,7 +53,7 @@ export function useProductPurchase(product: Product | undefined) {
   const buyNow = () => {
     if (!product || !requireSelection() || !color) return
     addItem(product, size!, color, 1)
-    navigate('/checkout')
+    navigate(path('/checkout'))
   }
 
   return { color, setColor, size, selectSize, needsSize, soldOut, addToCart, buyNow }
