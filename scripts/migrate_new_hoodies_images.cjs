@@ -3,15 +3,19 @@
 // migrate_new_tees_images.cjs.
 //
 // Archive 50 (Illusion of Knowing / Independent SS4500) holds up to 6 raw
-// front variants and 6 raw back variants PER COLOR, like the tee batch did
-// — Printful's dashboard batch-export again, not one pre-picked shot. But
-// unlike the tees, there's no single "front index == back index" rule that
-// holds across every color here (one color, Duck Camo, only has 3 of each
-// and is missing the otherwise-common tightly-matched pair). So instead of
-// a fixed index, for every color we trim every front and every back
-// candidate, and pick whichever front+back PAIR has the closest matching
-// aspect ratio — that's what actually keeps the two photos the same scale
-// in the gallery, which is the thing that was flagged before on the tees.
+// front variants and 6 raw back variants PER COLOR — Printful's dashboard
+// batch-export again, not one pre-picked shot. These aren't just different
+// crops of the same photo: there are genuinely two different mockup
+// renders mixed in, a dimensional/photographic one (visible fabric folds
+// and shadow in the hood and sleeves — confirmed by eye, repeatedly, most
+// clearly on White where the flat one's hood is almost blown out to a
+// featureless white blob next to the dimensional one's real shading) and a
+// flatter/smoother one. They land in two trimmed-aspect-ratio clusters —
+// ~0.76 (front) / ~0.72 (back) is the dimensional one, ~0.69 (front) /
+// ~0.69 (back) is the flat one — consistent across every color checked,
+// so each view is picked by ratio-closeness to the dimensional cluster's
+// target rather than a fixed array index (Duck Camo only has the
+// dimensional cluster to begin with, so it's unaffected either way).
 //
 // Archives 51 (ANCIENT DREAM) and 52 (The Freedom to Choose) each hold
 // exactly one front and one back shot per color already — no picking
@@ -121,20 +125,19 @@ async function run() {
       let backPick = variants.back[0]
 
       if (multi) {
-        // Pick the front+back pair with the closest matching trimmed
-        // aspect ratio, so the two photos read as the same garment at the
-        // same scale rather than two different sized shots.
-        const frontRatios = await Promise.all(variants.front.map(trimmedRatio))
-        const backRatios = await Promise.all(variants.back.map(trimmedRatio))
-        let best = { diff: Infinity, fi: 0, bi: 0 }
-        for (let fi = 0; fi < frontRatios.length; fi++) {
-          for (let bi = 0; bi < backRatios.length; bi++) {
-            const diff = Math.abs(frontRatios[fi] - backRatios[bi])
-            if (diff < best.diff) best = { diff, fi, bi }
-          }
+        // Pick whichever candidate's trimmed ratio is closest to the
+        // dimensional cluster's target for that view.
+        const pickClosest = async (paths, target) => {
+          const ratios = await Promise.all(paths.map(trimmedRatio))
+          let best = { diff: Infinity, i: 0 }
+          ratios.forEach((r, i) => {
+            const diff = Math.abs(r - target)
+            if (diff < best.diff) best = { diff, i }
+          })
+          return paths[best.i]
         }
-        frontPick = variants.front[best.fi]
-        backPick = variants.back[best.bi]
+        frontPick = await pickClosest(variants.front, 0.76)
+        backPick = await pickClosest(variants.back, 0.72)
       }
 
       for (const [view, src] of [
