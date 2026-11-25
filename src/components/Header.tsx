@@ -5,15 +5,21 @@ import { SearchIcon, BagIcon, UserIcon, MenuIcon } from './icons'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
 import { formatPrice } from '@/lib/format'
-import { shippingPolicy } from '@/lib/store'
+import { shippingPolicy, store } from '@/lib/store'
 import { MobileNav } from './MobileNav'
+import { LL } from './LL'
+import { useLocale } from '@/hooks/useLocale'
+import { supportedLocales, localeLabels, stripLocalePrefix } from '@/lib/locale'
 
-const navLinks = [
-  { label: 'SHOP', to: '/shop' },
-  { label: 'NEW DROP', to: '/shop?collection=New%20Drop' },
-  { label: 'ABOUT', to: '/about' },
-  { label: 'COMMUNITY', to: '/community' },
-]
+function useNavLinks() {
+  const { t } = useLocale()
+  return [
+    { label: t('nav.shop'), to: '/shop' },
+    { label: t('nav.newDrop'), to: '/shop?collection=New%20Drop' },
+    { label: t('nav.about'), to: '/about' },
+    { label: t('nav.community'), to: '/community' },
+  ]
+}
 
 // SHOP and NEW DROP both point at /shop (one plain, one with a ?collection=
 // filter), so react-router's NavLink — which only matches on pathname —
@@ -25,6 +31,28 @@ function isNavLinkActive(to: string, pathname: string, search: string): boolean 
   const linkCollection = new URLSearchParams(linkQuery ?? '').get('collection')
   const currentCollection = new URLSearchParams(search).get('collection')
   return linkCollection === currentCollection
+}
+
+function LanguageSwitcher() {
+  const { locale } = useLocale()
+  const location = useLocation()
+  const bare = stripLocalePrefix(location.pathname)
+
+  return (
+    <div className="flex items-center text-[11px] tracking-widest">
+      {supportedLocales.map((l, i) => (
+        <Link
+          key={l}
+          to={`${l === 'en' ? '' : `/${l}`}${bare}${location.search}`}
+          className={`px-1.5 ${i === 0 ? '' : 'border-l border-line'} ${
+            locale === l ? 'text-paper' : 'text-mist hover:text-paper/80'
+          } transition-colors`}
+        >
+          {localeLabels[l]}
+        </Link>
+      ))}
+    </div>
+  )
 }
 
 function CurrencySwitcher() {
@@ -57,34 +85,38 @@ export function Header() {
   const { currency } = useCurrency()
   const policy = shippingPolicy(currency)
   const location = useLocation()
+  const { t } = useLocale()
+  const navLinks = useNavLinks()
+  const barePathname = stripLocalePrefix(location.pathname)
 
   return (
     <>
       <div className="sticky top-0 z-50 bg-black border-b border-line">
         <p className="max-w-content mx-auto px-5 md:px-8 h-9 flex items-center justify-center text-center text-[11px] tracking-wide text-paper/70">
-          Free shipping over {formatPrice(policy.freeShippingThreshold, currency)} &nbsp;/&nbsp; Free 14-day returns
+          {t('header.freeShipping', { amount: formatPrice(policy.freeShippingThreshold, currency) })} &nbsp;/&nbsp;{' '}
+          {t('header.freeReturns', { days: store.returnWindowDays })}
         </p>
       </div>
       <header className="sticky top-9 z-40 bg-black/95 backdrop-blur border-b border-line">
         <div className="max-w-content mx-auto px-5 md:px-8 h-16 md:h-20 flex items-center justify-between">
           <button
             className="md:hidden text-paper"
-            aria-label="Open menu"
+            aria-label={t('nav.openMenu')}
             onClick={() => setMobileOpen(true)}
           >
             <MenuIcon />
           </button>
 
-          <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="WITD home">
+          <LL to="/" className="flex items-center gap-2.5 shrink-0" aria-label="WITD home">
             <WitdSymbol className="w-6 h-6 md:w-7 md:h-7 text-paper" />
             <span className="font-display text-lg md:text-xl tracking-wide text-paper">WITD</span>
-          </Link>
+          </LL>
 
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
-              const isActive = isNavLinkActive(link.to, location.pathname, location.search)
+              const isActive = isNavLinkActive(link.to, barePathname, location.search)
               return (
-                <Link
+                <LL
                   key={link.label}
                   to={link.to}
                   className="relative group text-xs tracking-widest uppercase text-paper/80 hover:text-paper transition-colors duration-200 pb-1"
@@ -95,21 +127,22 @@ export function Header() {
                       isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
                     }`}
                   />
-                </Link>
+                </LL>
               )
             })}
           </nav>
 
           <div className="flex items-center gap-4 md:gap-5 text-paper">
+            <LanguageSwitcher />
             <CurrencySwitcher />
-            <Link to="/search" aria-label="Search" className="hover:opacity-70 transition-opacity">
+            <LL to="/search" aria-label={t('nav.search')} className="hover:opacity-70 transition-opacity">
               <SearchIcon />
-            </Link>
-            <Link to="/account" aria-label="Account" className="hidden md:inline-flex hover:opacity-70 transition-opacity">
+            </LL>
+            <LL to="/account" aria-label={t('nav.account')} className="hidden md:inline-flex hover:opacity-70 transition-opacity">
               <UserIcon />
-            </Link>
+            </LL>
             <button
-              aria-label={`Cart, ${itemCount} item${itemCount === 1 ? '' : 's'}`}
+              aria-label={`${t('nav.cart')}, ${itemCount} item${itemCount === 1 ? '' : 's'}`}
               onClick={openCart}
               className="relative hover:opacity-70 transition-opacity"
             >

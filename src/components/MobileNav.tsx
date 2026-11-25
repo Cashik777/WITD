@@ -1,7 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import type { SyntheticEvent } from 'react'
 import { WitdSymbol } from './WitdSymbol'
 import { CloseIcon } from './icons'
+import { LL } from './LL'
+import { useLocale } from '@/hooks/useLocale'
 
 interface MobileNavProps {
   open: boolean
@@ -11,6 +13,7 @@ interface MobileNavProps {
 
 export function MobileNav({ open, onClose, links }: MobileNavProps) {
   const navigate = useNavigate()
+  const { t, path } = useLocale()
 
   // A plain <Link onClick> relies on the browser synthesizing a click after
   // the tap — which, on this panel specifically, real phones (and a
@@ -22,7 +25,7 @@ export function MobileNav({ open, onClose, links }: MobileNavProps) {
   const go = (to: string) => (e: SyntheticEvent) => {
     e.preventDefault()
     onClose()
-    navigate(to)
+    navigate(path(to))
   }
 
   return (
@@ -42,18 +45,18 @@ export function MobileNav({ open, onClose, links }: MobileNavProps) {
         }`}
       >
         <div className="h-16 flex items-center justify-between px-5 border-b border-line">
-          <Link to="/" onClick={go('/')} onTouchEnd={go('/')} className="flex items-center gap-2.5">
+          <LL to="/" onClick={go('/')} onTouchEnd={go('/')} className="flex items-center gap-2.5">
             <WitdSymbol className="w-6 h-6 text-paper" />
             <span className="font-display text-lg text-paper">WITD</span>
-          </Link>
-          <button aria-label="Close menu" onClick={onClose} className="text-paper">
+          </LL>
+          <button aria-label={t('nav.closeMenu')} onClick={onClose} className="text-paper">
             <CloseIcon />
           </button>
         </div>
 
         <nav className="flex flex-col px-5 py-6 gap-1">
           {links.map((link) => (
-            <Link
+            <LL
               key={link.label}
               to={link.to}
               onClick={go(link.to)}
@@ -61,12 +64,12 @@ export function MobileNav({ open, onClose, links }: MobileNavProps) {
               className="py-3.5 text-sm tracking-widest uppercase text-paper border-b border-line/60"
             >
               {link.label}
-            </Link>
+            </LL>
           ))}
         </nav>
 
         <div className="mt-auto px-5 py-6 text-xs text-mist tracking-wide">
-          WAKE IN THE DREAM.
+          {t('mobileNav.tagline')}
         </div>
       </div>
     </div>

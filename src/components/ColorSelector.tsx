@@ -1,4 +1,5 @@
 import { SwatchDot } from './SwatchDot'
+import { useLocale } from '@/hooks/useLocale'
 
 interface ColorSelectorProps {
   colors: string[]
@@ -7,10 +8,12 @@ interface ColorSelectorProps {
 }
 
 export function ColorSelector({ colors, selected, onSelect }: ColorSelectorProps) {
+  const { t } = useLocale()
   return (
     <div>
       <span className="text-xs tracking-widest uppercase text-paper mb-3 block">
-        Color{selected ? ` — ${selected}` : ''}
+        {t('product.color')}
+        {selected ? ` — ${selected}` : ''}
       </span>
       <div className="flex flex-wrap gap-2.5">
         {colors.map((color) => (

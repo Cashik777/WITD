@@ -1,3 +1,5 @@
+import { useLocale } from '@/hooks/useLocale'
+
 interface SizeSelectorProps {
   sizes: string[]
   availableSizes: string[]
@@ -7,14 +9,16 @@ interface SizeSelectorProps {
 }
 
 export function SizeSelector({ sizes, availableSizes, selected, onSelect, onOpenGuide }: SizeSelectorProps) {
+  const { t } = useLocale()
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs tracking-widest uppercase text-paper">
-          Size{selected ? ` — ${selected}` : ''}
+          {t('product.size')}
+          {selected ? ` — ${selected}` : ''}
         </span>
         <button onClick={onOpenGuide} className="text-xs text-mist hover:text-paper underline underline-offset-4">
-          Size Guide
+          {t('product.sizeGuide')}
         </button>
       </div>
       <div className="grid grid-cols-6 gap-2">

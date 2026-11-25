@@ -1,4 +1,5 @@
 import { Modal } from './Modal'
+import { useLocale } from '@/hooks/useLocale'
 
 const rows = [
   { size: 'XS', chest: '34–36"', length: '27"' },
@@ -13,14 +14,15 @@ const rows = [
 // per-category charts later — pass a `category` prop and swap the `rows`
 // source once hoodies/outerwear are live, without changing the modal itself.
 export function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLocale()
   return (
-    <Modal open={open} onClose={onClose} title="Size Guide">
+    <Modal open={open} onClose={onClose} title={t('product.sizeGuide')}>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs tracking-widest uppercase text-mist border-b border-line">
-            <th className="pb-3">Size</th>
-            <th className="pb-3">Chest</th>
-            <th className="pb-3">Length</th>
+            <th className="pb-3">{t('product.size')}</th>
+            <th className="pb-3">{t('product.chest')}</th>
+            <th className="pb-3">{t('product.length')}</th>
           </tr>
         </thead>
         <tbody>
@@ -33,10 +35,7 @@ export function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () =
           ))}
         </tbody>
       </table>
-      <p className="mt-5 text-xs text-mist leading-relaxed">
-        All WITD tees are cut in a boxy, oversized fit. Measurements are body measurements — for a closer fit,
-        size down. Fits are printed per style below the size chart as they're added to the catalog.
-      </p>
+      <p className="mt-5 text-xs text-mist leading-relaxed">{t('product.sizeGuideFootnote')}</p>
     </Modal>
   )
 }

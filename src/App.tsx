@@ -52,29 +52,38 @@ function ScrollToTop() {
   return null
 }
 
+// Relative (no leading slash) so this same route list can be mounted under
+// "/*" (default English) and under "/fr/*", "/de/*", "/es/*" alike, without
+// duplicating every <Route>.
+function StorefrontRoutes() {
+  return (
+    <Routes>
+      <Route index element={<Home />} />
+      <Route path="shop" element={<Shop />} />
+      <Route path="shop/:category" element={<Shop />} />
+      <Route path="product/:slug" element={<ProductDetail />} />
+      <Route path="about" element={<About />} />
+      <Route path="community" element={<Community />} />
+      <Route path="cart" element={<CartPage />} />
+      <Route path="checkout" element={<Checkout />} />
+      <Route path="order-confirmation" element={<OrderConfirmation />} />
+      <Route path="verify" element={<VerifyPurchase />} />
+      <Route path="search" element={<SearchPage />} />
+      <Route path="account" element={<Account />} />
+      <Route path="privacy" element={<Privacy />} />
+      <Route path="terms" element={<Terms />} />
+      <Route path="404" element={<NotFound />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  )
+}
+
 function StorefrontLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-black">
       <Header />
       <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/shop/:category" element={<Shop />} />
-          <Route path="/product/:slug" element={<ProductDetail />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          <Route path="/verify" element={<VerifyPurchase />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <StorefrontRoutes />
       </main>
       <Footer />
       <CartDrawer />
@@ -111,7 +120,17 @@ export default function App() {
           <AdminSection />
         </AdminAuthProvider>
       ) : (
-        <StorefrontLayout />
+        <Routes>
+          {/* One explicit route per translated locale (not a generic
+              "/:lang/*") — a dynamic segment there would out-rank the
+              English "/*" below for every path, including plain English
+              ones like "/shop", since react-router scores a param above a
+              bare wildcard regardless of what it actually matches. */}
+          <Route path="/fr/*" element={<StorefrontLayout />} />
+          <Route path="/de/*" element={<StorefrontLayout />} />
+          <Route path="/es/*" element={<StorefrontLayout />} />
+          <Route path="/*" element={<StorefrontLayout />} />
+        </Routes>
       )}
     </>
   )

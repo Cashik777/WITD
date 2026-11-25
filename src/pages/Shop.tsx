@@ -9,13 +9,8 @@ import { activeFilterChips } from '@/lib/filters'
 import { ChevronDown, CloseIcon } from '@/components/icons'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import type { SortOption } from '@/types/product'
-
-const sortLabels: Record<SortOption, string> = {
-  featured: 'Featured',
-  newest: 'Newest',
-  'price-asc': 'Price: Low to High',
-  'price-desc': 'Price: High to Low',
-}
+import { useLocale } from '@/hooks/useLocale'
+import { useSortLabels } from '@/hooks/useSortLabels'
 
 // Every nav entry point into this page (header "Shop"/"New Drop", footer
 // "Bestsellers", category tabs, etc.) renders the same /shop route without
@@ -31,6 +26,8 @@ export default function Shop() {
 
 function ShopView() {
   useDocumentMeta('Shop — WITD', 'Browse the First Drop — streetwear for those awake inside the dream.')
+  const { t } = useLocale()
+  const sortLabels = useSortLabels()
   const { products, categoryNames } = useProducts()
   const [searchParams] = useSearchParams()
   const { category: categoryParam } = useParams<{ category?: string }>()
@@ -71,8 +68,8 @@ function ShopView() {
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-12 md:py-16">
       <div className="max-w-2xl">
-        <h1 className="font-display text-4xl md:text-5xl text-paper">Shop</h1>
-        <p className="mt-3 text-sm text-paper/70">Clothing for those awake inside the dream.</p>
+        <h1 className="font-display text-4xl md:text-5xl text-paper">{t('shop.title')}</h1>
+        <p className="mt-3 text-sm text-paper/70">{t('shop.subtitle')}</p>
       </div>
 
       <div className="mt-10 flex items-center gap-2 overflow-x-auto pb-2 -mx-5 px-5 md:mx-0 md:px-0">
@@ -93,7 +90,7 @@ function ShopView() {
                 active ? 'bg-paper text-black border-paper' : 'border-line text-paper/70 hover:border-mist'
               }`}
             >
-              {cat}
+              {cat === 'All' ? t('shop.all') : cat}
             </button>
           )
         })}
@@ -104,10 +101,10 @@ function ShopView() {
           onClick={() => setDrawerOpen(true)}
           className="md:hidden sticky top-[100px] z-20 bg-black px-4 py-2.5 -ml-4 text-xs tracking-widest uppercase text-paper border border-line"
         >
-          Filter &amp; Sort
+          {t('filters.filterAndSort')}
         </button>
         <span className="hidden md:block text-xs text-mist">
-          {result.length} {result.length === 1 ? 'piece' : 'pieces'}
+          {t(result.length === 1 ? 'shop.pieceCount' : 'shop.pieceCount_plural', { count: result.length })}
         </span>
 
         <div className="relative">
@@ -115,7 +112,7 @@ function ShopView() {
             onClick={() => setSortOpen((o) => !o)}
             className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-paper"
           >
-            Sort: {sortLabels[sort]}
+            {t('shop.sortBy', { label: sortLabels[sort] })}
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
           {sortOpen && (
@@ -152,7 +149,7 @@ function ShopView() {
             </button>
           ))}
           <button onClick={clearFilters} className="text-xs text-mist hover:text-paper underline underline-offset-4">
-            Clear All
+            {t('filters.clearAll')}
           </button>
         </div>
       )}

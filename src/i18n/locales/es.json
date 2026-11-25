@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "shop": "Shop",
+    "newDrop": "New Drop",
+    "about": "About",
+    "community": "Community",
+    "openMenu": "Open menu",
+    "search": "Search",
+    "account": "Account",
+    "cart": "Cart"
+  },
+  "header": {
+    "freeShipping": "Free shipping over {{amount}}",
+    "freeReturns": "Free {{days}}-day returns"
+  },
+  "footer": {
+    "tagline": "Wake in the dream. Clothing for those who choose to stay conscious inside it.",
+    "shop": "Shop",
+    "allProducts": "All Products",
+    "newDrop": "New Drop",
+    "bestsellers": "Bestsellers",
+    "witd": "WITD",
+    "about": "About",
+    "community": "Community",
+    "support": "Support",
+    "shipping": "Shipping",
+    "returns": "Returns",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "rights": "All rights reserved."
+  }
+}

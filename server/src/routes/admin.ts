@@ -63,6 +63,7 @@ function productFromBody(body: Record<string, unknown>, existing?: Product): Omi
     name,
     description: (body.description as string) ?? existing?.description ?? '',
     idea: (body.idea as string) ?? existing?.idea,
+    translations: (body.translations as Product['translations']) ?? existing?.translations,
     price: Number(body.price ?? existing?.price ?? 0),
     priceUSD:
       body.priceUSD !== undefined && body.priceUSD !== null && body.priceUSD !== ''

@@ -1,0 +1,124 @@
+{
+  "common": {
+    "close": "Close"
+  },
+  "sort": {
+    "featured": "Featured",
+    "newest": "Newest",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low"
+  },
+  "filters": {
+    "filter": "Filter",
+    "filterAndSort": "Filter & Sort",
+    "clearAll": "Clear All",
+    "category": "Category",
+    "size": "Size",
+    "color": "Color",
+    "collection": "Collection",
+    "availability": "Availability",
+    "sort": "Sort",
+    "showResult": "Show {{count}} Result",
+    "showResults": "Show {{count}} Results",
+    "collectionNewDrop": "New Drop",
+    "collectionBestsellers": "Bestsellers",
+    "collectionLimited": "Limited",
+    "availabilityInStock": "In Stock",
+    "availabilityLowStock": "Low Stock",
+    "availabilitySoldOut": "Sold Out",
+    "availabilityComingSoon": "Coming Soon"
+  },
+  "shop": {
+    "title": "Shop",
+    "subtitle": "Clothing for those awake inside the dream.",
+    "all": "All",
+    "pieceCount": "{{count}} piece",
+    "pieceCount_plural": "{{count}} pieces",
+    "sortBy": "Sort: {{label}}"
+  },
+  "nav": {
+    "shop": "Shop",
+    "newDrop": "New Drop",
+    "about": "About",
+    "community": "Community",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "search": "Search",
+    "account": "Account",
+    "cart": "Cart"
+  },
+  "mobileNav": {
+    "tagline": "WAKE IN THE DREAM."
+  },
+  "hero": {
+    "title": "Wake in the dream.",
+    "subtitle": "You are here. Now choose how to move.",
+    "shopDrop": "Shop the Drop",
+    "enterWitd": "Enter WITD"
+  },
+  "header": {
+    "freeShipping": "Free shipping over {{amount}}",
+    "freeReturns": "Free {{days}}-day returns"
+  },
+  "product": {
+    "new": "New",
+    "soldOut": "Sold Out",
+    "lowStock": "Low Stock",
+    "quickAdd": "Quick Add",
+    "selectSize": "Select a Size",
+    "bestseller": "Bestseller",
+    "goBack": "Go back",
+    "youMayAlsoLike": "You May Also Like",
+    "recentlyViewed": "Recently Viewed",
+    "pleaseSelectSize": "Please select a size.",
+    "notifyMe": "Notify Me",
+    "notifyMeBody": "Get an email if {{name}} is restocked.",
+    "addToCartWithPrice": "Add to Cart — {{price}}",
+    "buyNow": "Buy Now",
+    "freeShippingOver": "Free shipping on orders over {{amount}}",
+    "flatRateOtherwise": "{{amount}} flat rate otherwise",
+    "returnsShipsIn": "{{days}}-day returns · ships in {{min}}–{{max}} business days · {{shipsTo}}",
+    "fitAndSize": "Fit & Size",
+    "viewSizeGuide": "View size guide",
+    "materialAndCare": "Material & Care",
+    "shippingAndReturns": "Shipping & Returns",
+    "shippingReturnsBody": "Orders ship within {{min}}–{{max}} business days. Free shipping on orders over {{amount}}. Returns accepted within {{days}} days of delivery for unworn items in original condition. Ships to {{shipsTo}}.",
+    "details": "Details",
+    "sku": "SKU {{sku}}",
+    "color": "Color",
+    "size": "Size",
+    "sizeGuide": "Size Guide",
+    "chest": "Chest",
+    "length": "Length",
+    "sizeGuideFootnote": "All WITD tees are cut in a boxy, oversized fit. Measurements are body measurements — for a closer fit, size down. Fits are printed per style below the size chart as they're added to the catalog.",
+    "notifyMeSuccess": "You're on the list — we'll email you if {{name}} comes back.",
+    "emailPlaceholder": "you@example.com",
+    "emailForRestock": "Email for restock notification"
+  },
+  "home": {
+    "newDrop": "New Drop",
+    "viewAll": "View All",
+    "ideaTitle": "The WITD Idea",
+    "ideaBody": "Reality can feel like a dream — vivid, moving fast, mostly on autopilot. WITD is for those who choose to become conscious inside it, and dress like they mean it.",
+    "readPhilosophy": "Read the Philosophy",
+    "featuredPieces": "Featured Pieces"
+  },
+  "footer": {
+    "tagline": "Wake in the dream. Clothing for those who choose to stay conscious inside it.",
+    "shop": "Shop",
+    "allProducts": "All Products",
+    "newDrop": "New Drop",
+    "bestsellers": "Bestsellers",
+    "witd": "WITD",
+    "about": "About",
+    "community": "Community",
+    "support": "Support",
+    "shipping": "Shipping",
+    "returns": "Returns",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "rights": "All rights reserved."
+  }
+}

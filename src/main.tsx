@@ -7,6 +7,7 @@ import { ProductsProvider } from '@/context/ProductsContext'
 import { CustomerAuthProvider } from '@/context/CustomerAuthContext'
 import { CurrencyProvider } from '@/context/CurrencyContext'
 import '@/styles/index.css'
+import '@/i18n/config'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

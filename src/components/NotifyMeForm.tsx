@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
+import { useLocale } from '@/hooks/useLocale'
 
 // No backend endpoint exists for restock notifications yet — this captures
 // the email client-side and confirms, same as the newsletter form. Wire it
 // to a real list (or the backend) before launch.
 export function NotifyMeForm({ productName }: { productName: string }) {
+  const { t } = useLocale()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
@@ -16,7 +18,7 @@ export function NotifyMeForm({ productName }: { productName: string }) {
   if (submitted) {
     return (
       <p className="mt-4 text-sm text-paper/70 border border-line px-4 py-3">
-        You're on the list — we'll email you if {productName} comes back.
+        {t('product.notifyMeSuccess', { name: productName })}
       </p>
     )
   }
@@ -28,15 +30,15 @@ export function NotifyMeForm({ productName }: { productName: string }) {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        aria-label="Email for restock notification"
+        placeholder={t('product.emailPlaceholder')}
+        aria-label={t('product.emailForRestock')}
         className="flex-1 min-w-0 bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors"
       />
       <button
         type="submit"
         className="shrink-0 px-5 py-3 border border-paper text-paper text-xs tracking-widest uppercase hover:bg-paper hover:text-black transition-colors"
       >
-        Notify Me
+        {t('product.notifyMe')}
       </button>
     </form>
   )

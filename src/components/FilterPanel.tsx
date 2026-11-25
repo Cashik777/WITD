@@ -1,5 +1,7 @@
 import type { Product, ProductFilters } from '@/types/product'
-import { filterOptions, availabilityLabels, countByOption, categoryOptions, colorOptions } from '@/lib/filters'
+import { filterOptions, countByOption, categoryOptions, colorOptions } from '@/lib/filters'
+import { useLocale } from '@/hooks/useLocale'
+import { useFilterLabels } from '@/hooks/useFilterLabels'
 
 interface FilterPanelProps {
   products: Product[]
@@ -55,50 +57,53 @@ function CheckboxGroup({
 }
 
 export function FilterPanel({ products, filters, toggleFilter, clearFilters }: FilterPanelProps) {
+  const { t } = useLocale()
+  const { collectionLabels, availabilityLabels } = useFilterLabels()
   const hasActive =
     filters.category.length + filters.size.length + filters.color.length + filters.collection.length + filters.availability.length > 0
 
   return (
     <div>
       <div className="flex items-center justify-between pb-4">
-        <h2 className="text-xs tracking-widest uppercase text-paper">Filter</h2>
+        <h2 className="text-xs tracking-widest uppercase text-paper">{t('filters.filter')}</h2>
         {hasActive && (
           <button onClick={clearFilters} className="text-xs text-mist hover:text-paper underline underline-offset-4">
-            Clear All
+            {t('filters.clearAll')}
           </button>
         )}
       </div>
 
       <CheckboxGroup
-        title="Category"
+        title={t('filters.category')}
         options={categoryOptions(products)}
         selected={filters.category}
         counts={countByOption(products, filters, 'category')}
         onToggle={(v) => toggleFilter('category', v)}
       />
       <CheckboxGroup
-        title="Size"
+        title={t('filters.size')}
         options={filterOptions.size}
         selected={filters.size}
         counts={countByOption(products, filters, 'size')}
         onToggle={(v) => toggleFilter('size', v)}
       />
       <CheckboxGroup
-        title="Color"
+        title={t('filters.color')}
         options={colorOptions(products)}
         selected={filters.color}
         counts={countByOption(products, filters, 'color')}
         onToggle={(v) => toggleFilter('color', v)}
       />
       <CheckboxGroup
-        title="Collection"
+        title={t('filters.collection')}
         options={filterOptions.collection}
         selected={filters.collection}
         counts={countByOption(products, filters, 'collection')}
         onToggle={(v) => toggleFilter('collection', v)}
+        labels={collectionLabels}
       />
       <CheckboxGroup
-        title="Availability"
+        title={t('filters.availability')}
         options={filterOptions.availability}
         selected={filters.availability}
         counts={countByOption(products, filters, 'availability')}

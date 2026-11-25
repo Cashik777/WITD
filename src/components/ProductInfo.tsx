@@ -3,6 +3,8 @@ import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { store, shippingPolicy } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useLocale } from '@/hooks/useLocale'
+import { localizedProductText } from '@/lib/productText'
 import type { useProductPurchase } from '@/hooks/useProductPurchase'
 import { SizeSelector } from './SizeSelector'
 import { ColorSelector } from './ColorSelector'
@@ -26,18 +28,20 @@ interface ProductInfoProps {
 export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps) {
   const { color, setColor, size, selectSize, needsSize, soldOut, addToCart, buyNow } = purchase
   const { currency } = useCurrency()
+  const { t, locale } = useLocale()
   const price = getProductPrice(product, currency)
   const policy = shippingPolicy(currency)
+  const { description } = localizedProductText(product, locale)
 
   return (
     <div>
       <h1 className="font-display text-3xl md:text-4xl text-paper">{product.name}</h1>
       <p className="mt-2 text-lg text-paper/80">{formatPrice(price, currency)}</p>
-      <p className="mt-5 text-sm text-paper/70 leading-relaxed max-w-md">{product.description}</p>
+      <p className="mt-5 text-sm text-paper/70 leading-relaxed max-w-md">{description}</p>
 
       {soldOut && (
         <p className="mt-4 text-xs tracking-widest uppercase text-paper/60 border border-line inline-block px-3 py-2">
-          Sold Out
+          {t('product.soldOut')}
         </p>
       )}
 
@@ -52,14 +56,14 @@ export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps
             onSelect={selectSize}
             onOpenGuide={onOpenGuide}
           />
-          {needsSize && <p className="mt-2 text-xs text-[#B5674F]">Please select a size.</p>}
+          {needsSize && <p className="mt-2 text-xs text-[#B5674F]">{t('product.pleaseSelectSize')}</p>}
         </div>
       </div>
 
       {soldOut ? (
         <div className="mt-8">
-          <p className="text-xs tracking-widest uppercase text-paper mb-2">Notify Me</p>
-          <p className="text-sm text-mist">Get an email if {product.name} is restocked.</p>
+          <p className="text-xs tracking-widest uppercase text-paper mb-2">{t('product.notifyMe')}</p>
+          <p className="text-sm text-mist">{t('product.notifyMeBody', { name: product.name })}</p>
           <NotifyMeForm productName={product.name} />
         </div>
       ) : (
@@ -70,24 +74,28 @@ export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps
               disabled={!size}
               className="w-full py-4 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-60"
             >
-              {size ? `Add to Cart — ${formatPrice(price, currency)}` : 'Select a Size'}
+              {size ? t('product.addToCartWithPrice', { price: formatPrice(price, currency) }) : t('product.selectSize')}
             </button>
             <button
               onClick={buyNow}
               className="w-full py-4 border border-paper text-paper text-xs tracking-widest uppercase hover:bg-paper hover:text-black transition-colors"
             >
-              Buy Now
+              {t('product.buyNow')}
             </button>
           </div>
 
           <div className="mt-5 space-y-1.5 text-xs text-mist">
             <p>
-              Free shipping on orders over {formatPrice(policy.freeShippingThreshold, currency)} &middot;{' '}
-              {formatPrice(policy.shippingFlatRate, currency)} flat rate otherwise
+              {t('product.freeShippingOver', { amount: formatPrice(policy.freeShippingThreshold, currency) })} &middot;{' '}
+              {t('product.flatRateOtherwise', { amount: formatPrice(policy.shippingFlatRate, currency) })}
             </p>
             <p>
-              {store.returnWindowDays}-day returns &middot; ships in {store.fulfillmentDaysMin}–
-              {store.fulfillmentDaysMax} business days &middot; {store.shipsTo}
+              {t('product.returnsShipsIn', {
+                days: store.returnWindowDays,
+                min: store.fulfillmentDaysMin,
+                max: store.fulfillmentDaysMax,
+                shipsTo: store.shipsTo,
+              })}
             </p>
           </div>
         </>
@@ -111,38 +119,43 @@ export function ProductInfo({ product, purchase, onOpenGuide }: ProductInfoProps
 // column and a void.
 export function ProductDetailsAccordion({ product, onOpenGuide }: { product: Product; onOpenGuide: () => void }) {
   const { currency } = useCurrency()
+  const { t, locale } = useLocale()
   const policy = shippingPolicy(currency)
+  const { idea } = localizedProductText(product, locale)
 
   return (
     <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-      {product.idea ? (
+      {idea ? (
         <p className="font-display text-2xl md:text-3xl lg:text-4xl text-paper/90 leading-snug max-w-lg mx-auto text-center">
-          {product.idea}
+          {idea}
         </p>
       ) : (
         <div />
       )}
       <div>
-        <Accordion title="Fit & Size" defaultOpen>
+        <Accordion title={t('product.fitAndSize')} defaultOpen>
           <p>{product.fit}</p>
           <button onClick={onOpenGuide} className="mt-2 text-paper underline underline-offset-4 hover:text-paper/70">
-            View size guide
+            {t('product.viewSizeGuide')}
           </button>
         </Accordion>
-        <Accordion title="Material & Care">
+        <Accordion title={t('product.materialAndCare')}>
           <p>{product.materials}</p>
           <p className="mt-2">{product.careInstructions}</p>
         </Accordion>
-        <Accordion title="Shipping & Returns">
+        <Accordion title={t('product.shippingAndReturns')}>
           <p>
-            Orders ship within {store.fulfillmentDaysMin}–{store.fulfillmentDaysMax} business days. Free shipping on
-            orders over {formatPrice(policy.freeShippingThreshold, currency)}. Returns accepted within{' '}
-            {store.returnWindowDays} days of delivery for unworn items in original condition. Ships to{' '}
-            {store.shipsTo}.
+            {t('product.shippingReturnsBody', {
+              min: store.fulfillmentDaysMin,
+              max: store.fulfillmentDaysMax,
+              amount: formatPrice(policy.freeShippingThreshold, currency),
+              days: store.returnWindowDays,
+              shipsTo: store.shipsTo,
+            })}
           </p>
         </Accordion>
-        <Accordion title="Details">
-          <p>SKU {product.sku}</p>
+        <Accordion title={t('product.details')}>
+          <p>{t('product.sku', { sku: product.sku })}</p>
         </Accordion>
       </div>
     </div>

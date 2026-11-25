@@ -1,5 +1,7 @@
-import { useParams, Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import { LL } from '@/components/LL'
+import { useLocale } from '@/hooks/useLocale'
 import { useProducts } from '@/hooks/useProducts'
 import { ProductGallery } from '@/components/ProductGallery'
 import { ProductInfo, ProductDetailsAccordion } from '@/components/ProductInfo'
@@ -33,6 +35,7 @@ export default function ProductDetail() {
   const [guideOpen, setGuideOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { t, path } = useLocale()
   useDocumentMeta(product ? `${product.name} — WITD` : 'WITD', product?.description)
 
   // location.key is 'default' only for the very first history entry this
@@ -42,7 +45,7 @@ export default function ProductDetail() {
   // rather than always landing on the shop/category page.
   const goBack = () => {
     if (location.key === 'default') {
-      navigate('/shop')
+      navigate(path('/shop'))
     } else {
       navigate(-1)
     }
@@ -64,20 +67,20 @@ export default function ProductDetail() {
       <nav className="text-xs text-mist mb-8 flex items-center">
         <button
           onClick={goBack}
-          aria-label="Go back"
+          aria-label={t('product.goBack')}
           className="mr-3 p-1 -ml-1 hover:text-paper transition-colors"
         >
           <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <Link to="/shop" className="hover:text-paper">
-          Shop
-        </Link>
+        <LL to="/shop" className="hover:text-paper">
+          {t('nav.shop')}
+        </LL>
         <span className="mx-2">/</span>
-        <Link to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-paper">
+        <LL to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-paper">
           {product.category}
-        </Link>
+        </LL>
         <span className="mx-2">/</span>
         <span className="text-paper/70">{product.name}</span>
       </nav>
@@ -103,14 +106,14 @@ export default function ProductDetail() {
 
       {related.length > 0 && (
         <section className="mt-24 md:mt-32">
-          <h2 className="font-display text-2xl md:text-3xl text-paper mb-10">You May Also Like</h2>
+          <h2 className="font-display text-2xl md:text-3xl text-paper mb-10">{t('product.youMayAlsoLike')}</h2>
           <ProductGrid products={related} />
         </section>
       )}
 
       {recentlyViewed.length > 0 && (
         <section className="mt-20">
-          <h2 className="font-display text-xl md:text-2xl text-paper mb-8">Recently Viewed</h2>
+          <h2 className="font-display text-xl md:text-2xl text-paper mb-8">{t('product.recentlyViewed')}</h2>
           <ProductGrid products={recentlyViewed} />
         </section>
       )}

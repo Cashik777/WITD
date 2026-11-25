@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
+import { LL } from './LL'
 import { WitdSymbol } from './WitdSymbol'
+import { useLocale } from '@/hooks/useLocale'
 
 const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/wakeinthedream/' },
@@ -10,40 +11,45 @@ const socialLinks = [
   { label: 'Pinterest', href: 'https://ca.pinterest.com/WakeInTheDream/' },
 ]
 
-const columns = [
-  {
-    heading: 'Shop',
-    links: [
-      { label: 'All Products', to: '/shop' },
-      { label: 'New Drop', to: '/shop?collection=New%20Drop' },
-      { label: 'Bestsellers', to: '/shop?collection=Bestsellers' },
-    ],
-  },
-  {
-    heading: 'WITD',
-    links: [
-      { label: 'About', to: '/about' },
-      { label: 'Community', to: '/community' },
-    ],
-  },
-  {
-    heading: 'Support',
-    links: [
-      { label: 'Shipping', to: '/about#shipping' },
-      { label: 'Returns', to: '/about#returns' },
-      { label: 'Contact', to: '/about#contact' },
-    ],
-  },
-  {
-    heading: 'Legal',
-    links: [
-      { label: 'Privacy', to: '/privacy' },
-      { label: 'Terms', to: '/terms' },
-    ],
-  },
-]
+function useColumns() {
+  const { t } = useLocale()
+  return [
+    {
+      heading: t('footer.shop'),
+      links: [
+        { label: t('footer.allProducts'), to: '/shop' },
+        { label: t('footer.newDrop'), to: '/shop?collection=New%20Drop' },
+        { label: t('footer.bestsellers'), to: '/shop?collection=Bestsellers' },
+      ],
+    },
+    {
+      heading: t('footer.witd'),
+      links: [
+        { label: t('footer.about'), to: '/about' },
+        { label: t('footer.community'), to: '/community' },
+      ],
+    },
+    {
+      heading: t('footer.support'),
+      links: [
+        { label: t('footer.shipping'), to: '/about#shipping' },
+        { label: t('footer.returns'), to: '/about#returns' },
+        { label: t('footer.contact'), to: '/about#contact' },
+      ],
+    },
+    {
+      heading: t('footer.legal'),
+      links: [
+        { label: t('footer.privacy'), to: '/privacy' },
+        { label: t('footer.terms'), to: '/terms' },
+      ],
+    },
+  ]
+}
 
 export function Footer() {
+  const { t } = useLocale()
+  const columns = useColumns()
   return (
     <footer className="bg-black border-t border-line">
       <div className="max-w-content mx-auto px-5 md:px-8 py-16 grid grid-cols-2 md:grid-cols-6 gap-10">
@@ -52,9 +58,7 @@ export function Footer() {
             <WitdSymbol className="w-7 h-7 text-paper" />
             <span className="font-display text-xl text-paper">WITD</span>
           </div>
-          <p className="text-sm text-mist max-w-[26ch]">
-            Wake in the dream. Clothing for those who choose to stay conscious inside it.
-          </p>
+          <p className="text-sm text-mist max-w-[26ch]">{t('footer.tagline')}</p>
         </div>
 
         {columns.map((col) => (
@@ -63,10 +67,10 @@ export function Footer() {
             <ul className="space-y-2.5">
               {col.links.map((link) => (
                 <li key={link.label}>
-                  <Link to={link.to} className="relative inline-block group text-sm text-mist hover:text-paper transition-colors duration-200">
+                  <LL to={link.to} className="relative inline-block group text-sm text-mist hover:text-paper transition-colors duration-200">
                     {link.label}
                     <span className="absolute left-0 -bottom-0.5 h-px w-full bg-paper scale-x-0 origin-left transition-transform duration-300 ease-witd group-hover:scale-x-100" />
-                  </Link>
+                  </LL>
                 </li>
               ))}
             </ul>
@@ -75,7 +79,9 @@ export function Footer() {
       </div>
 
       <div className="max-w-content mx-auto px-5 md:px-8 py-6 border-t border-line flex flex-col md:flex-row gap-3 items-center justify-between">
-        <p className="text-xs text-mist">&copy; {new Date().getFullYear()} WITD. All rights reserved.</p>
+        <p className="text-xs text-mist">
+          &copy; {new Date().getFullYear()} WITD. {t('footer.rights')}
+        </p>
         <div className="flex flex-wrap gap-5">
           {socialLinks.map((social) => (
             <a

@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { LL } from './LL'
+import { useLocale } from '@/hooks/useLocale'
 import type { Product } from '@/types/product'
 import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
@@ -13,6 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [pickingSize, setPickingSize] = useState(false)
   const { addItem, openCart } = useCart()
   const { currency } = useCurrency()
+  const { t } = useLocale()
   const soldOut = product.availability === 'sold_out'
 
   const openSizePicker = (e: MouseEvent) => {
@@ -33,7 +35,7 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <Link
+    <LL
       to={`/product/${product.slug}`}
       className="group block"
       onMouseEnter={() => setHovered(true)}
@@ -69,16 +71,16 @@ export function ProductCard({ product }: { product: Product }) {
         {(product.new || soldOut || product.availability === 'low_stock') && (
           <div className="absolute top-3 left-3 flex gap-2">
             {product.new && !soldOut && (
-              <span className="text-[10px] tracking-widest uppercase bg-paper text-black px-2 py-1">New</span>
+              <span className="text-[10px] tracking-widest uppercase bg-paper text-black px-2 py-1">{t('product.new')}</span>
             )}
             {soldOut && (
               <span className="text-[10px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1 border border-line">
-                Sold Out
+                {t('product.soldOut')}
               </span>
             )}
             {!soldOut && product.availability === 'low_stock' && (
               <span className="text-[10px] tracking-widest uppercase bg-black/70 text-paper px-2 py-1 border border-line">
-                Low Stock
+                {t('product.lowStock')}
               </span>
             )}
           </div>
@@ -89,13 +91,13 @@ export function ProductCard({ product }: { product: Product }) {
             onClick={openSizePicker}
             className="absolute bottom-0 left-0 right-0 py-3 bg-paper text-black text-[11px] tracking-widest uppercase opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 ease-witd hidden md:block"
           >
-            Quick Add
+            {t('product.quickAdd')}
           </button>
         )}
 
         {pickingSize && (
           <div className="absolute bottom-0 left-0 right-0 bg-paper p-2.5">
-            <p className="text-[10px] tracking-widest uppercase text-black/60 mb-1.5 px-0.5">Select a Size</p>
+            <p className="text-[10px] tracking-widest uppercase text-black/60 mb-1.5 px-0.5">{t('product.selectSize')}</p>
             <div className="flex flex-wrap gap-1.5">
               {product.availableSizes.map((s) => (
                 <button
@@ -114,7 +116,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="mt-3.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           {product.bestseller && (
-            <p className="text-[10px] tracking-widest uppercase text-paper/50 mb-1">Bestseller</p>
+            <p className="text-[10px] tracking-widest uppercase text-paper/50 mb-1">{t('product.bestseller')}</p>
           )}
           <h3 className="text-sm text-paper">{product.name}</h3>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -125,6 +127,6 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
         <span className="text-sm text-paper/80 whitespace-nowrap">{formatPrice(getProductPrice(product, currency), currency)}</span>
       </div>
-    </Link>
+    </LL>
   )
 }

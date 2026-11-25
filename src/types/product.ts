@@ -13,6 +13,12 @@ export interface Product {
   name: string
   description: string
   idea?: string // short "the idea behind this piece" editorial blurb
+  // Per-language rewrites of description/idea (fr/de/es) — the print on the
+  // garment itself is always English (the physical object can't change
+  // language), but the storefront's own copy about it can. Falls back to
+  // the English description/idea above wherever a language or field is
+  // missing — see src/lib/productText.ts.
+  translations?: Partial<Record<'fr' | 'de' | 'es', { description?: string; idea?: string }>>
   price: number // CAD — the base/display price
   priceUSD: number | null // shown/charged to customers detected as non-Canadian; null falls back to `price`
   priceEUR: number | null // shown/charged to customers detected as EU-based; null falls back to `price`

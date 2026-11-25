@@ -44,6 +44,7 @@ const CREATE_TABLE_SQL = `
 const MIGRATE_SQL = `
   ALTER TABLE products ADD COLUMN IF NOT EXISTS price_usd NUMERIC;
   ALTER TABLE products ADD COLUMN IF NOT EXISTS price_eur NUMERIC;
+  ALTER TABLE products ADD COLUMN IF NOT EXISTS translations JSONB;
 `
 
 function rowToProduct(row: Record<string, unknown>): Product {
@@ -53,6 +54,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
     name: row.name as string,
     description: row.description as string,
     idea: (row.idea as string | null) ?? undefined,
+    translations: (row.translations as Product['translations'] | null) ?? undefined,
     price: Number(row.price),
     priceUSD: row.price_usd != null ? Number(row.price_usd) : null,
     priceEUR: row.price_eur != null ? Number(row.price_eur) : null,
@@ -87,7 +89,7 @@ const INSERT_COLUMNS = `
   images, hover_image, images_by_color, colors, sizes, available_sizes,
   materials, fit, care_instructions, sku, tags, featured, is_new, bestseller,
   availability, fulfillment_provider, provider_product_id, provider_variant_mappings,
-  created_at, updated_at
+  translations, created_at, updated_at
 `
 
 function toInsertValues(p: Product): unknown[] {
@@ -96,7 +98,8 @@ function toInsertValues(p: Product): unknown[] {
     JSON.stringify(p.images), p.hoverImage ?? null, JSON.stringify(p.imagesByColor), JSON.stringify(p.colors),
     JSON.stringify(p.sizes), JSON.stringify(p.availableSizes), p.materials, p.fit, p.careInstructions, p.sku,
     JSON.stringify(p.tags), p.featured, p.new, p.bestseller, p.availability, p.fulfillmentProvider,
-    p.providerProductId, JSON.stringify(p.providerVariantMappings), p.createdAt, p.updatedAt,
+    p.providerProductId, JSON.stringify(p.providerVariantMappings),
+    p.translations ? JSON.stringify(p.translations) : null, p.createdAt, p.updatedAt,
   ]
 }
 
@@ -121,7 +124,7 @@ export class PostgresProductRepository implements ProductRepository {
   }
 
   private async insert(p: Product): Promise<void> {
-    const placeholders = Array.from({ length: 31 }, (_, i) => `$${i + 1}`).join(',')
+    const placeholders = Array.from({ length: 32 }, (_, i) => `$${i + 1}`).join(',')
     await this.pool.query(`INSERT INTO products (${INSERT_COLUMNS}) VALUES (${placeholders})`, toInsertValues(p))
   }
 
@@ -170,7 +173,7 @@ export class PostgresProductRepository implements ProductRepository {
         images=$12, hover_image=$13, images_by_color=$14, colors=$15, sizes=$16, available_sizes=$17,
         materials=$18, fit=$19, care_instructions=$20, sku=$21, tags=$22, featured=$23, is_new=$24,
         bestseller=$25, availability=$26, fulfillment_provider=$27, provider_product_id=$28,
-        provider_variant_mappings=$29, updated_at=$30
+        provider_variant_mappings=$29, translations=$30, updated_at=$31
       WHERE id=$1`,
       [
         id, updated.slug, updated.name, updated.description, updated.idea ?? null, updated.price, updated.priceUSD ?? null, updated.priceEUR ?? null, updated.currency,
@@ -179,7 +182,8 @@ export class PostgresProductRepository implements ProductRepository {
         JSON.stringify(updated.availableSizes), updated.materials, updated.fit, updated.careInstructions,
         updated.sku, JSON.stringify(updated.tags), updated.featured, updated.new, updated.bestseller,
         updated.availability, updated.fulfillmentProvider, updated.providerProductId,
-        JSON.stringify(updated.providerVariantMappings), updated.updatedAt,
+        JSON.stringify(updated.providerVariantMappings),
+        updated.translations ? JSON.stringify(updated.translations) : null, updated.updatedAt,
       ]
     )
     return updated
