@@ -7,6 +7,8 @@ import { calculateShipping } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
 import { useFilterLabels } from '@/hooks/useFilterLabels'
+import { useProducts } from '@/hooks/useProducts'
+import { localizedProductText } from '@/lib/productText'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { ChevronDown } from '@/components/icons'
 
@@ -26,9 +28,17 @@ function CheckoutSteps({ current }: { current: number }) {
 }
 
 export default function Checkout() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   useDocumentMeta(t('meta.checkoutTitle'))
   const { colorLabel } = useFilterLabels()
+  const { getProductById } = useProducts()
+  // Same snapshot-vs-live-catalog reasoning as CartItem.tsx: resolve each
+  // line's name against the current locale instead of trusting whatever
+  // language was active when it was added to the cart.
+  const lineName = (productId: string, fallback: string) => {
+    const product = getProductById(productId)
+    return product ? localizedProductText(product, locale).name : fallback
+  }
   const PAYMENTS_NOT_OPEN_MESSAGE = t('checkout.paymentsNotOpen')
   const { lines, subtotal } = useCart()
   const { currency: activeCurrency } = useCurrency()
@@ -163,7 +173,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
                 <span className="text-paper/80">
-                  {l.name} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
+                  {lineName(l.productId, l.name)} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
                 </span>
                 <span className="text-paper">{formatPrice(l.price * l.quantity, l.currency)}</span>
               </div>
@@ -228,7 +238,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
                 <span className="text-paper/80">
-                  {l.name} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
+                  {lineName(l.productId, l.name)} ({colorLabel(l.color)}/{l.size}) &times; {l.quantity}
                 </span>
                 <span className="text-paper">{formatPrice(l.price * l.quantity, l.currency)}</span>
               </div>

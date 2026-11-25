@@ -5,6 +5,8 @@ import { calculateShipping, amountToFreeShipping, shippingPolicy } from '@/lib/s
 import { useCurrency } from '@/context/CurrencyContext'
 import { useLocale } from '@/hooks/useLocale'
 import { useFilterLabels } from '@/hooks/useFilterLabels'
+import { useProducts } from '@/hooks/useProducts'
+import { localizedProductText } from '@/lib/productText'
 import { CartItem } from './CartItem'
 import { PairsWellWith } from './PairsWellWith'
 import { CloseIcon, BagIcon } from './icons'
@@ -12,8 +14,9 @@ import { CloseIcon, BagIcon } from './icons'
 export function CartDrawer() {
   const { lines, isOpen, closeCart, subtotal, lastAdded } = useCart()
   const { currency: activeCurrency } = useCurrency()
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { colorLabel } = useFilterLabels()
+  const { getProductById } = useProducts()
   const currency = lines[0]?.currency ?? activeCurrency
 
   const shipping = calculateShipping(subtotal, currency)
@@ -21,6 +24,12 @@ export function CartDrawer() {
   const remaining = amountToFreeShipping(subtotal, currency)
   const policy = shippingPolicy(currency)
   const progressPct = Math.min(100, (subtotal / policy.freeShippingThreshold) * 100)
+  const lastAddedProduct = lastAdded ? getProductById(lastAdded.productId) : undefined
+  const lastAddedName = lastAdded
+    ? lastAddedProduct
+      ? localizedProductText(lastAddedProduct, locale).name
+      : lastAdded.name
+    : ''
 
   return (
     <div
@@ -66,7 +75,7 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               {lastAdded && (
                 <p className="px-6 py-3 bg-paper/10 border-b border-line text-xs text-paper">
-                  {t('cart.added', { name: lastAdded.name, color: colorLabel(lastAdded.color), size: lastAdded.size })}
+                  {t('cart.added', { name: lastAddedName, color: colorLabel(lastAdded.color), size: lastAdded.size })}
                 </p>
               )}
 
