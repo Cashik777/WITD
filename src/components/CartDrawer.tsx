@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
+import { LL } from './LL'
 import { useCart } from '@/hooks/useCart'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping, amountToFreeShipping, shippingPolicy } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useLocale } from '@/hooks/useLocale'
 import { CartItem } from './CartItem'
 import { PairsWellWith } from './PairsWellWith'
 import { CloseIcon, BagIcon } from './icons'
@@ -10,6 +11,7 @@ import { CloseIcon, BagIcon } from './icons'
 export function CartDrawer() {
   const { lines, isOpen, closeCart, subtotal, lastAdded } = useCart()
   const { currency: activeCurrency } = useCurrency()
+  const { t } = useLocale()
   const currency = lines[0]?.currency ?? activeCurrency
 
   const shipping = calculateShipping(subtotal, currency)
@@ -38,9 +40,9 @@ export function CartDrawer() {
       >
         <div className="flex items-center justify-between px-6 h-16 border-b border-line shrink-0">
           <h2 className="text-xs tracking-widest uppercase text-paper">
-            Cart {lines.length > 0 && `(${lines.length})`}
+            {lines.length > 0 ? t('cart.titleWithCount', { count: lines.length }) : t('cart.title')}
           </h2>
-          <button onClick={closeCart} aria-label="Close cart" className="text-paper">
+          <button onClick={closeCart} aria-label={t('cart.closeCart')} className="text-paper">
             <CloseIcon />
           </button>
         </div>
@@ -48,29 +50,32 @@ export function CartDrawer() {
         {lines.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
             <BagIcon className="w-8 h-8 text-mist" />
-            <p className="text-sm text-mist">Your cart is empty.</p>
-            <Link
+            <p className="text-sm text-mist">{t('cart.empty')}</p>
+            <LL
               to="/shop"
               onClick={closeCart}
               className="px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase"
             >
-              Shop the Drop
-            </Link>
+              {t('hero.shopDrop')}
+            </LL>
           </div>
         ) : (
           <>
             <div className="flex-1 overflow-y-auto">
               {lastAdded && (
                 <p className="px-6 py-3 bg-paper/10 border-b border-line text-xs text-paper">
-                  Added: {lastAdded.name} ({lastAdded.color} / {lastAdded.size})
+                  {t('cart.added', { name: lastAdded.name, color: lastAdded.color, size: lastAdded.size })}
                 </p>
               )}
 
               <div className="px-6 py-4 border-b border-line">
                 <p className="text-xs text-paper mb-2">
                   {remaining > 0
-                    ? `Shipping is ${formatPrice(policy.shippingFlatRate, currency)}. Add ${formatPrice(remaining, currency)} more and it's free.`
-                    : "You've unlocked free shipping"}
+                    ? t('cart.shippingProgress', {
+                        flatRate: formatPrice(policy.shippingFlatRate, currency),
+                        remaining: formatPrice(remaining, currency),
+                      })
+                    : t('cart.freeShippingUnlocked')}
                 </p>
                 <div className="h-1 bg-line overflow-hidden">
                   <div className="h-full bg-paper transition-all duration-300" style={{ width: `${progressPct}%` }} />
@@ -88,27 +93,26 @@ export function CartDrawer() {
 
             <div className="shrink-0 px-6 py-5 border-t border-line space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-mist">Subtotal</span>
+                <span className="text-mist">{t('cart.subtotal')}</span>
                 <span className="text-paper">{formatPrice(subtotal, currency)}</span>
               </div>
               <p className="text-xs text-mist">
-                Shipping: {shipping === 0 ? 'Free' : formatPrice(shipping, currency)} &middot; taxes calculated at
-                checkout.
+                {t('cart.shippingLine', { amount: shipping === 0 ? t('cart.free') : formatPrice(shipping, currency) })}
               </p>
-              <Link
+              <LL
                 to="/checkout"
                 onClick={closeCart}
                 className="block w-full text-center py-3.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors"
               >
-                Checkout {formatPrice(total, currency)}
-              </Link>
+                {t('cart.checkoutWithTotal', { total: formatPrice(total, currency) })}
+              </LL>
               <div className="flex items-center justify-between text-xs">
                 <button onClick={closeCart} className="text-mist hover:text-paper underline underline-offset-4">
-                  Continue Shopping
+                  {t('cart.continueShopping')}
                 </button>
-                <Link to="/cart" onClick={closeCart} className="text-mist hover:text-paper underline underline-offset-4">
-                  View Full Cart
-                </Link>
+                <LL to="/cart" onClick={closeCart} className="text-mist hover:text-paper underline underline-offset-4">
+                  {t('cart.viewFullCart')}
+                </LL>
               </div>
             </div>
           </>

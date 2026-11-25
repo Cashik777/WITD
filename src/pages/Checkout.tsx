@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { LL } from '@/components/LL'
 import { useCart } from '@/hooks/useCart'
 import { useCustomerAuth } from '@/hooks/useCustomerAuth'
 import { formatPrice } from '@/lib/format'
 import { calculateShipping } from '@/lib/store'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useLocale } from '@/hooks/useLocale'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 import { ChevronDown } from '@/components/icons'
 
-const PAYMENTS_NOT_OPEN_MESSAGE = 'Payments are not open yet — your cart is saved.'
-
-const steps = ['Cart', 'Details', 'Payment', 'Done'] as const
-
 function CheckoutSteps({ current }: { current: number }) {
+  const { t } = useLocale()
+  const steps = [t('checkout.stepCart'), t('checkout.stepDetails'), t('checkout.stepPayment'), t('checkout.stepDone')]
   return (
     <ol className="flex items-center gap-2 text-xs tracking-widest uppercase mb-10">
       {steps.map((step, i) => (
@@ -27,6 +26,8 @@ function CheckoutSteps({ current }: { current: number }) {
 
 export default function Checkout() {
   useDocumentMeta('Checkout — WITD')
+  const { t } = useLocale()
+  const PAYMENTS_NOT_OPEN_MESSAGE = t('checkout.paymentsNotOpen')
   const { lines, subtotal } = useCart()
   const { currency: activeCurrency } = useCurrency()
   const currency = lines[0]?.currency ?? activeCurrency
@@ -83,7 +84,7 @@ export default function Checkout() {
 
   const handleCheckout = async () => {
     if (!emailValid) {
-      setError('Enter a valid email to continue.')
+      setError(t('checkout.enterValidEmail'))
       return
     }
     setLoading(true)
@@ -111,18 +112,14 @@ export default function Checkout() {
       if (!res.ok) {
         if (res.status === 503) throw new Error(PAYMENTS_NOT_OPEN_MESSAGE)
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || `Checkout is not available right now (${res.status}).`)
+        throw new Error(body.error || t('checkout.checkoutUnavailable', { status: res.status }))
       }
 
       const { url } = await res.json()
-      if (!url) throw new Error('No checkout URL was returned.')
+      if (!url) throw new Error(t('checkout.noCheckoutUrl'))
       window.location.href = url
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Something went wrong starting checkout. Please try again.'
-      )
+      setError(err instanceof Error ? err.message : t('checkout.somethingWentWrong'))
       setLoading(false)
     }
   }
@@ -130,17 +127,17 @@ export default function Checkout() {
   if (lines.length === 0) {
     return (
       <div className="max-w-content mx-auto px-5 md:px-8 py-24 text-center">
-        <p className="text-paper/70 mb-6">Your cart is empty.</p>
-        <Link to="/shop" className="inline-block px-7 py-3.5 bg-paper text-black text-xs tracking-widest uppercase">
-          Shop the Drop
-        </Link>
+        <p className="text-paper/70 mb-6">{t('cart.empty')}</p>
+        <LL to="/shop" className="inline-block px-7 py-3.5 bg-paper text-black text-xs tracking-widest uppercase">
+          {t('hero.shopDrop')}
+        </LL>
       </div>
     )
   }
 
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-12 md:py-16">
-      <h1 className="font-display text-4xl md:text-5xl text-paper mb-6">Checkout</h1>
+      <h1 className="font-display text-4xl md:text-5xl text-paper mb-6">{t('cart.checkout')}</h1>
       <CheckoutSteps current={1} />
 
       <div className="md:hidden mb-8 border border-line">
@@ -149,7 +146,10 @@ export default function Checkout() {
           className="w-full flex items-center justify-between px-4 py-3.5 text-xs tracking-widest uppercase text-paper"
         >
           <span>
-            {summaryOpen ? 'Hide' : 'Show'} Order Summary &middot; {lines.length} {lines.length === 1 ? 'item' : 'items'}
+            {t(
+              `checkout.${summaryOpen ? 'hide' : 'show'}Summary${lines.length === 1 ? '' : '_plural'}`,
+              { count: lines.length }
+            )}
           </span>
           <span className="flex items-center gap-2">
             {formatPrice(total, currency)}
@@ -167,12 +167,12 @@ export default function Checkout() {
               </div>
             ))}
             <div className="flex justify-between text-sm pt-3 border-t border-line">
-              <span className="text-mist">Subtotal</span>
+              <span className="text-mist">{t('cart.subtotal')}</span>
               <span className="text-paper">{formatPrice(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-mist">Shipping</span>
-              <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping, currency)}</span>
+              <span className="text-mist">{t('cart.shipping')}</span>
+              <span className="text-paper">{shipping === 0 ? t('cart.free') : formatPrice(shipping, currency)}</span>
             </div>
           </div>
         )}
@@ -180,39 +180,33 @@ export default function Checkout() {
 
       <div className="grid md:grid-cols-[1fr_400px] gap-12">
         <div>
-          <label className="block text-xs tracking-widest uppercase text-paper mb-3">Email</label>
+          <label className="block text-xs tracking-widest uppercase text-paper mb-3">{t('checkout.email')}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             readOnly={Boolean(accountEmail)}
-            placeholder="you@example.com"
+            placeholder={t('product.emailPlaceholder')}
             className={`w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors ${accountEmail ? 'opacity-70 cursor-not-allowed' : ''}`}
           />
-          {accountEmail && <p className="mt-2 text-xs text-mist">Using your account email.</p>}
+          {accountEmail && <p className="mt-2 text-xs text-mist">{t('checkout.usingAccountEmail')}</p>}
 
-          <label className="block text-xs tracking-widest uppercase text-paper mb-3 mt-6">Coupon Code</label>
+          <label className="block text-xs tracking-widest uppercase text-paper mb-3 mt-6">{t('checkout.couponCode')}</label>
           <input
             type="text"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-            placeholder="Optional"
+            placeholder={t('checkout.optional')}
             className="w-full bg-transparent border border-mist/50 focus:border-paper px-4 py-3 text-sm text-paper placeholder:text-mist outline-none transition-colors tracking-widest"
           />
 
-          <p className="mt-3 text-xs text-mist leading-relaxed">
-            Shipping address and payment are collected securely on the next step — WITD never sees or stores your
-            card details.
-          </p>
+          <p className="mt-3 text-xs text-mist leading-relaxed">{t('checkout.securityNote')}</p>
 
           {error && (
             <div className="mt-6 border border-line px-4 py-3 text-sm text-paper/80">
               <p>{error}</p>
               {error !== PAYMENTS_NOT_OPEN_MESSAGE && (
-                <p className="mt-1 text-xs text-mist">
-                  This storefront is running in test mode without live payment/fulfillment credentials connected
-                  yet.
-                </p>
+                <p className="mt-1 text-xs text-mist">{t('checkout.testModeNote')}</p>
               )}
             </div>
           )}
@@ -222,12 +216,12 @@ export default function Checkout() {
             disabled={loading || !emailValid}
             className="mt-8 w-full md:w-auto px-10 py-4 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-50"
           >
-            {loading ? 'Redirecting to payment…' : 'Continue to Payment'}
+            {loading ? t('checkout.redirecting') : t('checkout.continueToPayment')}
           </button>
         </div>
 
         <div className="hidden md:block border border-line p-6 h-fit space-y-4">
-          <h2 className="text-xs tracking-widest uppercase text-paper">Order Summary</h2>
+          <h2 className="text-xs tracking-widest uppercase text-paper">{t('cart.orderSummary')}</h2>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {lines.map((l) => (
               <div key={`${l.productId}-${l.size}-${l.color}`} className="flex justify-between text-sm">
@@ -239,15 +233,15 @@ export default function Checkout() {
             ))}
           </div>
           <div className="flex justify-between text-sm pt-3 border-t border-line">
-            <span className="text-mist">Subtotal</span>
+            <span className="text-mist">{t('cart.subtotal')}</span>
             <span className="text-paper">{formatPrice(subtotal, currency)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-mist">Shipping</span>
-            <span className="text-paper">{shipping === 0 ? 'Free' : formatPrice(shipping, currency)}</span>
+            <span className="text-mist">{t('cart.shipping')}</span>
+            <span className="text-paper">{shipping === 0 ? t('cart.free') : formatPrice(shipping, currency)}</span>
           </div>
           <div className="flex justify-between text-sm pt-3 border-t border-line">
-            <span className="text-paper">Total</span>
+            <span className="text-paper">{t('cart.total')}</span>
             <span className="text-paper">{formatPrice(total, currency)}</span>
           </div>
         </div>

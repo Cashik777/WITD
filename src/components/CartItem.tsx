@@ -1,11 +1,13 @@
 import type { CartLine } from '@/types/cart'
 import { formatPrice } from '@/lib/format'
 import { useCart } from '@/hooks/useCart'
+import { useLocale } from '@/hooks/useLocale'
 import { MinusIcon, PlusIcon, CloseIcon } from './icons'
 import { productImage } from '@/lib/productImage'
 
 export function CartItem({ line }: { line: CartLine }) {
   const { updateQuantity, removeItem } = useCart()
+  const { t } = useLocale()
 
   return (
     <div className="flex gap-4 py-5 border-b border-line">
@@ -23,7 +25,7 @@ export function CartItem({ line }: { line: CartLine }) {
           </div>
           <button
             onClick={() => removeItem(line.productId, line.size, line.color)}
-            aria-label="Remove item"
+            aria-label={t('cart.removeItem')}
             className="text-mist hover:text-paper shrink-0"
           >
             <CloseIcon className="w-4 h-4" />
@@ -35,7 +37,7 @@ export function CartItem({ line }: { line: CartLine }) {
             <button
               onClick={() => updateQuantity(line.productId, line.size, line.color, line.quantity - 1)}
               className="w-7 h-7 flex items-center justify-center text-paper/80 hover:text-paper"
-              aria-label="Decrease quantity"
+              aria-label={t('cart.decreaseQuantity')}
             >
               <MinusIcon className="w-3.5 h-3.5" />
             </button>
@@ -43,7 +45,7 @@ export function CartItem({ line }: { line: CartLine }) {
             <button
               onClick={() => updateQuantity(line.productId, line.size, line.color, line.quantity + 1)}
               className="w-7 h-7 flex items-center justify-center text-paper/80 hover:text-paper"
-              aria-label="Increase quantity"
+              aria-label={t('cart.increaseQuantity')}
             >
               <PlusIcon className="w-3.5 h-3.5" />
             </button>

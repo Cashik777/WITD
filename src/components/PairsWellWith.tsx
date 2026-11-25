@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useLocale } from '@/hooks/useLocale'
 import { productImage } from '@/lib/productImage'
 
 // A small, honest cross-sell: other in-stock First Drop pieces not already
@@ -15,6 +16,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
   const { products } = useProducts()
   const { addItem } = useCart()
   const { currency } = useCurrency()
+  const { t } = useLocale()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const inCartIds = new Set(lines.map((l) => l.productId))
 
@@ -34,7 +36,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
 
   return (
     <div className="border-t border-line px-6 py-5">
-      <h3 className="text-xs tracking-widest uppercase text-paper mb-3">Pairs Well With</h3>
+      <h3 className="text-xs tracking-widest uppercase text-paper mb-3">{t('cart.pairsWellWith')}</h3>
       <div className="space-y-3">
         {suggestions.map((p) => (
           <div key={p.id} className="flex items-center gap-3">
@@ -62,7 +64,7 @@ export function PairsWellWith({ lines }: { lines: CartLine[] }) {
                 onClick={() => setPickingId(p.id)}
                 className="shrink-0 text-xs text-paper underline underline-offset-4 hover:text-paper/70"
               >
-                Add
+                {t('cart.add')}
               </button>
             )}
           </div>

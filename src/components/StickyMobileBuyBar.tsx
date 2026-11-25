@@ -3,6 +3,7 @@ import type { Product } from '@/types/product'
 import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { useCurrency } from '@/context/CurrencyContext'
+import { useLocale } from '@/hooks/useLocale'
 import type { useProductPurchase } from '@/hooks/useProductPurchase'
 
 interface StickyMobileBuyBarProps {
@@ -19,6 +20,7 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
   const { size, addToCart, soldOut } = purchase
   const [visible, setVisible] = useState(false)
   const { currency } = useCurrency()
+  const { t } = useLocale()
 
   useEffect(() => {
     if (soldOut) return
@@ -63,7 +65,7 @@ export function StickyMobileBuyBar({ product, purchase }: StickyMobileBuyBarProp
         onClick={handleClick}
         className="shrink-0 px-6 py-3 bg-paper text-black text-xs tracking-widest uppercase"
       >
-        {size ? 'Add to Cart' : 'Select a Size'}
+        {size ? t('cart.addToCart') : t('product.selectSize')}
       </button>
     </div>
   )

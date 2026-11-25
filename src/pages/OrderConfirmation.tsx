@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { LL } from '@/components/LL'
 import { useCart } from '@/hooks/useCart'
 import { useCustomerAuth } from '@/hooks/useCustomerAuth'
+import { useLocale } from '@/hooks/useLocale'
 import { useDocumentMeta } from '@/hooks/useDocumentMeta'
 
 // Stripe redirects here after a successful payment
@@ -12,6 +14,7 @@ export default function OrderConfirmation() {
   const sessionId = searchParams.get('session_id')
   const { clearCart } = useCart()
   const { email: accountEmail } = useCustomerAuth()
+  const { t } = useLocale()
   const [orderNumber, setOrderNumber] = useState<string | null>(null)
 
   useEffect(() => {
@@ -26,54 +29,49 @@ export default function OrderConfirmation() {
 
   return (
     <div className="max-w-content mx-auto px-5 md:px-8 py-24 md:py-32 text-center">
-      <h1 className="font-display text-4xl md:text-6xl text-paper">Order Confirmed.</h1>
-      <p className="mt-4 text-base text-paper/75">You&rsquo;re officially awake.</p>
+      <h1 className="font-display text-4xl md:text-6xl text-paper">{t('orderConfirmation.title')}</h1>
+      <p className="mt-4 text-base text-paper/75">{t('orderConfirmation.subtitle')}</p>
 
       {sessionId ? (
         orderNumber ? (
           <>
             <p className="mt-8 text-xs text-mist">
-              Order number: <span className="text-paper/70">{orderNumber}</span>
+              {t('orderConfirmation.orderNumber')} <span className="text-paper/70">{orderNumber}</span>
             </p>
-            <p className="mt-2 text-xs text-mist max-w-sm mx-auto">
-              Save this — you&rsquo;ll need it with your order email to verify your purchase for community access.
-            </p>
+            <p className="mt-2 text-xs text-mist max-w-sm mx-auto">{t('orderConfirmation.saveThis')}</p>
             {!accountEmail && (
               <p className="mt-6 text-xs text-paper/60">
-                Want to track this order later?{' '}
-                <Link to="/account" className="text-paper underline underline-offset-4 hover:text-paper/70">
-                  Create an account
-                </Link>{' '}
-                with the same email.
+                {t('orderConfirmation.trackLater')}{' '}
+                <LL to="/account" className="text-paper underline underline-offset-4 hover:text-paper/70">
+                  {t('orderConfirmation.createAccount')}
+                </LL>{' '}
+                {t('orderConfirmation.withSameEmail')}
               </p>
             )}
           </>
         ) : (
           <p className="mt-8 text-xs text-mist">
-            Reference: <span className="text-paper/70">{sessionId}</span>
+            {t('orderConfirmation.reference')} <span className="text-paper/70">{sessionId}</span>
           </p>
         )
       ) : (
-        <p className="mt-8 text-sm text-paper/60 max-w-md mx-auto">
-          We couldn&rsquo;t find a payment reference for this page. If you just completed a purchase, check your
-          email for an order confirmation.
-        </p>
+        <p className="mt-8 text-sm text-paper/60 max-w-md mx-auto">{t('orderConfirmation.noReference')}</p>
       )}
 
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <Link
+        <LL
           to="/shop"
           className="inline-block px-8 py-3.5 border border-paper/50 text-paper text-xs tracking-widest uppercase hover:border-paper transition-colors"
         >
-          Continue Shopping
-        </Link>
+          {t('cart.continueShopping')}
+        </LL>
         {orderNumber && (
-          <Link
+          <LL
             to="/verify"
             className="inline-block px-8 py-3.5 bg-paper text-black text-xs tracking-widest uppercase hover:bg-white transition-colors"
           >
-            Verify for Community Access
-          </Link>
+            {t('orderConfirmation.verifyForCommunity')}
+          </LL>
         )}
       </div>
     </div>

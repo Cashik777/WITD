@@ -56,12 +56,13 @@ function LanguageSwitcher() {
 }
 
 function CurrencySwitcher() {
+  const { t } = useLocale()
   const { currency, setCurrency, locked } = useCurrency()
 
   return (
     <div
       className={`flex items-center text-[11px] tracking-widest ${locked ? 'opacity-40' : ''}`}
-      title={locked ? 'Currency is locked while your cart has items' : undefined}
+      title={locked ? t('header.currencyLocked') : undefined}
     >
       {(['CAD', 'USD', 'EUR'] as const).map((c, i) => (
         <button

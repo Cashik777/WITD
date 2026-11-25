@@ -1,14 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SearchIcon } from './icons'
+import { useLocale } from '@/hooks/useLocale'
 
 export function SearchBar({ initialQuery = '', autoFocus = false }: { initialQuery?: string; autoFocus?: boolean }) {
   const [value, setValue] = useState(initialQuery)
   const navigate = useNavigate()
+  const { t, path } = useLocale()
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    navigate(`/search?q=${encodeURIComponent(value)}`)
+    navigate(path(`/search?q=${encodeURIComponent(value)}`))
   }
 
   return (
@@ -18,7 +20,7 @@ export function SearchBar({ initialQuery = '', autoFocus = false }: { initialQue
         autoFocus={autoFocus}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search products, categories, collections..."
+        placeholder={t('search.placeholder')}
         className="w-full bg-transparent border-b border-mist/50 focus:border-paper pl-8 pr-2 py-3 text-lg md:text-2xl text-paper placeholder:text-mist outline-none transition-colors font-display"
       />
     </form>

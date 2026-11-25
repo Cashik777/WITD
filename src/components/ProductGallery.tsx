@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { productImage } from '@/lib/productImage'
+import { useLocale } from '@/hooks/useLocale'
 
 // Larger than other image contexts on the site — both the desktop hover
 // zoom and the mobile pinch zoom scale this same loaded image up to ~2.2x,
@@ -230,6 +231,7 @@ function Arrow({ direction }: { direction: 'left' | 'right' }) {
 }
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
+  const { t } = useLocale()
   const [active, setActive] = useState(0)
   const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -405,7 +407,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
               <button
                 type="button"
                 onClick={() => goTo(-1)}
-                aria-label="Previous photo"
+                aria-label={t('common.previousPhoto')}
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
               >
                 <Arrow direction="left" />
@@ -413,7 +415,7 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
               <button
                 type="button"
                 onClick={() => goTo(1)}
-                aria-label="Next photo"
+                aria-label={t('common.nextPhoto')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 text-paper hover:bg-black/70 transition-colors"
               >
                 <Arrow direction="right" />

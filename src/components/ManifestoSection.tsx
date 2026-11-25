@@ -1,10 +1,8 @@
-const lines = [
-  'You are not your circumstances.',
-  'You are the one noticing them.',
-  'The dream does not end. You wake up inside it.',
-]
+import { useLocale } from '@/hooks/useLocale'
 
 export function ManifestoSection() {
+  const { t } = useLocale()
+  const lines = [t('manifesto.line1'), t('manifesto.line2'), t('manifesto.line3')]
   return (
     <section className="bg-black border-t border-line">
       <div className="max-w-content mx-auto px-5 md:px-8 py-28 md:py-36">

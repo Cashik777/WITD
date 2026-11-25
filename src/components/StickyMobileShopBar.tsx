@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { LL } from './LL'
+import { useLocale } from '@/hooks/useLocale'
 
 // Mobile visitors tend to scroll straight past the Hero's "Shop the Drop"
 // button without clicking it, and nothing else on the homepage keeps a shop
@@ -9,6 +10,7 @@ import { Link } from 'react-router-dom'
 // mobile swipe and the bar fails to appear until the next scroll settles.
 export function StickyMobileShopBar() {
   const [visible, setVisible] = useState(false)
+  const { t } = useLocale()
 
   useEffect(() => {
     const checkPosition = () => {
@@ -31,12 +33,12 @@ export function StickyMobileShopBar() {
 
   return (
     <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-black border-t border-line px-5 py-3">
-      <Link
+      <LL
         to="/shop"
         className="block text-center py-3 bg-paper text-black text-xs tracking-widest uppercase"
       >
-        Shop the Drop
-      </Link>
+        {t('hero.shopDrop')}
+      </LL>
     </div>
   )
 }
