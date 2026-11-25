@@ -10,8 +10,8 @@ export default function SearchPage() {
   const { products } = useProducts()
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
-  const results = searchProducts(products, query)
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const results = searchProducts(products, query, locale)
   useDocumentMeta(query ? t('meta.searchTitleWithQuery', { query }) : t('meta.searchTitle'))
 
   return (
