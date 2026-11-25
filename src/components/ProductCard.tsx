@@ -117,9 +117,9 @@ export function ProductCard({ product }: { product: Product }) {
             <p className="text-[10px] tracking-widest uppercase text-paper/50 mb-1">Bestseller</p>
           )}
           <h3 className="text-sm text-paper">{product.name}</h3>
-          <div className="mt-1.5 flex gap-1.5">
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
             {product.colors.map((c) => (
-              <SwatchDot key={c} color={c} className="w-3 h-3 rounded-full border border-paper/20" title={c} />
+              <SwatchDot key={c} color={c} className="w-3 h-3 shrink-0 rounded-full border border-paper/20" title={c} />
             ))}
           </div>
         </div>

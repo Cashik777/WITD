@@ -12,13 +12,13 @@ export function ColorSelector({ colors, selected, onSelect }: ColorSelectorProps
       <span className="text-xs tracking-widest uppercase text-paper mb-3 block">
         Color{selected ? ` — ${selected}` : ''}
       </span>
-      <div className="flex gap-2.5">
+      <div className="flex flex-wrap gap-2.5">
         {colors.map((color) => (
           <button
             key={color}
             onClick={() => onSelect(color)}
             aria-label={color}
-            className={`w-9 h-9 rounded-full border-2 transition-all duration-150 ${
+            className={`w-9 h-9 shrink-0 rounded-full border-2 transition-all duration-150 ${
               selected === color ? 'border-paper scale-110' : 'border-transparent hover:border-mist'
             }`}
           >
