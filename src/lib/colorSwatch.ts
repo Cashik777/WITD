@@ -82,18 +82,3 @@ export const colorSwatch: Record<string, string | string[]> = {
   'G. Dyed Misty Grey': '#878D89',
   'G. Dyed Blush': '#CCA39F',
 }
-
-// A patterned colourway (camo, etc.) can't be shown honestly as one flat
-// dot — this renders it as a clean left/right 50-50 split of its two real
-// colors instead (a conic-gradient was tried first, but its start-angle
-// seam rendered as a rough edge right on the circle's own border — a
-// straight linear-gradient half-and-half split doesn't have that seam).
-// Spread the result straight into a style prop.
-export function swatchStyle(color: string): { backgroundColor?: string; backgroundImage?: string } {
-  const value = colorSwatch[color]
-  if (Array.isArray(value)) {
-    const [left, right] = value
-    return { backgroundImage: `linear-gradient(90deg, ${left} 50%, ${right} 50%)` }
-  }
-  return { backgroundColor: value ?? '#8F8B82' }
-}

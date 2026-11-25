@@ -5,7 +5,7 @@ import { formatPrice } from '@/lib/format'
 import { getProductPrice } from '@/lib/price'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/context/CurrencyContext'
-import { swatchStyle } from '@/lib/colorSwatch'
+import { SwatchDot } from './SwatchDot'
 import { productImage } from '@/lib/productImage'
 
 export function ProductCard({ product }: { product: Product }) {
@@ -119,12 +119,7 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="text-sm text-paper">{product.name}</h3>
           <div className="mt-1.5 flex gap-1.5">
             {product.colors.map((c) => (
-              <span
-                key={c}
-                className="w-3 h-3 rounded-full border border-paper/20"
-                style={swatchStyle(c)}
-                title={c}
-              />
+              <SwatchDot key={c} color={c} className="w-3 h-3 rounded-full border border-paper/20" title={c} />
             ))}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { swatchStyle } from '@/lib/colorSwatch'
+import { SwatchDot } from './SwatchDot'
 
 interface ColorSelectorProps {
   colors: string[]
@@ -22,10 +22,7 @@ export function ColorSelector({ colors, selected, onSelect }: ColorSelectorProps
               selected === color ? 'border-paper scale-110' : 'border-transparent hover:border-mist'
             }`}
           >
-            <span
-              className="block w-full h-full rounded-full border border-paper/15"
-              style={swatchStyle(color)}
-            />
+            <SwatchDot color={color} className="block w-full h-full rounded-full border border-paper/15" />
           </button>
         ))}
       </div>
