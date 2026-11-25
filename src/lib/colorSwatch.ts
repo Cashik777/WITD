@@ -63,4 +63,17 @@ export const colorSwatch: Record<string, string> = {
   'Storm Blue': '#4A5A6B',
   Sandstone: '#C2B192',
   'Grey Heather': '#9A9893',
+  // Illusion of Knowing (Independent SS4500)
+  Purple: '#482E81',
+  'Alpine Green': '#304A3C',
+  'Duck Camo': '#4E4737',
+  'Dusty Sage': '#C6C6AC',
+  Bone: '#F2E5D4',
+  // ANCIENT DREAM (Stanley/Stella Sculpter Heavyweight Hoodie)
+  Stone: '#A79F88',
+  // The Freedom to Choose (Stanley/Stella Chaser Vintage Garment-Dyed Hoodie)
+  'G. Dyed Black Rock': '#1B1F20',
+  'G. Dyed Blue Grey': '#676D83',
+  'G. Dyed Misty Grey': '#878D89',
+  'G. Dyed Blush': '#CCA39F',
 }
